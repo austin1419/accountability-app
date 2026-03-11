@@ -85,7 +85,7 @@ export function HabitsTabs({
           {habits.map((task) => {
             const colorClass =
               categoryColors[task.category ?? ""] ?? "bg-gray-100 text-gray-500";
-            const reason = "removal_reason" in task ? task.removal_reason : null;
+            const reason = "removal_reason" in task ? (task as ArchivedHabit).removal_reason : null;
             return (
               <li key={task.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5 ${colorClass}`}>
