@@ -50,9 +50,11 @@ export const mockWeightLog: WeightEntry[] = [
 // ── Category color map ────────────────────────
 // Used to give each habit category a distinct color badge.
 export const categoryColors: Record<string, string> = {
-  Movement:    "bg-blue-100 text-blue-600",
-  Nutrition:   "bg-green-100 text-green-600",
-  Supplements: "bg-amber-100 text-amber-600",
-  Sleep:       "bg-purple-100 text-purple-600",
-  Recovery:    "bg-teal-100 text-teal-600",
+  Movement:        "bg-blue-100 text-blue-600",
+  Activity:        "bg-blue-100 text-blue-600",
+  Nutrition:       "bg-green-100 text-green-600",
+  Supplements:     "bg-amber-100 text-amber-600",
+  Sleep:           "bg-purple-100 text-purple-600",
+  "Sleep/Recovery": "bg-purple-100 text-purple-600",
+  Recovery:        "bg-teal-100 text-teal-600",
 };

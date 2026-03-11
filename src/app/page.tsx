@@ -7,10 +7,17 @@
 // No loading spinners, no useEffect, no useState needed here.
 // ─────────────────────────────────────────────
 
-import { ProgressRing }   from "@/components/ProgressRing";
-import { BottomNav }      from "@/components/BottomNav";
-import { fetchDashboard } from "@/lib/queries";
-import { DEMO_CLIENT_ID } from "@/lib/config";
+import { redirect }              from "next/navigation";
+import { ProgressRing }          from "@/components/ProgressRing";
+import { BottomNav }             from "@/components/BottomNav";
+import { DateHeader }            from "@/components/DateHeader";
+import { fetchDashboard }        from "@/lib/server-queries";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createAdminClient }     from "@/lib/supabase-admin";
+
+// Always render fresh from the server — required so searchParams-driven
+// date navigation actually re-fetches Supabase data on each navigation.
+export const dynamic = "force-dynamic";
 
 // Calculates how far along the client is toward their goal weight.
 // Returns 0 if any weight value is missing.
@@ -26,10 +33,44 @@ function getGoalProgress(
   return Math.min(Math.max(Math.round((lostSoFar / totalToLose) * 100), 0), 100);
 }
 
-export default async function ClientDashboard() {
-  // Fetch all dashboard data from Supabase before the page renders.
-  // DEMO_CLIENT_ID is a fixed UUID from seed.sql — replaced by real auth later.
-  const data = await fetchDashboard(DEMO_CLIENT_ID);
+// Validates a raw date string from the URL.
+// Returns todayStr for any missing, malformed, or future value.
+function validateDate(raw: string | undefined, todayStr: string): string {
+  if (!raw) return todayStr;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return todayStr;
+  const d = new Date(raw + "T00:00:00");
+  if (isNaN(d.getTime())) return todayStr;
+  if (raw > todayStr) return todayStr; // clamp future dates to today
+  return raw;
+}
+
+export default async function ClientDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  // ── Auth check ───────────────────────────────────────────────────
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Look up the user's public.users row (the id used in all data tables)
+  const adminSupabase = createAdminClient();
+  const { data: profile } = await adminSupabase
+    .from("users")
+    .select("id")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (!profile) redirect("/login");
+
+  // ── Date handling ────────────────────────────────────────────────
+  const todayStr = new Date().toISOString().split("T")[0];
+  const params   = await searchParams;
+  const selectedDate = validateDate(params.date, todayStr);
+
+  // ── Fetch dashboard data ─────────────────────────────────────────
+  const data = await fetchDashboard(profile.id, selectedDate);
 
   const { clientName, goal, today, week } = data;
 
@@ -39,21 +80,42 @@ export default async function ClientDashboard() {
     goal?.goal_weight ?? null
   );
 
+  // Friendly greeting date — always shows real today
   const todayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month:   "long",
     day:     "numeric",
   });
 
+  // Short label for the compliance section header when viewing a past date
+  const isToday = selectedDate === todayStr;
+  const shortDateLabel = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day:   "numeric",
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
 
       {/* ── Header ───────────────────────────────── */}
-      <header className="bg-white px-5 pt-10 pb-5 border-b border-gray-100">
-        <p className="text-sm text-gray-400">{todayDate}</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">
-          Hey, {clientName} 👋
-        </h1>
+      <header className="bg-white pt-10 border-b border-gray-100">
+        <div className="px-5 pb-3">
+          {/* Brand mark */}
+          <div className="mb-3">
+            <p className="text-xs font-bold tracking-widest text-blue-500 uppercase">
+              IronTribe <span className="text-gray-800">PULSE</span>
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Track the habits that drive your progress
+            </p>
+          </div>
+          <p className="text-sm text-gray-400">{todayDate}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mt-1">
+            Hey, {clientName} 👋
+          </h1>
+        </div>
+        {/* Date navigation — step through days or open calendar */}
+        <DateHeader selectedDate={selectedDate} todayDate={todayStr} userId={profile.id} />
       </header>
 
       {/* ── Scrollable content ───────────────────── */}
@@ -121,7 +183,7 @@ export default async function ClientDashboard() {
         {/* ── Today's Compliance ───────────────────── */}
         <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
-            Today&apos;s Compliance
+            {isToday ? "Today\u2019s Compliance" : `${shortDateLabel} Compliance`}
           </p>
           <div className="flex items-center gap-5">
             <div className="relative flex items-center justify-center flex-shrink-0">
@@ -157,7 +219,7 @@ export default async function ClientDashboard() {
         <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Weekly Compliance
+              {isToday ? "Weekly Compliance" : `7 Days to ${shortDateLabel}`}
             </p>
             {week.percent >= 70 ? (
               <span className="text-xs font-semibold text-green-600 bg-green-50 rounded-full px-3 py-1">

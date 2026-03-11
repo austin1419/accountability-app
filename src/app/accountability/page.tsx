@@ -7,9 +7,11 @@
 // Server Component: fetches all data before render, no loading spinners needed.
 // ─────────────────────────────────────────────
 
-import { BottomNav }        from "@/components/BottomNav";
-import { fetchLeaderboard } from "@/lib/queries";
-import { DEMO_CLIENT_ID }   from "@/lib/config";
+import { redirect }              from "next/navigation";
+import { BottomNav }             from "@/components/BottomNav";
+import { fetchLeaderboard }      from "@/lib/server-queries";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createAdminClient }     from "@/lib/supabase-admin";
 
 // ── Medal colors for top 3 ─────────────────────
 const rankStyles: Record<number, { border: string; badge: string; label: string }> = {
@@ -19,6 +21,20 @@ const rankStyles: Record<number, { border: string; badge: string; label: string 
 };
 
 export default async function AccountabilityPage() {
+  // ── Auth check ───────────────────────────────────────────────────
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const adminSupabase = createAdminClient();
+  const { data: profile } = await adminSupabase
+    .from("users")
+    .select("id")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (!profile) redirect("/login");
+
   const leaderboard = await fetchLeaderboard();
 
   // Group average weekly compliance
@@ -94,7 +110,7 @@ export default async function AccountabilityPage() {
             <ul className="space-y-3">
               {leaderboard.map((entry, index) => {
                 const rank    = index + 1;
-                const isYou   = entry.id === DEMO_CLIENT_ID;
+                const isYou   = entry.id === profile.id;
                 const style   = rankStyles[rank];
                 const onTrack = entry.weekPercent >= 70;
 

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IronTribe | Accountability",
-  description: "Coaching accountability app",
+  title: "IronTribe PULSE",
+  description: "Track the habits that drive your progress",
 };
 
 export default function RootLayout({

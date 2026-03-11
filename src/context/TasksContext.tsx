@@ -9,7 +9,8 @@
 //   *above* both pages in the root layout, so both share the same data.
 //
 // What changed from mock data:
-//   - On mount, tasks are fetched from Supabase (real IDs, real completion status)
+//   - On mount, resolves the current user's public.users id via auth
+//   - Tasks are fetched from Supabase (real IDs, real completion status)
 //   - When a task is toggled, the new status is written to task_logs in Supabase
 //   - The Dashboard re-reads from Supabase on next navigation, so the compliance
 //     wheel reflects the real saved data
@@ -17,8 +18,8 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import type { Task } from "@/lib/mockData";
+import { supabase } from "@/lib/supabase";
 import { fetchTodaysTasks, upsertTaskLog } from "@/lib/queries";
-import { DEMO_CLIENT_ID } from "@/lib/config";
 
 // ── Shape of what the context exposes ─────────
 type TasksContextType = {
@@ -35,14 +36,31 @@ const TasksContext = createContext<TasksContextType | null>(null);
 // ── Provider ──────────────────────────────────
 // Wrap this around your app (in layout.tsx) so any page can access task state.
 export function TasksProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [tasks,  setTasks]  = useState<Task[]>([]);
 
-  // Load tasks from Supabase when the app first loads
+  // Resolve the current user's public.users id, then load their tasks
   useEffect(() => {
-    fetchTodaysTasks(DEMO_CLIENT_ID).then(setTasks);
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (!profile) return;
+
+      setUserId(profile.id);
+      fetchTodaysTasks(profile.id).then(setTasks);
+    }
+    init();
   }, []);
 
   function toggleTask(id: string) {
+    if (!userId) return;
     // Optimistic update: flip the checkbox immediately so the UI feels instant
     setTasks((prev) => {
       const task = prev.find((t) => t.id === id);
@@ -52,7 +70,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       // Write the new status to Supabase in the background (fire-and-forget)
       // The Dashboard will pick up the saved value on next navigation
-      upsertTaskLog(id, DEMO_CLIENT_ID, newDone);
+      upsertTaskLog(id, userId, newDone);
 
       return prev.map((t) => (t.id === id ? { ...t, done: newDone } : t));
     });

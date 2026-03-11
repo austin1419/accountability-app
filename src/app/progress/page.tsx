@@ -2,11 +2,10 @@
 // ↑ Needed because we have interactive state: logging a new weight entry.
 
 import { useState, useEffect } from "react";
-import { mockWeightLog } from "@/lib/mockData";
 import type { WeightEntry } from "@/lib/mockData";
 import { BottomNav } from "@/components/BottomNav";
-import { fetchGoalData, updateCurrentWeight } from "@/lib/queries";
-import { DEMO_CLIENT_ID } from "@/lib/config";
+import { supabase } from "@/lib/supabase";
+import { fetchGoalData, updateCurrentWeight, fetchWeightLog, insertWeightLog } from "@/lib/queries";
 
 // ─────────────────────────────────────────────
 // WeightChart — SVG line chart
@@ -123,7 +122,8 @@ function WeightChart({
 // Progress Page
 // ─────────────────────────────────────────────
 export default function ProgressPage() {
-  const [weightLog, setWeightLog] = useState<WeightEntry[]>(mockWeightLog);
+  const [userId,    setUserId]    = useState<string | null>(null);
+  const [weightLog, setWeightLog] = useState<WeightEntry[]>([]);
   const [showForm,  setShowForm]  = useState(false);
   const [input,     setInput]     = useState("");
   const [error,     setError]     = useState("");
@@ -135,35 +135,53 @@ export default function ProgressPage() {
     current_weight: number | null;
   } | null>(null);
 
-  // Load real goal data from Supabase on mount
+  // Resolve the current user's public.users id, then load their data
   useEffect(() => {
-    fetchGoalData(DEMO_CLIENT_ID).then((data) => {
-      if (data) setGoalData(data);
-    });
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (!profile) return;
+
+      setUserId(profile.id);
+      fetchGoalData(profile.id).then((data) => {
+        if (data) setGoalData(data);
+      });
+      fetchWeightLog(profile.id).then(setWeightLog);
+    }
+    init();
   }, []);
 
-  // Use Supabase values when available, fall back to mock data
+  // Use Supabase values when available; fall back to last log entry or safe defaults
   const startWeight   = goalData?.start_weight   ?? 240;
   const goalWeight    = goalData?.goal_weight     ?? 190;
-  const currentWeight = goalData?.current_weight  ?? weightLog[weightLog.length - 1].weight;
+  const currentWeight = goalData?.current_weight  ?? weightLog[weightLog.length - 1]?.weight ?? 0;
 
   const lostSoFar = startWeight - currentWeight;
   const stillToGo = currentWeight - goalWeight;
 
   function handleLogWeight() {
+    if (!userId) return;
     const w = parseFloat(input);
     if (isNaN(w) || w < 50 || w > 500) {
       setError("Enter a valid weight between 50 and 500 lbs.");
       return;
     }
 
-    // Update local state so the chart and stats update immediately
-    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    setWeightLog((prev) => [...prev, { week: today, weight: w }]);
+    // Optimistic update so the chart and stats reflect the new entry immediately
+    const label = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    setWeightLog((prev) => [...prev, { week: label, weight: w }]);
     setGoalData((prev) => prev ? { ...prev, current_weight: w } : prev);
 
-    // Write to Supabase so the Dashboard's Progress ring updates on next visit
-    updateCurrentWeight(DEMO_CLIENT_ID, w);
+    // Persist to Supabase: log entry for history + snapshot on goal for dashboard
+    insertWeightLog(userId, w);
+    updateCurrentWeight(userId, w);
 
     setInput("");
     setError("");
