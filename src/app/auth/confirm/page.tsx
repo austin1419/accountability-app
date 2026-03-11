@@ -1,0 +1,136 @@
+"use client";
+
+// ─────────────────────────────────────────────
+// /auth/confirm — Set Password
+//
+// Clients land here after clicking their invite email link.
+// Supabase appends session tokens to the URL hash:
+//   /auth/confirm#access_token=...&refresh_token=...&type=invite
+//
+// The Supabase browser client detects those hash params automatically
+// and fires an SIGNED_IN auth state change. We then show a form
+// so the client can set a permanent password for their account.
+// After saving, they're redirected to the client dashboard.
+// ─────────────────────────────────────────────
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
+export default function AuthConfirmPage() {
+  const router = useRouter();
+  const [ready,    setReady]    = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+
+  useEffect(() => {
+    // The Supabase browser client automatically exchanges the hash tokens
+    // for a session and fires SIGNED_IN. Wait for that before showing the form.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
+          setReady(true);
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (updateError) {
+      setError("Failed to set password. Please try again.");
+      return;
+    }
+
+    // Session is already active — send them straight to their dashboard.
+    router.push("/");
+  }
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-400">Verifying your invite…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-5">
+
+      {/* Brand */}
+      <div className="mb-8 text-center">
+        <p className="text-xs font-bold tracking-widest text-blue-500 uppercase mb-1">
+          IronTribe <span className="text-gray-800">PULSE</span>
+        </p>
+        <p className="text-xs text-gray-400">Set up your account</p>
+      </div>
+
+      {/* Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm p-8">
+        <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome!</h1>
+        <p className="text-sm text-gray-400 mb-6">
+          Create a password to access your dashboard.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+              required
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+          >
+            {loading ? "Setting up…" : "Set Password & Continue"}
+          </button>
+        </form>
+      </div>
+
+    </div>
+  );
+}

@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/queries";
+import { createClientWithInvite } from "./actions";
 
 type FormState = {
   firstName:      string;
@@ -72,7 +72,7 @@ export function AddClientModal() {
     }
 
     setLoading(true);
-    const result = await createClient({
+    const result = await createClientWithInvite({
       firstName:      form.firstName.trim(),
       lastName:       form.lastName.trim(),
       email:          form.email.trim(),
@@ -266,7 +266,7 @@ export function AddClientModal() {
                   disabled={loading}
                   className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors"
                 >
-                  {loading ? "Saving…" : "Add Client"}
+                  {loading ? "Creating & sending invite…" : "Add Client & Send Invite"}
                 </button>
               </div>
 
