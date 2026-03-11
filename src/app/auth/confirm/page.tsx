@@ -26,8 +26,26 @@ export default function AuthConfirmPage() {
   const [loading,  setLoading]  = useState(false);
 
   useEffect(() => {
-    // The Supabase browser client automatically exchanges the hash tokens
-    // for a session and fires SIGNED_IN. Wait for that before showing the form.
+    // Primary path: parse hash tokens from the URL and set the session directly.
+    // More reliable than waiting for onAuthStateChange, which can fire during
+    // Supabase client initialization — before this useEffect registers.
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken  = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+
+    if (accessToken && refreshToken) {
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error }) => { if (!error) setReady(true); });
+      return;
+    }
+
+    // Fallback: check for an existing session (e.g. page reload after token exchange)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
