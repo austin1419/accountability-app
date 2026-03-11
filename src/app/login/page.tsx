@@ -1,10 +1,10 @@
 "use client";
 
 // ─────────────────────────────────────────────
-// CLIENT LOGIN — IronTribe PULSE
+// CLIENT LOGIN — PULSE
 //
 // Email + password sign-in for clients.
-// On success, redirects to the client dashboard (/).
+// On success, middleware routes them to the client dashboard (/).
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
@@ -23,7 +23,7 @@ export default function ClientLoginPage() {
     setError("");
     setLoading(true);
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
+    const { error: authError } = await supabase.auth.signInWithPassword({
       email:    email.trim(),
       password,
     });
@@ -35,12 +35,7 @@ export default function ClientLoginPage() {
       return;
     }
 
-    // Coaches who somehow land here get sent to HabitOS instead.
-    if (data.user?.app_metadata?.role === "coach") {
-      router.push("/coach");
-    } else {
-      router.push("/");
-    }
+    router.push("/");
     router.refresh();
   }
 
@@ -52,12 +47,13 @@ export default function ClientLoginPage() {
         <p className="text-xs font-bold tracking-widest text-blue-500 uppercase mb-1">
           IronTribe <span className="text-gray-800">PULSE</span>
         </p>
-        <p className="text-xs text-gray-400">Track the habits that drive your progress</p>
+        <p className="text-xs text-gray-400">Sign in to your account</p>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm p-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Sign in</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h1>
+        <p className="text-sm text-gray-400 mb-6">Enter your email and password to continue.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -88,16 +84,14 @@ export default function ClientLoginPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-xs text-red-500">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-500">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
       </div>
