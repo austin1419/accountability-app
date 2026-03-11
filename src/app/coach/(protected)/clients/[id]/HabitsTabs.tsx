@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 import { categoryColors } from "@/lib/mockData";
-import { deleteHabit } from "@/lib/queries";
+import { removeClientHabit } from "./actions";
 import { DeleteHabitButton } from "./DeleteHabitButton";
 
 type ActiveHabit   = { id: string; task_name: string; category: string | null };
@@ -37,8 +37,8 @@ export function HabitsTabs({
     setActiveTasks((prev) => prev.filter((t) => t.id !== taskId));
     setArchivedTasks((prev) => [archivedTask, ...prev]);
 
-    // Persist to Supabase in the background
-    await deleteHabit(taskId, reason || undefined);
+    // Persist to Supabase via server action (admin client bypasses RLS)
+    await removeClientHabit(taskId, reason || undefined);
   }
 
   const habits = tab === "active" ? activeTasks : archivedTasks;

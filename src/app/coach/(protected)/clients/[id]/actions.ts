@@ -23,3 +23,22 @@ export async function updateClientWeights(
 
   return {};
 }
+
+export async function removeClientHabit(
+  taskId: string,
+  reason?: string,
+): Promise<{ error?: string }> {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({ is_active: false, removal_reason: reason ?? null })
+    .eq("id", taskId);
+
+  if (error) {
+    console.error("[removeClientHabit] failed:", error.message);
+    return { error: "Failed to remove habit. Please try again." };
+  }
+
+  return {};
+}
