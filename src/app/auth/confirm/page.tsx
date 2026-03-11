@@ -85,8 +85,12 @@ export default function AuthConfirmPage() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 gap-4">
         <p className="text-sm text-gray-400">Verifying your invite…</p>
+        <p className="text-xs text-gray-400 text-center max-w-xs">
+          On iPhone? If this screen does not proceed, open the link in{" "}
+          <strong className="text-gray-500">Safari</strong> to complete your setup.
+        </p>
       </div>
     );
   }
