@@ -24,6 +24,24 @@ export async function updateClientWeights(
   return {};
 }
 
+export async function reactivateClient(
+  clientId: string,
+): Promise<{ error?: string }> {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ is_active: true, archive_reason: null })
+    .eq("id", clientId);
+
+  if (error) {
+    console.error("[reactivateClient] failed:", error.message);
+    return { error: "Failed to reactivate client. Please try again." };
+  }
+
+  return {};
+}
+
 export async function archiveClient(
   clientId: string,
   reason?: string,

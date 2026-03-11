@@ -57,6 +57,14 @@ export type CoachClientRow = {
   isFlagged:     boolean;
 };
 
+export type ArchivedClientRow = {
+  id:             string;
+  name:           string;
+  email:          string;
+  goalName:       string | null;
+  archiveReason:  string | null;
+};
+
 export type ClientNote = {
   id:         string;
   note:       string;
@@ -326,6 +334,42 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
       isFlagged:     todayPercent < 70 || weekPercent < 70 || monthPercent < 70,
     };
   });
+}
+
+
+// ── fetchArchivedClientsForCoach ───────────────────────────────────
+export async function fetchArchivedClientsForCoach(): Promise<ArchivedClientRow[]> {
+  const supabase = createAdminClient();
+
+  const { data: clients } = await supabase
+    .from("users")
+    .select("id, name, email, archive_reason")
+    .eq("role", "client")
+    .eq("is_active", false)
+    .order("name", { ascending: true });
+
+  if (!clients || clients.length === 0) return [];
+
+  const clientIds = clients.map((c) => c.id);
+
+  const { data: goals } = await supabase
+    .from("goals")
+    .select("user_id, goal_name")
+    .in("user_id", clientIds)
+    .order("created_at", { ascending: false });
+
+  const goalByUser = new Map<string, string>();
+  for (const g of goals ?? []) {
+    if (!goalByUser.has(g.user_id)) goalByUser.set(g.user_id, g.goal_name);
+  }
+
+  return clients.map((c) => ({
+    id:            c.id,
+    name:          c.name,
+    email:         c.email,
+    goalName:      goalByUser.get(c.id) ?? null,
+    archiveReason: c.archive_reason ?? null,
+  }));
 }
 
 

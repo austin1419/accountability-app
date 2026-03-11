@@ -9,8 +9,9 @@
 // ─────────────────────────────────────────────
 
 import Link from "next/link";
-import { fetchAllClientsForCoach } from "@/lib/server-queries";
+import { fetchAllClientsForCoach, fetchArchivedClientsForCoach } from "@/lib/server-queries";
 import { AddClientModal } from "./AddClientModal";
+import { ArchivedClientList } from "./ArchivedClientList";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,18 @@ function ComplianceBadge({ pct }: { pct: number }) {
   );
 }
 
-export default async function ClientsListPage() {
-  const clients = await fetchAllClientsForCoach();
+export default async function ClientsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: tabParam } = await searchParams;
+  const tab = tabParam === "archived" ? "archived" : "active";
+
+  const [clients, archivedClients] = await Promise.all([
+    fetchAllClientsForCoach(),
+    fetchArchivedClientsForCoach(),
+  ]);
 
   const onTrack = clients.filter((c) => !c.isFlagged).length;
 
@@ -37,9 +48,9 @@ export default async function ClientsListPage() {
       {/* ── Page header ─────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Clients</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
           <p className="text-sm text-gray-400 mt-1">
-            {clients.length} client{clients.length !== 1 ? "s" : ""} &middot;{" "}
+            {clients.length} active &middot;{" "}
             <span className="text-green-600 font-medium">{onTrack} on track</span>
             {clients.length - onTrack > 0 && (
               <> &middot; <span className="text-red-500 font-medium">{clients.length - onTrack} flagged</span></>
@@ -49,8 +60,43 @@ export default async function ClientsListPage() {
         <AddClientModal />
       </div>
 
-      {/* ── Clients table ───────────────────────── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* ── Tab bar ──────────────────────────────── */}
+      <div className="flex gap-1 border-b border-gray-100">
+        <Link
+          href="/coach/clients"
+          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+            tab === "active"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Active
+          {clients.length > 0 && (
+            <span className="ml-1.5 text-gray-400 font-normal">({clients.length})</span>
+          )}
+        </Link>
+        <Link
+          href="/coach/clients?tab=archived"
+          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+            tab === "archived"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Archived
+          {archivedClients.length > 0 && (
+            <span className="ml-1.5 text-gray-400 font-normal">({archivedClients.length})</span>
+          )}
+        </Link>
+      </div>
+
+      {/* ── Archived clients list ─────────────────── */}
+      {tab === "archived" && (
+        <ArchivedClientList initialClients={archivedClients} />
+      )}
+
+      {/* ── Active clients table ─────────────────── */}
+      {tab === "active" && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
@@ -171,23 +217,25 @@ export default async function ClientsListPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
 
-      {/* ── Legend ──────────────────────────────── */}
-      <div className="flex items-center gap-6 text-xs text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-green-200 inline-block" /> ≥70% on track
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-amber-200 inline-block" /> 50–69% at risk
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-red-200 inline-block" /> &lt;50% critical
-        </span>
-        <span className="flex items-center gap-1.5 ml-4">
-          <span className="w-3 h-1 rounded-full bg-red-300 inline-block" /> Left border = flagged
-        </span>
-      </div>
+      {/* ── Legend (active tab only) ─────────────── */}
+      {tab === "active" && (
+        <div className="flex items-center gap-6 text-xs text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-green-200 inline-block" /> ≥70% on track
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-amber-200 inline-block" /> 50–69% at risk
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-red-200 inline-block" /> &lt;50% critical
+          </span>
+          <span className="flex items-center gap-1.5 ml-4">
+            <span className="w-3 h-1 rounded-full bg-red-300 inline-block" /> Left border = flagged
+          </span>
+        </div>
+      )}
 
     </div>
   );
