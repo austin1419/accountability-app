@@ -78,8 +78,9 @@ export default function AuthConfirmPage() {
       return;
     }
 
-    // Session is already active — send them straight to their dashboard.
-    router.push("/");
+    // Sign out the invite session so the client starts fresh from login.
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
   if (!ready) {

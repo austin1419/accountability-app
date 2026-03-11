@@ -70,7 +70,7 @@ export async function createClientWithInvite(data: {
   // This creates the auth.users row and sends the "Accept Invite" email.
   // The on_auth_user_created trigger auto-links auth_id on the
   // public.users row we just created (matches by email).
-  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
     data.email,
     { redirectTo: `${siteUrl}/auth/confirm` },
   );
@@ -84,6 +84,13 @@ export async function createClientWithInvite(data: {
         "Client record created, but the invite email failed to send. " +
         "You can send the invite manually from the Supabase dashboard.",
     };
+  }
+
+  // ── 5. Set app_metadata.role so middleware routes them correctly ──
+  if (inviteData.user) {
+    await supabase.auth.admin.updateUserById(inviteData.user.id, {
+      app_metadata: { role: "client" },
+    });
   }
 
   return {};
