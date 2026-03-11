@@ -24,6 +24,25 @@ export async function updateClientWeights(
   return {};
 }
 
+export async function addClientHabit(
+  goalId:   string,
+  taskName: string,
+  category: string,
+): Promise<{ error?: string }> {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("tasks")
+    .insert({ goal_id: goalId, task_name: taskName, category });
+
+  if (error) {
+    console.error("[addClientHabit] insert failed:", error.message);
+    return { error: "Failed to save habit. Please try again." };
+  }
+
+  return {};
+}
+
 export async function reactivateClient(
   clientId: string,
 ): Promise<{ error?: string }> {

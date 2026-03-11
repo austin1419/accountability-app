@@ -197,7 +197,11 @@ export default async function ClientDetailPage({
           </p>
           {client.goal && <AddHabitModal goalId={client.goal.id} />}
         </div>
-        <HabitsTabs active={client.tasks} archived={client.archivedTasks} />
+        <HabitsTabs
+          key={client.tasks.length + client.archivedTasks.length}
+          active={client.tasks}
+          archived={client.archivedTasks}
+        />
       </div>
 
       {/* ── Coach Notes ──────────────────────────── */}

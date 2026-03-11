@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addHabit } from "@/lib/queries";
+import { addClientHabit } from "./actions";
 
 const CATEGORIES = ["Activity", "Nutrition", "Sleep/Recovery", "Supplements"] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -48,7 +48,7 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
     }
 
     setLoading(true);
-    const result = await addHabit(goalId, form.taskName.trim(), form.category);
+    const result = await addClientHabit(goalId, form.taskName.trim(), form.category);
     setLoading(false);
 
     if (result.error) {
