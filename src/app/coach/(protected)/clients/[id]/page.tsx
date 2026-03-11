@@ -15,6 +15,7 @@ import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
 import { ClientNotes } from "./ClientNotes";
+import { ArchiveClientButton } from "./ArchiveClientButton";
 
 export const dynamic = "force-dynamic";
 
@@ -89,15 +90,18 @@ export default async function ClientDetailPage({
               )}
             </div>
           </div>
-          <span
-            className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full ${
-              isOnTrack
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-600"
-            }`}
-          >
-            {isOnTrack ? "On track" : "Needs attention"}
-          </span>
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full ${
+                isOnTrack
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-600"
+              }`}
+            >
+              {isOnTrack ? "On track" : "Needs attention"}
+            </span>
+            <ArchiveClientButton clientId={client.id} clientName={client.name} />
+          </div>
         </div>
       </div>
 

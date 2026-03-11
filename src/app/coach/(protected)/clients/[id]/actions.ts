@@ -24,6 +24,25 @@ export async function updateClientWeights(
   return {};
 }
 
+export async function archiveClient(
+  clientId: string,
+  reason?: string,
+): Promise<{ error?: string }> {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ is_active: false, archive_reason: reason ?? null })
+    .eq("id", clientId);
+
+  if (error) {
+    console.error("[archiveClient] failed:", error.message);
+    return { error: "Failed to archive client. Please try again." };
+  }
+
+  return {};
+}
+
 export async function addClientNote(
   clientId: string,
   note: string,

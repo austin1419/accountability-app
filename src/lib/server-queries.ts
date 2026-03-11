@@ -169,7 +169,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   const { data: clients } = await supabase
     .from("users")
     .select("id, name")
-    .eq("role", "client");
+    .eq("role", "client")
+    .eq("is_active", true);
 
   if (!clients || clients.length === 0) return [];
 
@@ -250,6 +251,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
     .from("users")
     .select("id, name, created_at")
     .eq("role", "client")
+    .eq("is_active", true)
     .order("name", { ascending: true });
 
   if (clientsError) console.error("[fetchAllClientsForCoach] users query failed:", clientsError);
