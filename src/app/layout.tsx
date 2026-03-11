@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "IronTribe PULSE",
   description: "Track the habits that drive your progress",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable:        true,
+    statusBarStyle: "default",
+    title:          "IronTribe Pulse",
+  },
 };
 
 export default function RootLayout({
