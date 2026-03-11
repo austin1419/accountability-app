@@ -57,6 +57,12 @@ export type CoachClientRow = {
   isFlagged:     boolean;
 };
 
+export type ClientNote = {
+  id:         string;
+  note:       string;
+  created_at: string;
+};
+
 export type ClientDetail = {
   id:    string;
   name:  string;
@@ -73,6 +79,7 @@ export type ClientDetail = {
   } | null;
   tasks:         { id: string; task_name: string; category: string | null }[];
   archivedTasks: { id: string; task_name: string; category: string | null; removal_reason: string | null }[];
+  clientNotes:   ClientNote[];
   todayPercent: number;
   weekPercent:  number;
   monthPercent: number;
@@ -362,6 +369,12 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     .eq("goal_id", goal?.id ?? "")
     .eq("is_active", false);
 
+  const { data: notes } = await supabase
+    .from("client_notes")
+    .select("id, note, created_at")
+    .eq("client_id", clientId)
+    .order("created_at", { ascending: false });
+
   const { data: logs } = await supabase
     .from("task_logs")
     .select("date, completed")
@@ -417,6 +430,11 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
       task_name:      t.task_name,
       category:       t.category ?? null,
       removal_reason: t.removal_reason ?? null,
+    })),
+    clientNotes: (notes ?? []).map((n) => ({
+      id:         n.id,
+      note:       n.note,
+      created_at: n.created_at,
     })),
     todayPercent,
     weekPercent,

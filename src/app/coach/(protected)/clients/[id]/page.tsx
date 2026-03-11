@@ -14,6 +14,7 @@ import { fetchClientDetail } from "@/lib/server-queries";
 import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
+import { ClientNotes } from "./ClientNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -193,6 +194,14 @@ export default async function ClientDetailPage({
           {client.goal && <AddHabitModal goalId={client.goal.id} />}
         </div>
         <HabitsTabs active={client.tasks} archived={client.archivedTasks} />
+      </div>
+
+      {/* ── Coach Notes ──────────────────────────── */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+          Coach Notes
+        </p>
+        <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />
       </div>
 
     </div>

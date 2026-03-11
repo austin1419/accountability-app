@@ -24,6 +24,26 @@ export async function updateClientWeights(
   return {};
 }
 
+export async function addClientNote(
+  clientId: string,
+  note: string,
+): Promise<{ error?: string; id?: string; created_at?: string }> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("client_notes")
+    .insert({ client_id: clientId, note })
+    .select("id, created_at")
+    .single();
+
+  if (error) {
+    console.error("[addClientNote] failed:", error.message);
+    return { error: "Failed to save note. Please try again." };
+  }
+
+  return { id: data.id, created_at: data.created_at };
+}
+
 export async function removeClientHabit(
   taskId: string,
   reason?: string,
