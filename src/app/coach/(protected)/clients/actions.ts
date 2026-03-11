@@ -26,7 +26,7 @@ export async function createClientWithInvite(data: {
     .from("users")
     .insert({
       name:         `${data.firstName} ${data.lastName}`,
-      email:        data.email,
+      email:        data.email.toLowerCase(),
       phone_number: data.phone,
       role:         "client",
     })
