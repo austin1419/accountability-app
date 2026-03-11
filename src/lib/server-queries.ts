@@ -72,7 +72,7 @@ export type ClientDetail = {
     goalProgress:   number;
   } | null;
   tasks:         { id: string; task_name: string; category: string | null }[];
-  archivedTasks: { id: string; task_name: string; category: string | null }[];
+  archivedTasks: { id: string; task_name: string; category: string | null; removal_reason: string | null }[];
   todayPercent: number;
   weekPercent:  number;
   monthPercent: number;
@@ -358,7 +358,7 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
 
   const { data: archivedTasks } = await supabase
     .from("tasks")
-    .select("id, task_name, category")
+    .select("id, task_name, category, removal_reason")
     .eq("goal_id", goal?.id ?? "")
     .eq("is_active", false);
 
@@ -413,9 +413,10 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
       category:  t.category ?? null,
     })),
     archivedTasks: (archivedTasks ?? []).map((t) => ({
-      id:        t.id,
-      task_name: t.task_name,
-      category:  t.category ?? null,
+      id:             t.id,
+      task_name:      t.task_name,
+      category:       t.category ?? null,
+      removal_reason: t.removal_reason ?? null,
     })),
     todayPercent,
     weekPercent,

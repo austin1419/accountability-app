@@ -13,30 +13,32 @@ import { categoryColors } from "@/lib/mockData";
 import { deleteHabit } from "@/lib/queries";
 import { DeleteHabitButton } from "./DeleteHabitButton";
 
-type Habit = { id: string; task_name: string; category: string | null };
+type ActiveHabit   = { id: string; task_name: string; category: string | null };
+type ArchivedHabit = { id: string; task_name: string; category: string | null; removal_reason: string | null };
 
 export function HabitsTabs({
   active,
   archived,
 }: {
-  active:   Habit[];
-  archived: Habit[];
+  active:   ActiveHabit[];
+  archived: ArchivedHabit[];
 }) {
-  const [tab,          setTab]          = useState<"active" | "archived">("active");
-  const [activeTasks,  setActiveTasks]  = useState<Habit[]>(active);
-  const [archivedTasks, setArchivedTasks] = useState<Habit[]>(archived);
+  const [tab,           setTab]           = useState<"active" | "archived">("active");
+  const [activeTasks,   setActiveTasks]   = useState<ActiveHabit[]>(active);
+  const [archivedTasks, setArchivedTasks] = useState<ArchivedHabit[]>(archived);
 
-  async function handleRemove(taskId: string) {
-    // Find the habit being removed
+  async function handleRemove(taskId: string, reason: string) {
     const task = activeTasks.find((t) => t.id === taskId);
     if (!task) return;
 
+    const archivedTask: ArchivedHabit = { ...task, removal_reason: reason || null };
+
     // Optimistic update: move it from active → archived immediately
     setActiveTasks((prev) => prev.filter((t) => t.id !== taskId));
-    setArchivedTasks((prev) => [task, ...prev]);
+    setArchivedTasks((prev) => [archivedTask, ...prev]);
 
     // Persist to Supabase in the background
-    await deleteHabit(taskId);
+    await deleteHabit(taskId, reason || undefined);
   }
 
   const habits = tab === "active" ? activeTasks : archivedTasks;
@@ -83,14 +85,20 @@ export function HabitsTabs({
           {habits.map((task) => {
             const colorClass =
               categoryColors[task.category ?? ""] ?? "bg-gray-100 text-gray-500";
+            const reason = "removal_reason" in task ? task.removal_reason : null;
             return (
-              <li key={task.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${colorClass}`}>
+              <li key={task.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5 ${colorClass}`}>
                   {task.category ?? "General"}
                 </span>
-                <span className="text-sm text-gray-700 flex-1">{task.task_name}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="text-sm text-gray-700">{task.task_name}</span>
+                  {reason && (
+                    <span className="block text-xs text-gray-400 italic mt-0.5">{reason}</span>
+                  )}
+                </span>
                 {tab === "active" && (
-                  <DeleteHabitButton taskName={task.task_name} onConfirm={() => handleRemove(task.id)} />
+                  <DeleteHabitButton taskName={task.task_name} onConfirm={(reason) => handleRemove(task.id, reason)} />
                 )}
               </li>
             );

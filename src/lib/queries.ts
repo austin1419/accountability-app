@@ -220,10 +220,10 @@ export async function addHabit(
 // The row and its task_logs are preserved for history;
 // the habit simply stops appearing in the client app and
 // active compliance counts.
-export async function deleteHabit(taskId: string): Promise<{ error?: string }> {
+export async function deleteHabit(taskId: string, reason?: string): Promise<{ error?: string }> {
   const { error } = await supabase
     .from("tasks")
-    .update({ is_active: false })
+    .update({ is_active: false, removal_reason: reason ?? null })
     .eq("id", taskId);
   if (error) {
     console.error("[deleteHabit] soft-delete failed:", error.message);
