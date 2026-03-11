@@ -13,6 +13,7 @@ import Link from "next/link";
 import { fetchClientDetail } from "@/lib/server-queries";
 import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
+import { EditWeightsButton } from "./EditWeightsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -139,6 +140,13 @@ export default async function ClientDetailPage({
               )}
 
               {/* Weight stats */}
+              {client.goal && (
+                <EditWeightsButton
+                  goalId={client.goal.id}
+                  currentWeight={client.goal.current_weight}
+                  goalWeight={client.goal.goal_weight}
+                />
+              )}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Starting",  val: client.goal.start_weight   },

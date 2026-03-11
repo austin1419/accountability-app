@@ -21,6 +21,7 @@ type FormState = {
   goalName:       string;
   goalDate:       string;
   startingWeight: string;
+  goalWeight:     string;
 };
 
 const EMPTY: FormState = {
@@ -31,6 +32,7 @@ const EMPTY: FormState = {
   goalName:       "",
   goalDate:       "",
   startingWeight: "",
+  goalWeight:     "",
 };
 
 export function AddClientModal() {
@@ -65,9 +67,15 @@ export function AddClientModal() {
       return;
     }
 
-    const weight = form.startingWeight ? parseFloat(form.startingWeight) : null;
+    const weight     = form.startingWeight ? parseFloat(form.startingWeight) : null;
+    const goalWeight = form.goalWeight     ? parseFloat(form.goalWeight)     : null;
+
     if (form.startingWeight && (isNaN(weight!) || weight! < 50 || weight! > 600)) {
       setErrors({ startingWeight: "Enter a valid weight (50–600 lbs)" });
+      return;
+    }
+    if (form.goalWeight && (isNaN(goalWeight!) || goalWeight! < 50 || goalWeight! > 600)) {
+      setErrors({ goalWeight: "Enter a valid weight (50–600 lbs)" });
       return;
     }
 
@@ -80,6 +88,7 @@ export function AddClientModal() {
       goalName:       form.goalName.trim(),
       goalDate:       form.goalDate,
       startingWeight: weight,
+      goalWeight,
     });
     setLoading(false);
 
@@ -213,22 +222,24 @@ export function AddClientModal() {
                 {errors.goalName && <p className="text-xs text-red-500 mt-1">{errors.goalName}</p>}
               </div>
 
-              {/* Goal date + starting weight */}
+              {/* Goal date */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Target Date <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={form.goalDate}
+                  onChange={(e) => set("goalDate", e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                    errors.goalDate ? "border-red-300 bg-red-50" : "border-gray-200"
+                  }`}
+                />
+                {errors.goalDate && <p className="text-xs text-red-500 mt-1">{errors.goalDate}</p>}
+              </div>
+
+              {/* Starting weight + goal weight */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Target Date <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.goalDate}
-                    onChange={(e) => set("goalDate", e.target.value)}
-                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      errors.goalDate ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                  />
-                  {errors.goalDate && <p className="text-xs text-red-500 mt-1">{errors.goalDate}</p>}
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Starting Weight <span className="text-gray-400 font-normal">(lbs, optional)</span>
@@ -238,12 +249,28 @@ export function AddClientModal() {
                     inputMode="decimal"
                     value={form.startingWeight}
                     onChange={(e) => set("startingWeight", e.target.value)}
-                    placeholder="215"
+                    placeholder="220"
                     className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                       errors.startingWeight ? "border-red-300 bg-red-50" : "border-gray-200"
                     }`}
                   />
                   {errors.startingWeight && <p className="text-xs text-red-500 mt-1">{errors.startingWeight}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Goal Weight <span className="text-gray-400 font-normal">(lbs, optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={form.goalWeight}
+                    onChange={(e) => set("goalWeight", e.target.value)}
+                    placeholder="210"
+                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                      errors.goalWeight ? "border-red-300 bg-red-50" : "border-gray-200"
+                    }`}
+                  />
+                  {errors.goalWeight && <p className="text-xs text-red-500 mt-1">{errors.goalWeight}</p>}
                 </div>
               </div>
 

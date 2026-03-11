@@ -18,6 +18,7 @@ export async function createClientWithInvite(data: {
   goalName:       string;
   goalDate:       string;
   startingWeight: number | null;
+  goalWeight:     number | null;
 }): Promise<{ error?: string }> {
   const supabase = createAdminClient();
 
@@ -46,9 +47,11 @@ export async function createClientWithInvite(data: {
     .from("goals")
     .insert({
       user_id:      newUser.id,
-      goal_name:    data.goalName,
-      goal_date:    data.goalDate,
-      start_weight: data.startingWeight,
+      goal_name:      data.goalName,
+      goal_date:      data.goalDate,
+      start_weight:   data.startingWeight,
+      goal_weight:    data.goalWeight,
+      current_weight: data.startingWeight, // current = starting on day one
     });
 
   if (goalError) {
