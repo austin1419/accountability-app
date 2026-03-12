@@ -97,7 +97,7 @@ export async function createClientWithInvite(data: {
   // This anchors the chart's leftmost point and ensures the graph
   // renders as soon as the client logs their first value.
   // All seed failures are non-fatal — goal creation is not rolled back.
-  const seedDate = new Date().toISOString().split("T")[0];
+  const seedDate = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
 
   if (data.goalCategory === "weight" && data.startingWeight != null) {
     const { error: seedError } = await supabase.from("weight_logs").upsert(
