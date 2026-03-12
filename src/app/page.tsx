@@ -134,41 +134,25 @@ export default async function ClientDashboard({
 
         {/* ── Goal Card ────────────────────────────── */}
         <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
+          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
             Your Goal
           </p>
           {goal ? (
             <>
-              <p className="text-base font-semibold text-[#DDD5C0] leading-snug">
-                {goal.goal_name}
+              <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
+                {goal.goal_category === "weight"
+                  ? "Weight"
+                  : goal.goal_category === "body_composition"
+                  ? "Body Composition"
+                  : (goal.performance_metric_name ?? "Performance")}
               </p>
-              {goal.goal_category === "weight" && goal.start_weight != null && goal.current_weight != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
-                  <span>Started at <strong className="text-[#DDD5C0]">{goal.start_weight} lbs</strong></span>
-                  <span className="text-[#252525]">·</span>
-                  <span>Currently <strong className="text-[#DDD5C0]">{goal.current_weight} lbs</strong></span>
-                </div>
-              )}
-              {goal.goal_category === "body_composition" && goal.current_body_fat != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
-                  <span>Body fat: <strong className="text-[#DDD5C0]">{goal.current_body_fat}%</strong></span>
-                  {goal.current_smm != null && (
-                    <>
-                      <span className="text-[#252525]">·</span>
-                      <span>SMM: <strong className="text-[#DDD5C0]">{goal.current_smm} lbs</strong></span>
-                    </>
-                  )}
-                </div>
-              )}
-              {goal.goal_category === "performance" && goal.current_performance_value != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
-                  <span>
-                    {goal.performance_metric_name ?? "Current"}:{" "}
-                    <strong className="text-[#DDD5C0]">
-                      {goal.current_performance_value}{goal.performance_unit ? ` ${goal.performance_unit}` : ""}
-                    </strong>
-                  </span>
-                </div>
+              <p className="text-base font-semibold text-[#DDD5C0] leading-snug">{goal.goal_name}</p>
+              {goal.goal_date && (
+                <p className="text-xs text-[#9A9080] mt-1">
+                  {new Date(goal.goal_date + "T00:00:00").toLocaleDateString("en-US", {
+                    month: "short", day: "numeric", year: "numeric",
+                  })}
+                </p>
               )}
             </>
           ) : (
@@ -191,69 +175,67 @@ export default async function ClientDashboard({
                 </div>
               </div>
 
-              {/* Weight details */}
-              {goal.goal_category === "weight" && goal.start_weight != null && goal.current_weight != null && (
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <p className="text-xs text-[#9A9080]">Lost so far</p>
-                    <p className="text-lg font-bold text-[#B8933A]">
-                      {((goal.start_weight ?? 0) - (goal.current_weight ?? 0)).toFixed(1)} lbs
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[#9A9080]">Still to go</p>
-                    <p className="text-lg font-bold text-[#DDD5C0]">
-                      {((goal.current_weight ?? 0) - (goal.goal_weight ?? 0)).toFixed(1)} lbs
-                    </p>
-                  </div>
+              {/* Weight: Starting → Current → Goal */}
+              {goal.goal_category === "weight" && (
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: "Starting", value: goal.start_weight   != null ? `${goal.start_weight} lbs`   : "—", color: "text-[#9A9080]" },
+                    { label: "Current",  value: goal.current_weight != null ? `${goal.current_weight} lbs` : "—", color: "text-[#DDD5C0]" },
+                    { label: "Goal",     value: goal.goal_weight    != null ? `${goal.goal_weight} lbs`    : "—", color: "text-[#B8933A]" },
+                  ].map((row) => (
+                    <div key={row.label}>
+                      <p className="text-[10px] text-[#807868]">{row.label}</p>
+                      <p className={`text-sm font-semibold ${row.color}`}>{row.value}</p>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {/* Body composition details */}
+              {/* Body composition: two groups (BF + SMM), each Starting → Current → Goal */}
               {goal.goal_category === "body_composition" && (
                 <div className="flex flex-col gap-3">
-                  {goal.current_body_fat != null && goal.goal_body_fat != null && (
-                    <div>
-                      <p className="text-xs text-[#9A9080]">Body fat</p>
-                      <p className="text-base font-bold text-[#DDD5C0]">
-                        {goal.current_body_fat}% → {goal.goal_body_fat}%
-                      </p>
-                    </div>
-                  )}
-                  {goal.current_smm != null && goal.goal_smm != null && (
-                    <div>
-                      <p className="text-xs text-[#9A9080]">Muscle (SMM)</p>
-                      <p className="text-base font-bold text-[#DDD5C0]">
-                        {goal.current_smm} → {goal.goal_smm} lbs
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-[#C04040] mb-1">Body Fat</p>
+                    {[
+                      { label: "Starting", value: goal.starting_body_fat != null ? `${goal.starting_body_fat}%` : "—" },
+                      { label: "Current",  value: goal.current_body_fat  != null ? `${goal.current_body_fat}%`  : "—" },
+                      { label: "Goal",     value: goal.goal_body_fat     != null ? `${goal.goal_body_fat}%`     : "—" },
+                    ].map((row) => (
+                      <div key={row.label} className="flex justify-between gap-3">
+                        <p className="text-[10px] text-[#807868]">{row.label}</p>
+                        <p className="text-xs font-semibold text-[#DDD5C0]">{row.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-[#B89B3A] mb-1">SMM</p>
+                    {[
+                      { label: "Starting", value: goal.starting_smm != null ? `${goal.starting_smm} lbs` : "—" },
+                      { label: "Current",  value: goal.current_smm  != null ? `${goal.current_smm} lbs`  : "—" },
+                      { label: "Goal",     value: goal.goal_smm     != null ? `${goal.goal_smm} lbs`     : "—" },
+                    ].map((row) => (
+                      <div key={row.label} className="flex justify-between gap-3">
+                        <p className="text-[10px] text-[#807868]">{row.label}</p>
+                        <p className="text-xs font-semibold text-[#DDD5C0]">{row.value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Performance details */}
+              {/* Performance: Starting → Current → Goal */}
               {goal.goal_category === "performance" && (
-                <div className="flex flex-col gap-3">
-                  {goal.current_performance_value != null && (
-                    <div>
-                      <p className="text-xs text-[#9A9080]">
-                        {goal.performance_metric_name ?? "Current"}
-                      </p>
-                      <p className="text-lg font-bold text-[#DDD5C0]">
-                        {goal.current_performance_value}
-                        {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
-                      </p>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: "Starting", value: goal.starting_performance_value != null ? `${goal.starting_performance_value}${goal.performance_unit ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#9A9080]" },
+                    { label: "Current",  value: goal.current_performance_value  != null ? `${goal.current_performance_value}${goal.performance_unit  ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#DDD5C0]" },
+                    { label: "Goal",     value: goal.goal_performance_value     != null ? `${goal.goal_performance_value}${goal.performance_unit     ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#B8933A]" },
+                  ].map((row) => (
+                    <div key={row.label}>
+                      <p className="text-[10px] text-[#807868]">{row.label}</p>
+                      <p className={`text-sm font-semibold ${row.color}`}>{row.value}</p>
                     </div>
-                  )}
-                  {goal.goal_performance_value != null && (
-                    <div>
-                      <p className="text-xs text-[#9A9080]">Goal</p>
-                      <p className="text-lg font-bold text-[#DDD5C0]">
-                        {goal.goal_performance_value}
-                        {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
-                      </p>
-                    </div>
-                  )}
+                  ))}
                 </div>
               )}
 

@@ -78,6 +78,7 @@ export type DashboardData = {
   clientName: string;
   goal: (GoalMetrics & {
     goal_name:    string;
+    goal_date:    string | null;
     goalProgress: number;
   }) | null;
   today: {
@@ -211,6 +212,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     goal: goal
       ? {
           goal_name:    goal.goal_name,
+          goal_date:    goal.goal_date ?? null,
           goalProgress: computeGoalProgress(goal as GoalMetrics),
           goal_category: goal.goal_category,
           start_weight:               goal.start_weight,

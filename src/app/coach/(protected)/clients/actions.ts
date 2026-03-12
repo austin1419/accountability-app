@@ -56,7 +56,8 @@ export async function createClientWithInvite(data: {
   }
 
   // ── 2. Create the client's first goal ─────────────────────────
-  const { error: goalError } = await supabase
+  // Select the id back so we can seed the starting progress log entry below.
+  const { data: newGoal, error: goalError } = await supabase
     .from("goals")
     .insert({
       user_id:       newUser.id,
@@ -81,13 +82,53 @@ export async function createClientWithInvite(data: {
       starting_performance_value: data.startingPerformanceValue,
       goal_performance_value:     data.goalPerformanceValue,
       current_performance_value:  data.startingPerformanceValue,
-    });
+    })
+    .select("id")
+    .single();
 
-  if (goalError) {
+  if (goalError || !newGoal) {
     // Roll back the user row so there's no orphan record
     await supabase.from("users").delete().eq("id", newUser.id);
-    console.error("[createClientWithInvite] goals insert failed:", goalError.message);
+    console.error("[createClientWithInvite] goals insert failed:", goalError?.message);
     return { error: "Failed to save goal. Please try again." };
+  }
+
+  // ── 2b. Seed the starting log entry ───────────────────────────
+  // This anchors the chart's leftmost point and ensures the graph
+  // renders as soon as the client logs their first value.
+  // All seed failures are non-fatal — goal creation is not rolled back.
+  const seedDate = new Date().toISOString().split("T")[0];
+
+  if (data.goalCategory === "weight" && data.startingWeight != null) {
+    const { error: seedError } = await supabase.from("weight_logs").upsert(
+      { user_id: newUser.id, weight: data.startingWeight, logged_at: seedDate },
+      { onConflict: "user_id,logged_at" },
+    );
+    if (seedError) console.error("[createClientWithInvite] failed to seed weight log:", seedError.message);
+  }
+
+  if (
+    data.goalCategory === "body_composition" &&
+    (data.startingBodyFat != null || data.startingSmm != null)
+  ) {
+    const { error: seedError } = await supabase.from("progress_logs").insert({
+      user_id:   newUser.id,
+      goal_id:   newGoal.id,
+      logged_at: seedDate,
+      body_fat:  data.startingBodyFat ?? null,
+      smm:       data.startingSmm     ?? null,
+    });
+    if (seedError) console.error("[createClientWithInvite] failed to seed body comp progress log:", seedError.message);
+  }
+
+  if (data.goalCategory === "performance" && data.startingPerformanceValue != null) {
+    const { error: seedError } = await supabase.from("progress_logs").insert({
+      user_id:           newUser.id,
+      goal_id:           newGoal.id,
+      logged_at:         seedDate,
+      performance_value: data.startingPerformanceValue,
+    });
+    if (seedError) console.error("[createClientWithInvite] failed to seed performance progress log:", seedError.message);
   }
 
   // ── 3. Derive the site URL for the invite redirect ────────────
