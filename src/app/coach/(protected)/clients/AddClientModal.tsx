@@ -122,15 +122,16 @@ export function AddClientModal() {
   }
 
   const inputCls = (field: string) =>
-    `w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-      errors[field] ? "border-red-300 bg-red-50" : "border-gray-200"
+    `w-full border rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] ${
+      errors[field] ? "border-[#7A1E1E]" : "border-[#252525]"
     }`;
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold bg-[#B8933A] hover:bg-[#C9A44A] text-[#0D0D0D] px-3 py-1.5 rounded transition-colors uppercase tracking-widest"
+        style={{ fontFamily: "'Cinzel', serif" }}
       >
         <span className="text-sm leading-none">+</span> Add Client
       </button>
@@ -141,12 +142,12 @@ export function AddClientModal() {
           onClick={handleClose}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            className="bg-[#141414] rounded border border-[#252525] w-full max-w-lg max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white">
-              <h2 className="text-base font-semibold text-gray-900">Add Client</h2>
-              <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">×</button>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#252525] sticky top-0 bg-[#141414]">
+              <h2 className="text-base font-semibold text-[#F4EEE4]" style={{ fontFamily: "'Cinzel', serif" }}>Add Client</h2>
+              <button onClick={handleClose} className="text-[#9A9080] hover:text-[#DDD5C0] text-xl leading-none" aria-label="Close">×</button>
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
@@ -154,61 +155,62 @@ export function AddClientModal() {
               {/* Name */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">First Name <span className="text-red-400">*</span></label>
+                  <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>First Name <span className="text-[#7A1E1E]">*</span></label>
                   <input type="text" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="Jane" className={inputCls("firstName")} />
-                  {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
+                  {errors.firstName && <p className="text-xs text-[#7A1E1E] mt-1">{errors.firstName}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Last Name <span className="text-red-400">*</span></label>
+                  <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Last Name <span className="text-[#7A1E1E]">*</span></label>
                   <input type="text" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Smith" className={inputCls("lastName")} />
-                  {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
+                  {errors.lastName && <p className="text-xs text-[#7A1E1E] mt-1">{errors.lastName}</p>}
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email <span className="text-red-400">*</span></label>
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Email <span className="text-[#7A1E1E]">*</span></label>
                 <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane@example.com" className={inputCls("email")} />
-                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-[#7A1E1E] mt-1">{errors.email}</p>}
               </div>
 
               {/* Phone */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
-                <input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(555) 555-5555" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Phone <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
+                <input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(555) 555-5555" className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]" />
               </div>
 
               {/* Divider */}
-              <div className="border-t border-gray-100 pt-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">First Goal</p>
+              <div className="border-t border-[#252525] pt-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#807868]" style={{ fontFamily: "'Cinzel', serif" }}>First Goal</p>
               </div>
 
               {/* Goal name + date */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Goal <span className="text-red-400">*</span></label>
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal <span className="text-[#7A1E1E]">*</span></label>
                 <input type="text" value={form.goalName} onChange={(e) => set("goalName", e.target.value)} placeholder="Lose 30 lbs by summer" className={inputCls("goalName")} />
-                {errors.goalName && <p className="text-xs text-red-500 mt-1">{errors.goalName}</p>}
+                {errors.goalName && <p className="text-xs text-[#7A1E1E] mt-1">{errors.goalName}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Target Date <span className="text-red-400">*</span></label>
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Target Date <span className="text-[#7A1E1E]">*</span></label>
                 <input type="date" value={form.goalDate} onChange={(e) => set("goalDate", e.target.value)} className={inputCls("goalDate")} />
-                {errors.goalDate && <p className="text-xs text-red-500 mt-1">{errors.goalDate}</p>}
+                {errors.goalDate && <p className="text-xs text-[#7A1E1E] mt-1">{errors.goalDate}</p>}
               </div>
 
               {/* Goal category */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Goal Category</label>
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal Category</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(["weight", "body_composition", "performance"] as const).map((cat) => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => set("goalCategory", cat)}
-                      className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${
+                      className={`px-3 py-2 text-xs font-semibold rounded border transition-colors ${
                         form.goalCategory === cat
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                          ? "bg-[#B8933A] text-[#0D0D0D] border-[#B8933A]"
+                          : "bg-[#1A1A1A] text-[#9A9080] border-[#252525] hover:border-[#B8933A]"
                       }`}
+                      style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       {cat === "weight" ? "Weight" : cat === "body_composition" ? "Body Comp" : "Performance"}
                     </button>
@@ -220,14 +222,14 @@ export function AddClientModal() {
               {form.goalCategory === "weight" && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Starting Weight <span className="text-gray-400 font-normal">(lbs, optional)</span></label>
+                    <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Starting Weight <span className="text-[#807868] font-normal normal-case">(lbs, optional)</span></label>
                     <input type="number" inputMode="decimal" value={form.startingWeight} onChange={(e) => set("startingWeight", e.target.value)} placeholder="220" className={inputCls("startingWeight")} />
-                    {errors.startingWeight && <p className="text-xs text-red-500 mt-1">{errors.startingWeight}</p>}
+                    {errors.startingWeight && <p className="text-xs text-[#7A1E1E] mt-1">{errors.startingWeight}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Goal Weight <span className="text-gray-400 font-normal">(lbs, optional)</span></label>
+                    <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal Weight <span className="text-[#807868] font-normal normal-case">(lbs, optional)</span></label>
                     <input type="number" inputMode="decimal" value={form.goalWeight} onChange={(e) => set("goalWeight", e.target.value)} placeholder="190" className={inputCls("goalWeight")} />
-                    {errors.goalWeight && <p className="text-xs text-red-500 mt-1">{errors.goalWeight}</p>}
+                    {errors.goalWeight && <p className="text-xs text-[#7A1E1E] mt-1">{errors.goalWeight}</p>}
                   </div>
                 </div>
               )}
@@ -237,21 +239,21 @@ export function AddClientModal() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting Body Fat % <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Starting Body Fat % <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
                       <input type="number" inputMode="decimal" value={form.startingBodyFat} onChange={(e) => set("startingBodyFat", e.target.value)} placeholder="28.0" className={inputCls("startingBodyFat")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal Body Fat %</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal Body Fat %</label>
                       <input type="number" inputMode="decimal" value={form.goalBodyFat} onChange={(e) => set("goalBodyFat", e.target.value)} placeholder="20.0" className={inputCls("goalBodyFat")} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting SMM (lbs) <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Starting SMM (lbs) <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
                       <input type="number" inputMode="decimal" value={form.startingSmm} onChange={(e) => set("startingSmm", e.target.value)} placeholder="75.0" className={inputCls("startingSmm")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal SMM (lbs)</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal SMM (lbs)</label>
                       <input type="number" inputMode="decimal" value={form.goalSmm} onChange={(e) => set("goalSmm", e.target.value)} placeholder="82.0" className={inputCls("goalSmm")} />
                     </div>
                   </div>
@@ -263,24 +265,25 @@ export function AddClientModal() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Metric Name</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Metric Name</label>
                       <input type="text" value={form.performanceMetricName} onChange={(e) => set("performanceMetricName", e.target.value)} placeholder="Bench Press" className={inputCls("performanceMetricName")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Unit</label>
                       <input type="text" value={form.performanceUnit} onChange={(e) => set("performanceUnit", e.target.value)} placeholder="lbs" className={inputCls("performanceUnit")} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-2">Direction</label>
+                    <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>Direction</label>
                     <div className="grid grid-cols-2 gap-2">
                       {(["increase", "decrease"] as const).map((dir) => (
                         <button key={dir} type="button" onClick={() => set("performanceDirection", dir)}
-                          className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${
+                          className={`px-3 py-2 text-xs font-semibold rounded border transition-colors ${
                             form.performanceDirection === dir
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-                          }`}>
+                              ? "bg-[#B8933A] text-[#0D0D0D] border-[#B8933A]"
+                              : "bg-[#1A1A1A] text-[#9A9080] border-[#252525] hover:border-[#B8933A]"
+                          }`}
+                          style={{ fontFamily: "'Cinzel', serif" }}>
                           {dir === "increase" ? "↑ Increase" : "↓ Decrease"}
                         </button>
                       ))}
@@ -288,22 +291,22 @@ export function AddClientModal() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting Value</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Starting Value</label>
                       <input type="number" inputMode="decimal" value={form.startingPerformanceValue} onChange={(e) => set("startingPerformanceValue", e.target.value)} placeholder="135" className={inputCls("startingPerformanceValue")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal Value</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Goal Value</label>
                       <input type="number" inputMode="decimal" value={form.goalPerformanceValue} onChange={(e) => set("goalPerformanceValue", e.target.value)} placeholder="225" className={inputCls("goalPerformanceValue")} />
                     </div>
                   </div>
                 </div>
               )}
 
-              {errors.submit && <p className="text-sm text-red-500">{errors.submit}</p>}
+              {errors.submit && <p className="text-sm text-[#7A1E1E]">{errors.submit}</p>}
 
               <div className="flex items-center justify-end gap-3 pt-1">
-                <button type="button" onClick={handleClose} className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
-                <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+                <button type="button" onClick={handleClose} className="text-sm text-[#9A9080] hover:text-[#DDD5C0] px-4 py-2 rounded transition-colors">Cancel</button>
+                <button type="submit" disabled={loading} className="bg-[#B8933A] hover:bg-[#C9A44A] disabled:opacity-60 text-[#0D0D0D] text-xs font-semibold px-5 py-2 rounded transition-colors uppercase tracking-widest" style={{ fontFamily: "'Cinzel', serif" }}>
                   {loading ? "Creating & sending invite…" : "Add Client & Send Invite"}
                 </button>
               </div>

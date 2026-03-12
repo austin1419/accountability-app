@@ -40,23 +40,46 @@ export default function CoachLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-5">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col items-center justify-center px-5">
 
       {/* Brand */}
-      <div className="mb-8 text-center">
-        <p className="text-2xl font-bold text-white tracking-tight">
-          Habit<span className="text-blue-400">OS</span>
-        </p>
-        <p className="text-xs text-gray-500 mt-1">Coach Control Center</p>
+      <div className="mb-8 flex flex-col items-center gap-3">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+          <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
+          <polyline
+            style={{ filter: "drop-shadow(0 0 4px rgba(184,147,58,0.9))" }}
+            points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
+            stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+          />
+        </svg>
+        <div className="text-center">
+          <p
+            className="text-lg tracking-[0.3em] text-[#B8933A] uppercase leading-none"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 900 }}
+          >
+            PulseOS
+          </p>
+          <p
+            className="text-xs text-[#807868] mt-1 leading-none"
+            style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}
+          >
+            Coach Control Center
+          </p>
+        </div>
       </div>
 
       {/* Card */}
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-8">
-        <h1 className="text-base font-semibold text-white mb-6">Sign in to your account</h1>
+      <div className="bg-[#141414] border border-[#252525] rounded w-full max-w-sm p-8">
+        <h1
+          className="text-base text-[#F4EEE4] mb-6 tracking-wide"
+          style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+        >
+          Sign in to your account
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
               Email
             </label>
             <input
@@ -65,12 +88,12 @@ export default function CoachLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="coach@example.com"
               required
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#1A1A1A] border border-[#252525] rounded px-3 py-2.5 text-sm text-[#DDD5C0] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
               Password
             </label>
             <input
@@ -79,18 +102,19 @@ export default function CoachLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#1A1A1A] border border-[#252525] rounded px-3 py-2.5 text-sm text-[#DDD5C0] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]"
             />
           </div>
 
           {error && (
-            <p className="text-xs text-red-400">{error}</p>
+            <p className="text-xs text-[#7A1E1E]">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+            className="w-full bg-[#B8933A] hover:bg-[#C9A44A] disabled:opacity-60 text-[#0D0D0D] text-xs font-semibold py-2.5 rounded transition-colors uppercase tracking-widest"
+            style={{ fontFamily: "'Cinzel', serif" }}
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
