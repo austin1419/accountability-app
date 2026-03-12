@@ -21,7 +21,7 @@ function MetricChart({
   data,
   goalValue,
   goalLabel,
-  color = "#3b82f6",
+  color = "#B8933A",
 }: {
   data:       { date: string; value: number }[];
   goalValue?: number | null;
@@ -61,10 +61,10 @@ function MetricChart({
           <line
             x1={PAD_L} y1={toY(goalValue)}
             x2={SVG_W - PAD_R} y2={toY(goalValue)}
-            stroke="#22c55e" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8}
+            stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8}
           />
           {goalLabel && (
-            <text x={SVG_W - PAD_R} y={toY(goalValue) - 4} fontSize={9} fill="#22c55e" textAnchor="end">
+            <text x={SVG_W - PAD_R} y={toY(goalValue) - 4} fontSize={9} fill="#C9A44A" textAnchor="end">
               {goalLabel}
             </text>
           )}
@@ -76,7 +76,7 @@ function MetricChart({
       ))}
       {data.map((d, i) =>
         i % 2 === 0 ? (
-          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#9ca3af" textAnchor="middle">
+          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
             {shortDate(d.date)}
           </text>
         ) : null
@@ -112,17 +112,17 @@ function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: nu
   return (
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
       <line x1={PAD_L} y1={goalY} x2={SVG_W - PAD_R} y2={goalY}
-        stroke="#22c55e" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8} />
-      <text x={SVG_W - PAD_R} y={goalY - 4} fontSize={9} fill="#22c55e" textAnchor="end">
+        stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8} />
+      <text x={SVG_W - PAD_R} y={goalY - 4} fontSize={9} fill="#C9A44A" textAnchor="end">
         Goal {goalWeight} lbs
       </text>
-      <polyline points={points} fill="none" stroke="#3b82f6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke="#B8933A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {data.map((d, i) => (
-        <circle key={i} cx={toX(i)} cy={toY(d.weight)} r={3} fill="#3b82f6" />
+        <circle key={i} cx={toX(i)} cy={toY(d.weight)} r={3} fill="#B8933A" />
       ))}
       {data.map((d, i) =>
         i % 2 === 0 ? (
-          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#9ca3af" textAnchor="middle">
+          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
             {d.week}
           </text>
         ) : null
@@ -283,8 +283,8 @@ export default function ProgressPage() {
     setShowForm(false);
   }
 
-  const inputCls = "flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400";
-  const saveBtnCls = "w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl py-2 transition-colors";
+  const inputCls = "flex-1 border border-[#252525] rounded px-4 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]";
+  const saveBtnCls = "w-full bg-[#B8933A] hover:bg-[#C9A44A] text-[#0D0D0D] text-xs font-semibold rounded py-2.5 transition-colors uppercase tracking-widest";
 
   // ─────────────────────────────────────────────
   // WEIGHT VIEW
@@ -297,35 +297,38 @@ export default function ProgressPage() {
     const stillToGo     = currentWeight - goalWeight;
 
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
-        <header className="bg-white px-5 pt-10 pb-5 border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
-          <p className="text-sm text-gray-400 mt-1">Weekly weight tracking</p>
+      <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
+        <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
+          <h1
+            className="text-2xl text-[#F4EEE4] tracking-wide"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+          >Progress</h1>
+          <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
         </header>
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           <section className="grid grid-cols-3 gap-3">
             {[
-              { label: "Current", value: `${currentWeight} lbs`, color: "text-gray-900" },
-              { label: "Lost",    value: `${lostSoFar} lbs`,     color: "text-blue-600" },
-              { label: "To go",   value: `${stillToGo} lbs`,     color: "text-amber-600" },
+              { label: "Current", value: `${currentWeight} lbs`, color: "text-[#DDD5C0]" },
+              { label: "Lost",    value: `${lostSoFar} lbs`,     color: "text-[#B8933A]" },
+              { label: "To go",   value: `${stillToGo} lbs`,     color: "text-[#9A9080]" },
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
+              <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
                 <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
+                <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
               </div>
             ))}
           </section>
-          <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Weight Trend</p>
-              <span className="text-xs text-gray-400">Goal: {goalWeight} lbs</span>
+              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
+              <span className="text-xs text-[#9A9080]">Goal: {goalWeight} lbs</span>
             </div>
             <WeightChart data={weightLog} goalWeight={goalWeight} />
           </section>
-          <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Log Weight</p>
-              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-blue-500 hover:text-blue-600">
+              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log Weight</p>
+              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
                 {showForm ? "Cancel" : "+ Add entry"}
               </button>
             </div>
@@ -333,15 +336,15 @@ export default function ProgressPage() {
               <div className="mt-4 space-y-3">
                 <div className="flex gap-2">
                   <input type="number" inputMode="decimal" placeholder="e.g. 215" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} className={inputCls} />
-                  <span className="flex items-center text-sm text-gray-400 pr-1">lbs</span>
+                  <span className="flex items-center text-sm text-[#9A9080] pr-1">lbs</span>
                 </div>
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
                 <button onClick={handleLogWeight} className={saveBtnCls}>Save</button>
               </div>
             )}
           </section>
-          <section className="bg-white rounded-2xl px-5 shadow-sm border border-gray-100">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 py-4 border-b border-gray-50">Weight Log</p>
+          <section className="bg-[#141414] rounded px-5 border border-[#252525]">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Log</p>
             <ul>
               {[...weightLog].slice(-7).reverse().map((entry, i) => {
                 const sliceOffset = Math.max(0, weightLog.length - 7);
@@ -349,15 +352,15 @@ export default function ProgressPage() {
                 const prev        = weightLog[prevIndex];
                 const change    = prev ? entry.weight - prev.weight : null;
                 return (
-                  <li key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                    <span className="text-sm text-gray-600">{entry.week}</span>
+                  <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
+                    <span className="text-sm text-[#9A9080]">{entry.week}</span>
                     <div className="flex items-center gap-3">
                       {change !== null && (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${change < 0 ? "bg-green-50 text-green-600" : change > 0 ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400"}`}>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded border border-[#252525] bg-[#141414] ${change < 0 ? "text-[#B8933A]" : change > 0 ? "text-[#7A1E1E]" : "text-[#9A9080]"}`}>
                           {change > 0 ? "+" : ""}{change} lbs
                         </span>
                       )}
-                      <span className="text-sm font-semibold text-gray-800">{entry.weight} lbs</span>
+                      <span className="text-sm font-semibold text-[#DDD5C0]">{entry.weight} lbs</span>
                     </div>
                   </li>
                 );
@@ -378,10 +381,13 @@ export default function ProgressPage() {
     const smmSeries  = progressLog.filter((e) => e.smm     != null).map((e) => ({ date: e.logged_at, value: e.smm!     }));
 
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
-        <header className="bg-white px-5 pt-10 pb-5 border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
-          <p className="text-sm text-gray-400 mt-1">Body composition tracking</p>
+      <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
+        <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
+          <h1
+            className="text-2xl text-[#F4EEE4] tracking-wide"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+          >Progress</h1>
+          <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
         </header>
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           {/* Stats */}
@@ -390,45 +396,45 @@ export default function ProgressPage() {
               { label: "Body Fat", value: goalData?.current_body_fat != null ? `${goalData.current_body_fat}%` : "—",    sub: goalData?.goal_body_fat != null ? `Goal: ${goalData.goal_body_fat}%` : undefined },
               { label: "SMM",      value: goalData?.current_smm      != null ? `${goalData.current_smm} lbs` : "—",      sub: goalData?.goal_smm      != null ? `Goal: ${goalData.goal_smm} lbs` : undefined },
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
-                <p className="text-lg font-bold text-gray-900">{s.value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
-                {s.sub && <p className="text-xs text-gray-300 mt-0.5">{s.sub}</p>}
+              <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
+                <p className="text-lg font-bold text-[#DDD5C0]">{s.value}</p>
+                <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
+                {s.sub && <p className="text-xs text-[#807868] mt-0.5">{s.sub}</p>}
               </div>
             ))}
           </section>
 
           {/* Body fat chart */}
           {bfSeries.length >= 2 && (
-            <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Body Fat Trend</p>
+            <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Body Fat Trend</p>
               <MetricChart
                 data={bfSeries}
                 goalValue={goalData?.goal_body_fat}
                 goalLabel={goalData?.goal_body_fat != null ? `Goal ${goalData.goal_body_fat}%` : undefined}
-                color="#8b5cf6"
+                color="#B8933A"
               />
             </section>
           )}
 
           {/* SMM chart */}
           {smmSeries.length >= 2 && (
-            <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Muscle (SMM) Trend</p>
+            <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Muscle (SMM) Trend</p>
               <MetricChart
                 data={smmSeries}
                 goalValue={goalData?.goal_smm}
                 goalLabel={goalData?.goal_smm != null ? `Goal ${goalData.goal_smm} lbs` : undefined}
-                color="#3b82f6"
+                color="#C9A44A"
               />
             </section>
           )}
 
           {/* Log entry */}
-          <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Log Measurements</p>
-              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-blue-500 hover:text-blue-600">
+              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log Measurements</p>
+              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
                 {showForm ? "Cancel" : "+ Add entry"}
               </button>
             </div>
@@ -436,28 +442,28 @@ export default function ProgressPage() {
               <div className="mt-4 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Body Fat %</label>
-                    <input type="number" inputMode="decimal" placeholder="25.0" value={bfInput} onChange={(e) => setBfInput(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    <label className="block text-xs text-[#9A9080] mb-1">Body Fat %</label>
+                    <input type="number" inputMode="decimal" placeholder="25.0" value={bfInput} onChange={(e) => setBfInput(e.target.value)} className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">SMM (lbs)</label>
-                    <input type="number" inputMode="decimal" placeholder="78.0" value={smmInput} onChange={(e) => setSmmInput(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    <label className="block text-xs text-[#9A9080] mb-1">SMM (lbs)</label>
+                    <input type="number" inputMode="decimal" placeholder="78.0" value={smmInput} onChange={(e) => setSmmInput(e.target.value)} className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]" />
                   </div>
                 </div>
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
                 <button onClick={handleLogBodyComp} className={saveBtnCls}>Save</button>
               </div>
             )}
           </section>
 
           {/* History log */}
-          <section className="bg-white rounded-2xl px-5 shadow-sm border border-gray-100">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 py-4 border-b border-gray-50">History</p>
+          <section className="bg-[#141414] rounded px-5 border border-[#252525]">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>History</p>
             <ul>
               {[...progressLog].reverse().map((entry, i) => (
-                <li key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                  <span className="text-sm text-gray-600">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                  <div className="flex items-center gap-3 text-sm font-semibold text-gray-800">
+                <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
+                  <span className="text-sm text-[#9A9080]">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  <div className="flex items-center gap-3 text-sm font-semibold text-[#DDD5C0]">
                     {entry.body_fat != null && <span>{entry.body_fat}%</span>}
                     {entry.smm      != null && <span>{entry.smm} lbs SMM</span>}
                   </div>
@@ -479,10 +485,13 @@ export default function ProgressPage() {
   const unitLabel  = goalData?.performance_unit ?? "";
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
-      <header className="bg-white px-5 pt-10 pb-5 border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
-        <p className="text-sm text-gray-400 mt-1">{metricName} tracking</p>
+    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
+      <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
+        <h1
+          className="text-2xl text-[#F4EEE4] tracking-wide"
+          style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+        >Progress</h1>
+        <p className="text-sm text-[#9A9080] mt-1">{metricName} tracking</p>
       </header>
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {/* Stats */}
@@ -506,9 +515,9 @@ export default function ProgressPage() {
                 { label: "Improved", value: improved != null ? `+${improved}${unitLabel ? ` ${unitLabel}` : ""}` : "—" },
                 { label: "To Goal",  value: fmt(toGoal)   },
               ].map((s) => (
-                <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
-                  <p className="text-lg font-bold text-gray-900">{s.value}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
+                <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
+                  <p className="text-lg font-bold text-[#DDD5C0]">{s.value}</p>
+                  <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
                 </div>
               ))}
             </section>
@@ -517,25 +526,25 @@ export default function ProgressPage() {
 
         {/* Chart */}
         {perfSeries.length >= 2 && (
-          <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">{metricName} Trend</p>
-              {unitLabel && <span className="text-xs text-gray-400">{unitLabel}</span>}
+              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>{metricName} Trend</p>
+              {unitLabel && <span className="text-xs text-[#9A9080]">{unitLabel}</span>}
             </div>
             <MetricChart
               data={perfSeries}
               goalValue={goalData?.goal_performance_value}
               goalLabel={goalData?.goal_performance_value != null ? `Goal ${goalData.goal_performance_value}${unitLabel ? ` ${unitLabel}` : ""}` : undefined}
-              color="#f59e0b"
+              color="#B8933A"
             />
           </section>
         )}
 
         {/* Log entry */}
-        <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Log {metricName}</p>
-            <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-blue-500 hover:text-blue-600">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log {metricName}</p>
+            <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
               {showForm ? "Cancel" : "+ Add entry"}
             </button>
           </div>
@@ -543,22 +552,22 @@ export default function ProgressPage() {
             <div className="mt-4 space-y-3">
               <div className="flex gap-2">
                 <input type="number" inputMode="decimal" placeholder="e.g. 185" value={perfInput} onChange={(e) => setPerfInput(e.target.value)} className={inputCls} />
-                {unitLabel && <span className="flex items-center text-sm text-gray-400 pr-1">{unitLabel}</span>}
+                {unitLabel && <span className="flex items-center text-sm text-[#9A9080] pr-1">{unitLabel}</span>}
               </div>
-              {error && <p className="text-xs text-red-500">{error}</p>}
+              {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
               <button onClick={handleLogPerformance} className={saveBtnCls}>Save</button>
             </div>
           )}
         </section>
 
         {/* History log */}
-        <section className="bg-white rounded-2xl px-5 shadow-sm border border-gray-100">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 py-4 border-b border-gray-50">History</p>
+        <section className="bg-[#141414] rounded px-5 border border-[#252525]">
+          <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>History</p>
           <ul>
             {[...progressLog].reverse().map((entry, i) => (
-              <li key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                <span className="text-sm text-gray-600">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                <span className="text-sm font-semibold text-gray-800">
+              <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
+                <span className="text-sm text-[#9A9080]">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                <span className="text-sm font-semibold text-[#DDD5C0]">
                   {entry.performance_value}{unitLabel ? ` ${unitLabel}` : ""}
                 </span>
               </li>

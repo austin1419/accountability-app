@@ -54,7 +54,7 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
         {/* Left arrow — always enabled */}
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 text-2xl transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A] text-2xl transition-colors"
           aria-label="Previous day"
         >
           ‹
@@ -63,7 +63,8 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
         {/* Date label — opens calendar */}
         <button
           onClick={() => setCalendarOpen(true)}
-          className="flex-1 text-center text-sm font-semibold text-gray-800 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+          className="flex-1 text-center text-sm font-semibold text-[#DDD5C0] hover:text-[#B8933A] transition-colors px-2 py-1 rounded hover:bg-[#1A1A1A]"
+          style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}
           aria-label="Open calendar"
         >
           {formatLabel(selectedDate, todayDate)}
@@ -73,10 +74,10 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
         <button
           onClick={() => navigate(1)}
           disabled={isToday}
-          className={`w-9 h-9 flex items-center justify-center rounded-full text-2xl transition-colors ${
+          className={`w-9 h-9 flex items-center justify-center rounded text-2xl transition-colors ${
             isToday
-              ? "text-gray-200 cursor-not-allowed"
-              : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+              ? "text-[#2E2E2E] cursor-not-allowed"
+              : "text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A]"
           }`}
           aria-label="Next day"
         >

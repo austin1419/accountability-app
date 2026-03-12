@@ -1,26 +1,37 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── PULSE Color Palette ─────────────────────────── */
+  --pulse-obsidian:       #0D0D0D;
+  --pulse-deep-black:     #111111;
+  --pulse-card:           #141414;
+  --pulse-border:         #252525;
+  --pulse-border-active:  #2E2E2E;
+  --pulse-gold:           #B8933A;
+  --pulse-gold-mid:       #C9A44A;
+  --pulse-gold-light:     #D4A84B;
+  --pulse-gold-pale:      #E8CC88;
+  --pulse-crimson:        #7A1E1E;
+  --pulse-crimson-mid:    #8C2424;
+  --pulse-stone:          #7A7060;
+  --pulse-stone-light:    #9A9080;
+  --pulse-text-primary:   #DDD5C0;
+  --pulse-text-mid:       #B8B0A0;
+  --pulse-text-dim:       #807868;
+  --pulse-white-warm:     #F4EEE4;
+  /* ── Tailwind theme aliases ───────────────────────── */
+  --background: #111111;
+  --foreground:  #DDD5C0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:  var(--pulse-deep-black);
+  color:       var(--pulse-text-primary);
+  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
 }

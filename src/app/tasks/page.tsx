@@ -22,21 +22,26 @@ export default function TasksPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
       {/* ── Header ───────────────────────────────── */}
-      <header className="bg-white px-5 pt-10 pb-5 border-b border-gray-100">
-        <p className="text-sm text-gray-400">{today}</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">Today&apos;s Tasks</h1>
+      <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
+        <p className="text-sm text-[#9A9080]">{today}</p>
+        <h1
+          className="text-2xl text-[#F4EEE4] mt-1 tracking-wide"
+          style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+        >
+          Today&apos;s Reckoning
+        </h1>
 
         {/* Compliance summary line */}
-        <p className="text-sm text-gray-500 mt-1">
-          <span className="font-semibold text-gray-800">{completedCount}</span> of{" "}
-          <span className="font-semibold text-gray-800">{totalCount}</span> complete
+        <p className="text-sm text-[#9A9080] mt-1">
+          <span className="font-semibold text-[#DDD5C0]">{completedCount}</span> of{" "}
+          <span className="font-semibold text-[#DDD5C0]">{totalCount}</span> complete
           {" · "}
           <span
             className={`font-semibold ${
-              compliancePercent >= 70 ? "text-green-600" : "text-amber-500"
+              compliancePercent >= 70 ? "text-[#B8933A]" : "text-[#7A1E1E]"
             }`}
           >
             {compliancePercent}%
@@ -44,10 +49,10 @@ export default function TasksPage() {
         </p>
 
         {/* Thin progress bar */}
-        <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="mt-3 h-1.5 bg-[#252525] rounded overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              compliancePercent >= 70 ? "bg-green-500" : "bg-amber-400"
+            className={`h-full rounded transition-all duration-500 ${
+              compliancePercent >= 70 ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
             }`}
             style={{ width: `${compliancePercent}%` }}
           />
@@ -57,11 +62,14 @@ export default function TasksPage() {
       {/* ── Task sections ────────────────────────── */}
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
 
-        {/* Show a congratulations banner when everything is done */}
+        {/* Show a completion banner when everything is done */}
         {allDone && (
-          <div className="bg-green-50 border border-green-100 rounded-2xl p-4 text-center">
-            <p className="text-green-700 font-semibold text-sm">
-              All done today! Great work 🎉
+          <div className="bg-[#141414] border border-[#B8933A] rounded p-4 text-center">
+            <p
+              className="text-[#B8933A] text-sm"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              Faithful today. Now do it again tomorrow.
             </p>
           </div>
         )}
@@ -74,14 +82,17 @@ export default function TasksPage() {
           return (
             <section
               key={category}
-              className="bg-white rounded-2xl px-5 shadow-sm border border-gray-100"
+              className="bg-[#141414] rounded px-5 border border-[#252525]"
             >
               {/* Category header row */}
-              <div className="flex items-center justify-between py-3 border-b border-gray-50">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              <div className="flex items-center justify-between py-3 border-b border-[#252525]">
+                <p
+                  className="text-xs uppercase tracking-widest text-[#9A9080]"
+                  style={{ fontFamily: "'Cinzel', serif" }}
+                >
                   {category}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[#9A9080]">
                   {catDone}/{categoryTasks.length}
                 </p>
               </div>
