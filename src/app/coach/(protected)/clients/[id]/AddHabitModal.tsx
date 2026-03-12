@@ -65,7 +65,8 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold bg-[#B8933A] hover:bg-[#C9A44A] text-[#0D0D0D] px-3 py-1.5 rounded border border-[#B8933A] cursor-pointer transition-all duration-150 uppercase tracking-widest"
+        style={{ fontFamily: "'Cinzel', serif" }}
       >
         <span className="text-sm leading-none">+</span> Add Habit
       </button>
@@ -73,19 +74,19 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
       {/* Modal overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
           onClick={handleClose}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl w-full max-w-md"
+            className="bg-[#141414] rounded border border-[#252525] w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <h2 className="text-base font-semibold text-gray-900">Add Habit</h2>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#252525]">
+              <h2 className="text-base text-[#F4EEE4]" style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Add Habit</h2>
               <button
                 onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                className="text-[#9A9080] hover:text-[#DDD5C0] text-xl leading-none cursor-pointer transition-colors duration-150"
                 aria-label="Close"
               >
                 ×
@@ -96,13 +97,13 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
                   Category
                 </label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value as Category }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full border border-[#252525] rounded bg-[#1A1A1A] px-3 py-2 text-sm text-[#DDD5C0] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] cursor-pointer"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -112,7 +113,7 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
 
               {/* Habit text */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
                   Habit
                 </label>
                 <input
@@ -123,18 +124,18 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
                     setErrors((prev) => ({ ...prev, taskName: "" }));
                   }}
                   placeholder="Walk 30 minutes"
-                  className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                    errors.taskName ? "border-red-300 bg-red-50" : "border-gray-200"
+                  className={`w-full border rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] ${
+                    errors.taskName ? "border-[#7A1E1E]" : "border-[#252525]"
                   }`}
                 />
                 {errors.taskName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.taskName}</p>
+                  <p className="text-xs text-[#7A1E1E] mt-1">{errors.taskName}</p>
                 )}
               </div>
 
               {/* Submit error */}
               {errors.submit && (
-                <p className="text-sm text-red-500">{errors.submit}</p>
+                <p className="text-sm text-[#7A1E1E]">{errors.submit}</p>
               )}
 
               {/* Actions */}
@@ -142,14 +143,15 @@ export function AddHabitModal({ goalId }: { goalId: string }) {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-xl"
+                  className="text-xs text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-4 py-2 rounded cursor-pointer transition-all duration-150"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors"
+                  className="bg-[#B8933A] hover:bg-[#C9A44A] disabled:opacity-60 text-[#0D0D0D] text-xs font-semibold px-5 py-2 rounded border border-[#B8933A] cursor-pointer transition-all duration-150 uppercase tracking-widest"
+                  style={{ fontFamily: "'Cinzel', serif" }}
                 >
                   {loading ? "Saving…" : "Add Habit"}
                 </button>

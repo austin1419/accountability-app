@@ -46,55 +46,57 @@ export function HabitsTabs({
   return (
     <>
       {/* Tab bar */}
-      <div className="flex gap-1 mb-4 border-b border-gray-100">
+      <div className="flex gap-1 mb-4 border-b border-[#252525]">
         <button
           onClick={() => setTab("active")}
           className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
             tab === "active"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-400 hover:text-gray-600"
+              ? "border-[#B8933A] text-[#B8933A]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
           }`}
+          style={{ fontFamily: "'Cinzel', serif" }}
         >
           Assigned Habits
           {activeTasks.length > 0 && (
-            <span className="ml-1.5 text-gray-400 font-normal">({activeTasks.length})</span>
+            <span className="ml-1.5 text-[#807868] font-normal">({activeTasks.length})</span>
           )}
         </button>
         <button
           onClick={() => setTab("archived")}
           className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
             tab === "archived"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-400 hover:text-gray-600"
+              ? "border-[#B8933A] text-[#B8933A]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
           }`}
+          style={{ fontFamily: "'Cinzel', serif" }}
         >
           Old Habits
           {archivedTasks.length > 0 && (
-            <span className="ml-1.5 text-gray-400 font-normal">({archivedTasks.length})</span>
+            <span className="ml-1.5 text-[#807868] font-normal">({archivedTasks.length})</span>
           )}
         </button>
       </div>
 
       {/* Habit list */}
       {habits.length === 0 ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-[#9A9080]">
           {tab === "active" ? "No habits assigned yet." : "No old habits."}
         </p>
       ) : (
-        <ul className="divide-y divide-gray-50">
+        <ul className="divide-y divide-[#252525]">
           {habits.map((task) => {
             const colorClass =
               categoryColors[task.category ?? ""] ?? "bg-gray-100 text-gray-500";
             const reason = "removal_reason" in task ? (task as ArchivedHabit).removal_reason : null;
             return (
               <li key={task.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5 ${colorClass}`}>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded flex-shrink-0 mt-0.5 ${colorClass}`}>
                   {task.category ?? "General"}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="text-sm text-gray-700">{task.task_name}</span>
+                  <span className="text-sm text-[#DDD5C0]">{task.task_name}</span>
                   {reason && (
-                    <span className="block text-xs text-gray-400 italic mt-0.5">{reason}</span>
+                    <span className="block text-xs text-[#807868] italic mt-0.5">{reason}</span>
                   )}
                 </span>
                 {tab === "active" && (

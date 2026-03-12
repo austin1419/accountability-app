@@ -21,21 +21,21 @@ export const dynamic = "force-dynamic";
 
 function ComplianceBar({ label, pct }: { label: string; pct: number }) {
   const color =
-    pct >= 70 ? "bg-green-400" :
-    pct >= 50 ? "bg-amber-400" :
-                "bg-red-400";
+    pct >= 70 ? "bg-[#B8933A]" :
+    pct >= 50 ? "bg-[#C9A44A]" :
+                "bg-[#7A1E1E]";
   const text =
-    pct >= 70 ? "text-green-600" :
-    pct >= 50 ? "text-amber-500" :
-                "text-red-500";
+    pct >= 70 ? "text-[#B8933A]" :
+    pct >= 50 ? "text-[#C9A44A]" :
+                "text-[#7A1E1E]";
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm text-gray-500">{label}</span>
+        <span className="text-sm text-[#9A9080]">{label}</span>
         <span className={`text-sm font-bold ${text}`}>{pct}%</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+      <div className="h-2 bg-[#252525] rounded overflow-hidden">
+        <div className={`h-full rounded transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -70,21 +70,21 @@ export default async function ClientDetailPage({
       {/* ── Back link ───────────────────────────── */}
       <Link
         href="/coach/clients"
-        className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-[#9A9080] hover:text-[#DDD5C0] transition-colors"
       >
         ← Back to Clients
       </Link>
 
       {/* ── Profile header ──────────────────────── */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-[#141414] rounded border border-[#252525] p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
+            <h1 className="text-2xl text-[#F4EEE4] tracking-wide" style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>{client.name}</h1>
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#9A9080]">
               <span>{client.email}</span>
               {client.phone && (
                 <>
-                  <span className="text-gray-200">·</span>
+                  <span className="text-[#252525]">·</span>
                   <span>{client.phone}</span>
                 </>
               )}
@@ -92,11 +92,12 @@ export default async function ClientDetailPage({
           </div>
           <div className="flex flex-col items-end gap-2">
             <span
-              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full ${
+              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded border ${
                 isOnTrack
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-600"
+                  ? "text-[#B8933A] border-[#B8933A]"
+                  : "text-[#7A1E1E] border-[#7A1E1E]"
               }`}
+              style={{ fontFamily: "'Cinzel', serif" }}
             >
               {isOnTrack ? "On track" : "Needs attention"}
             </span>
@@ -109,35 +110,35 @@ export default async function ClientDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Goal card */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+        <div className="bg-[#141414] rounded border border-[#252525] p-6 space-y-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
             Goal
           </p>
 
           {client.goal ? (
             <>
-              <p className="text-lg font-semibold text-gray-900 leading-snug">
+              <p className="text-lg font-semibold text-[#F4EEE4] leading-snug">
                 {client.goal.goal_name}
               </p>
 
               {goalDateLabel && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#9A9080]">
                   Target date:{" "}
-                  <strong className="text-gray-700">{goalDateLabel}</strong>
+                  <strong className="text-[#DDD5C0] font-medium">{goalDateLabel}</strong>
                 </p>
               )}
 
               {client.goal.goalProgress > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400">Progress toward goal</span>
-                    <span className="text-xs font-semibold text-gray-600">
+                    <span className="text-xs text-[#9A9080]">Progress toward goal</span>
+                    <span className="text-xs font-semibold text-[#DDD5C0]">
                       {client.goal.goalProgress}%
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[#252525] rounded overflow-hidden">
                     <div
-                      className="h-full bg-blue-400 rounded-full"
+                      className="h-full bg-[#B8933A] rounded"
                       style={{ width: `${client.goal.goalProgress}%` }}
                     />
                   </div>
@@ -168,11 +169,11 @@ export default async function ClientDetailPage({
                     { label: "Current",  val: client.goal.current_weight, unit: "lbs" },
                     { label: "Goal",     val: client.goal.goal_weight,    unit: "lbs" },
                   ].map(({ label, val, unit }) => (
-                    <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                      <p className="text-base font-bold text-gray-800">
-                        {val != null ? `${val} ${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                    <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
+                      <p className="text-base font-bold text-[#DDD5C0]">
+                        {val != null ? `${val} ${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                      <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
                     </div>
                   ))}
                 </div>
@@ -187,11 +188,11 @@ export default async function ClientDetailPage({
                       { label: "Current BF%",  val: client.goal.current_body_fat,  unit: "%" },
                       { label: "Goal BF%",     val: client.goal.goal_body_fat,     unit: "%" },
                     ].map(({ label, val, unit }) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                        <p className="text-base font-bold text-gray-800">
-                          {val != null ? `${val}${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
+                        <p className="text-base font-bold text-[#DDD5C0]">
+                          {val != null ? `${val}${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
                       </div>
                     ))}
                   </div>
@@ -201,11 +202,11 @@ export default async function ClientDetailPage({
                       { label: "Current SMM",  val: client.goal.current_smm,  unit: " lbs" },
                       { label: "Goal SMM",     val: client.goal.goal_smm,     unit: " lbs" },
                     ].map(({ label, val, unit }) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                        <p className="text-base font-bold text-gray-800">
-                          {val != null ? `${val}${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
+                        <p className="text-base font-bold text-[#DDD5C0]">
+                          {val != null ? `${val}${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
                       </div>
                     ))}
                   </div>
@@ -216,8 +217,8 @@ export default async function ClientDetailPage({
               {client.goal.goal_category === "performance" && (
                 <div>
                   {client.goal.performance_metric_name && (
-                    <p className="text-xs text-gray-400 mb-2">
-                      Metric: <strong className="text-gray-600">{client.goal.performance_metric_name}</strong>
+                    <p className="text-xs text-[#9A9080] mb-2">
+                      Metric: <strong className="text-[#DDD5C0] font-medium">{client.goal.performance_metric_name}</strong>
                       {client.goal.performance_unit && ` (${client.goal.performance_unit})`}
                       {client.goal.performance_direction && ` · ${client.goal.performance_direction}`}
                     </p>
@@ -228,13 +229,13 @@ export default async function ClientDetailPage({
                       { label: "Current",  val: client.goal.current_performance_value  },
                       { label: "Goal",     val: client.goal.goal_performance_value     },
                     ].map(({ label, val }) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                        <p className="text-base font-bold text-gray-800">
+                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
+                        <p className="text-base font-bold text-[#DDD5C0]">
                           {val != null
                             ? `${val}${client.goal?.performance_unit ? ` ${client.goal.performance_unit}` : ""}`
-                            : <span className="text-gray-300 text-sm font-normal">—</span>}
+                            : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
                       </div>
                     ))}
                   </div>
@@ -242,13 +243,13 @@ export default async function ClientDetailPage({
               )}
             </>
           ) : (
-            <p className="text-sm text-gray-400">No goal set yet.</p>
+            <p className="text-sm text-[#9A9080]">No goal set yet.</p>
           )}
         </div>
 
         {/* Compliance card */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+        <div className="bg-[#141414] rounded border border-[#252525] p-6 space-y-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
             Compliance
           </p>
 
@@ -258,15 +259,15 @@ export default async function ClientDetailPage({
             <ComplianceBar label="30-Day" pct={client.monthPercent} />
           </div>
 
-          <p className="text-xs text-gray-400">Target: 70% or better</p>
+          <p className="text-xs text-[#807868]">Target: 70% or better</p>
         </div>
 
       </div>
 
       {/* ── Habits (active + archived tabs) ─────── */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-[#141414] rounded border border-[#252525] p-6">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
             Habits
           </p>
           {client.goal && <AddHabitModal goalId={client.goal.id} />}
@@ -279,8 +280,8 @@ export default async function ClientDetailPage({
       </div>
 
       {/* ── Coach Notes ──────────────────────────── */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+      <div className="bg-[#141414] rounded border border-[#252525] p-6">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
           Coach Notes
         </p>
         <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />

@@ -69,14 +69,15 @@ export function ClientNotes({
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a note about this client…"
           rows={3}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full border border-[#252525] rounded bg-[#1A1A1A] px-3 py-2 text-sm text-[#DDD5C0] placeholder:text-[#807868] resize-none focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]"
         />
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={loading || !text.trim()}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+            className="bg-[#B8933A] hover:bg-[#C9A44A] disabled:opacity-50 text-[#0D0D0D] text-xs font-semibold px-4 py-2 rounded transition-colors uppercase tracking-widest"
+            style={{ fontFamily: "'Cinzel', serif" }}
           >
             {loading ? "Saving…" : "Save Note"}
           </button>
@@ -85,13 +86,13 @@ export function ClientNotes({
 
       {/* Notes list */}
       {notes.length === 0 ? (
-        <p className="text-sm text-gray-400">No notes yet.</p>
+        <p className="text-sm text-[#9A9080]">No notes yet.</p>
       ) : (
-        <ul className="divide-y divide-gray-50">
+        <ul className="divide-y divide-[#252525]">
           {notes.map((n) => (
             <li key={n.id} className="py-3 first:pt-0 last:pb-0 space-y-1">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{n.note}</p>
-              <p className="text-xs text-gray-400">{formatDate(n.created_at)}</p>
+              <p className="text-sm text-[#DDD5C0] whitespace-pre-wrap">{n.note}</p>
+              <p className="text-xs text-[#807868]">{formatDate(n.created_at)}</p>
             </li>
           ))}
         </ul>
