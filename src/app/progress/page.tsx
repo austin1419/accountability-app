@@ -218,8 +218,9 @@ export default function ProgressPage() {
     if (r1.error) { setError(r1.error); return; }
     const r2 = await updateCurrentWeight(userId, w);
     if (r2.error) { setError(r2.error); return; }
-    const label = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    setWeightLog((prev) => [...prev, { week: label, weight: w }]);
+    // Re-fetch full log from DB after insert — keeps state in sync with the upsert
+    // (same-day logs replace rather than append, so manual append would create duplicates)
+    fetchWeightLog(userId).then(setWeightLog);
     setGoalData((prev) => prev ? { ...prev, current_weight: w } : prev);
     setWeightInput("");
     setError("");
@@ -342,9 +343,10 @@ export default function ProgressPage() {
           <section className="bg-white rounded-2xl px-5 shadow-sm border border-gray-100">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 py-4 border-b border-gray-50">Weight Log</p>
             <ul>
-              {[...weightLog].reverse().map((entry, i) => {
-                const prevIndex = weightLog.length - 1 - i - 1;
-                const prev      = weightLog[prevIndex];
+              {[...weightLog].slice(-7).reverse().map((entry, i) => {
+                const sliceOffset = Math.max(0, weightLog.length - 7);
+                const prevIndex   = sliceOffset + (Math.min(weightLog.length, 7) - 1 - i) - 1;
+                const prev        = weightLog[prevIndex];
                 const change    = prev ? entry.weight - prev.weight : null;
                 return (
                   <li key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
