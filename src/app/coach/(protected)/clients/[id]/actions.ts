@@ -284,8 +284,8 @@ export async function changeClientGoal(
   }
 
   // 5. Insert the new active goal — select the id back so we can migrate tasks.
-  //    For weight goals, seed current_weight = start_weight so the client
-  //    dashboard shows correct values immediately (not null / "0 lbs lost").
+  //    Seed current_* from starting_* values so the client dashboard and
+  //    coach goal card show correct values immediately on a new goal.
   const { data: newGoal, error: insertError } = await admin
     .from("goals")
     .insert({
@@ -294,6 +294,12 @@ export async function changeClientGoal(
       ...newGoalData,
       ...(newGoalData.goal_category === "weight" && newGoalData.start_weight != null
         ? { current_weight: newGoalData.start_weight }
+        : {}),
+      ...(newGoalData.goal_category === "body_composition"
+        ? {
+            ...(newGoalData.starting_body_fat != null ? { current_body_fat: newGoalData.starting_body_fat } : {}),
+            ...(newGoalData.starting_smm       != null ? { current_smm:      newGoalData.starting_smm       } : {}),
+          }
         : {}),
     })
     .select("id")
