@@ -192,7 +192,7 @@ export default async function ClientDashboard({
               </div>
 
               {/* Weight details */}
-              {goal.goal_category === "weight" && goal.start_weight != null && (
+              {goal.goal_category === "weight" && goal.start_weight != null && goal.current_weight != null && (
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="text-xs text-[#9A9080]">Lost so far</p>

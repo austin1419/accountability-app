@@ -198,7 +198,9 @@ export async function removeClientHabit(
 //   5. Insert a new goal row with is_active=true and the new category/values
 //   6. On insert failure, restore the old goal to is_active=true (compensating update)
 //
-// Does NOT touch: tasks, task_logs, weight_logs, progress_logs, client_notes.
+// Step 7: Reassign active tasks from old goal to new goal (habit carry-forward).
+//         Archived tasks remain on the old goal for history.
+//         Task migration failure is non-fatal — goal change is not rolled back.
 
 type WeightGoalData = {
   goal_category: "weight";
@@ -281,23 +283,40 @@ export async function changeClientGoal(
     return { error: "Failed to close current goal. Please try again." };
   }
 
-  // 5. Insert the new active goal
-  const { error: insertError } = await admin
+  // 5. Insert the new active goal — select the id back so we can migrate tasks
+  const { data: newGoal, error: insertError } = await admin
     .from("goals")
     .insert({
       user_id:   clientId,
       is_active: true,
       ...newGoalData,
-    });
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
-    console.error("[changeClientGoal] failed to insert new goal:", insertError.message);
+  if (insertError || !newGoal) {
+    console.error("[changeClientGoal] failed to insert new goal:", insertError?.message);
     // 6. Compensating update — restore the old goal so the client is not left without one
     await admin
       .from("goals")
       .update({ is_active: true, completed_at: null, change_reason: null, completed_by: null })
       .eq("id", currentGoal.id);
     return { error: "Failed to create new goal. Please try again." };
+  }
+
+  // 7. Carry forward active habits — reassign tasks from old goal to new goal.
+  //    This preserves the client's current habit list without interruption.
+  //    Archived tasks (is_active = false) stay on the old goal for history.
+  const { error: taskMigrateError } = await admin
+    .from("tasks")
+    .update({ goal_id: newGoal.id })
+    .eq("goal_id", currentGoal.id)
+    .eq("is_active", true);
+
+  if (taskMigrateError) {
+    console.error("[changeClientGoal] failed to migrate tasks:", taskMigrateError.message);
+    // Non-fatal: the goal change succeeded. Tasks will appear empty but can be re-added.
+    // Do not roll back the goal change for a task migration failure.
   }
 
   return {};

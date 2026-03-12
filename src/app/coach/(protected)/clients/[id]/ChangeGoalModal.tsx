@@ -66,7 +66,7 @@ export function ChangeGoalModal({
   // Step 3 — performance
   const [metricName,      setMetricName]      = useState("");
   const [metricUnit,      setMetricUnit]      = useState("");
-  const [metricDirection, setMetricDirection] = useState("Higher is better");
+  const [metricDirection, setMetricDirection] = useState("increase");
   const [startPerf,       setStartPerf]       = useState("");
   const [goalPerf,        setGoalPerf]        = useState("");
 
@@ -78,7 +78,7 @@ export function ChangeGoalModal({
     setGoalName(""); setGoalNameError(""); setCategory("weight"); setGoalDate("");
     setStartWeight(""); setGoalWeight("");
     setStartBF(""); setGoalBF(""); setStartSMM(""); setGoalSMM("");
-    setMetricName(""); setMetricUnit(""); setMetricDirection("Higher is better");
+    setMetricName(""); setMetricUnit(""); setMetricDirection("increase");
     setStartPerf(""); setGoalPerf("");
     setSubmitError(null);
     setLoading(false);
@@ -413,8 +413,8 @@ export function ChangeGoalModal({
                           onChange={(e) => setMetricDirection(e.target.value)}
                           className={`${INPUT_BASE} border-[#252525] cursor-pointer`}
                         >
-                          <option value="Higher is better">Higher is better</option>
-                          <option value="Lower is better">Lower is better</option>
+                          <option value="increase">Higher is better</option>
+                          <option value="decrease">Lower is better</option>
                         </select>
                       </div>
                     </div>
