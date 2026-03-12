@@ -211,10 +211,10 @@ export default async function ClientsListPage({
                   </td>
 
                   {/* View link */}
-                  <td className="px-5 py-4 text-right">
+                  <td className="px-5 py-4 text-center">
                     <Link
                       href={`/coach/clients/${client.id}`}
-                      className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
+                      className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
                       style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       View →
