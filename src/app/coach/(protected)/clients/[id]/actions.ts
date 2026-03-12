@@ -301,6 +301,9 @@ export async function changeClientGoal(
             ...(newGoalData.starting_smm       != null ? { current_smm:      newGoalData.starting_smm       } : {}),
           }
         : {}),
+      ...(newGoalData.goal_category === "performance" && newGoalData.starting_performance_value != null
+        ? { current_performance_value: newGoalData.starting_performance_value }
+        : {}),
     })
     .select("id")
     .single();
