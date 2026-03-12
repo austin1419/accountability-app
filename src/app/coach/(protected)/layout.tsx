@@ -73,17 +73,17 @@ export default async function CoachLayout({ children }: { children: React.ReactN
           </div>
 
           {/* Nav links */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-1">
             <Link
               href="/coach"
-              className="text-sm text-[#9A9080] hover:text-[#B8933A] transition-colors"
+              className="text-sm text-[#9A9080] hover:text-[#B8933A] hover:bg-[#1A1A1A] px-2.5 py-1.5 rounded cursor-pointer transition-all duration-150"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
               Dashboard
             </Link>
             <Link
               href="/coach/clients"
-              className="text-sm text-[#9A9080] hover:text-[#B8933A] transition-colors"
+              className="text-sm text-[#9A9080] hover:text-[#B8933A] hover:bg-[#1A1A1A] px-2.5 py-1.5 rounded cursor-pointer transition-all duration-150"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
               Clients
@@ -95,7 +95,7 @@ export default async function CoachLayout({ children }: { children: React.ReactN
             <span className="text-xs text-[#9A9080]">{profile.name}</span>
             <SignOutButton
               redirectTo="/coach/login"
-              className="text-xs text-[#9A9080] hover:text-[#B8933A] transition-colors"
+              className="text-xs text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
             >
               Sign out
             </SignOutButton>
