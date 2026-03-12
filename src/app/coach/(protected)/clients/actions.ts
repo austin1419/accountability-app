@@ -17,8 +17,21 @@ export async function createClientWithInvite(data: {
   phone:          string | null;
   goalName:       string;
   goalDate:       string;
-  startingWeight: number | null;
-  goalWeight:     number | null;
+  goalCategory:   string;
+  // Weight
+  startingWeight:           number | null;
+  goalWeight:               number | null;
+  // Body composition
+  startingBodyFat:          number | null;
+  goalBodyFat:              number | null;
+  startingSmm:              number | null;
+  goalSmm:                  number | null;
+  // Performance
+  performanceMetricName:    string | null;
+  performanceUnit:          string | null;
+  performanceDirection:     string | null;
+  startingPerformanceValue: number | null;
+  goalPerformanceValue:     number | null;
 }): Promise<{ error?: string }> {
   const supabase = createAdminClient();
 
@@ -46,12 +59,28 @@ export async function createClientWithInvite(data: {
   const { error: goalError } = await supabase
     .from("goals")
     .insert({
-      user_id:      newUser.id,
-      goal_name:      data.goalName,
-      goal_date:      data.goalDate,
+      user_id:       newUser.id,
+      goal_name:     data.goalName,
+      goal_date:     data.goalDate,
+      goal_category: data.goalCategory,
+      // Weight
       start_weight:   data.startingWeight,
       goal_weight:    data.goalWeight,
-      current_weight: data.startingWeight, // current = starting on day one
+      current_weight: data.startingWeight,
+      // Body composition
+      starting_body_fat: data.startingBodyFat,
+      goal_body_fat:     data.goalBodyFat,
+      starting_smm:      data.startingSmm,
+      goal_smm:          data.goalSmm,
+      current_body_fat:  data.startingBodyFat,
+      current_smm:       data.startingSmm,
+      // Performance
+      performance_metric_name:    data.performanceMetricName,
+      performance_unit:           data.performanceUnit,
+      performance_direction:      data.performanceDirection,
+      starting_performance_value: data.startingPerformanceValue,
+      goal_performance_value:     data.goalPerformanceValue,
+      current_performance_value:  data.startingPerformanceValue,
     });
 
   if (goalError) {
@@ -62,12 +91,13 @@ export async function createClientWithInvite(data: {
   }
 
   // ── 3. Derive the site URL for the invite redirect ────────────
-  // Using the request host so this works in both local dev and production
-  // without requiring an extra env variable.
+  // NEXT_PUBLIC_SITE_URL must be set to the public-facing URL (e.g. Vercel).
+  // Falling back to the request host only works when the coach and client
+  // are on the same machine (local dev) — real clients can't reach localhost.
   const headersList = await headers();
   const host        = headersList.get("host") ?? "localhost:3000";
   const protocol    = host.includes("localhost") ? "http" : "https";
-  const siteUrl     = `${protocol}://${host}`;
+  const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL ?? `${protocol}://${host}`;
 
   // ── 4. Send the Supabase invite email ─────────────────────────
   // This creates the auth.users row and sends the "Accept Invite" email.

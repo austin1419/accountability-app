@@ -24,6 +24,31 @@ export async function updateClientWeights(
   return {};
 }
 
+export async function updateClientGoalMetrics(
+  goalId: string,
+  patch: {
+    // Weight
+    current_weight?:             number | null;
+    goal_weight?:                number | null;
+    // Body composition
+    current_body_fat?:           number | null;
+    goal_body_fat?:              number | null;
+    current_smm?:                number | null;
+    goal_smm?:                   number | null;
+    // Performance
+    current_performance_value?:  number | null;
+    goal_performance_value?:     number | null;
+  }
+): Promise<{ error?: string }> {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("goals").update(patch).eq("id", goalId);
+  if (error) {
+    console.error("[updateClientGoalMetrics] failed:", error.message);
+    return { error: "Failed to update metrics. Please try again." };
+  }
+  return {};
+}
+
 export async function addClientHabit(
   goalId:   string,
   taskName: string,

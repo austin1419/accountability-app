@@ -144,28 +144,102 @@ export default async function ClientDetailPage({
                 </div>
               )}
 
-              {/* Weight stats */}
+              {/* Category-aware metrics */}
               {client.goal && (
                 <EditWeightsButton
                   goalId={client.goal.id}
+                  goalCategory={client.goal.goal_category}
                   currentWeight={client.goal.current_weight}
                   goalWeight={client.goal.goal_weight}
+                  currentBodyFat={client.goal.current_body_fat}
+                  goalBodyFat={client.goal.goal_body_fat}
+                  currentSmm={client.goal.current_smm}
+                  goalSmm={client.goal.goal_smm}
+                  currentPerformanceValue={client.goal.current_performance_value}
+                  goalPerformanceValue={client.goal.goal_performance_value}
                 />
               )}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Starting",  val: client.goal.start_weight   },
-                  { label: "Current",   val: client.goal.current_weight  },
-                  { label: "Goal",      val: client.goal.goal_weight     },
-                ].map(({ label, val }) => (
-                  <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                    <p className="text-base font-bold text-gray-800">
-                      {val != null ? `${val} lbs` : <span className="text-gray-300 text-sm font-normal">—</span>}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+
+              {/* Weight */}
+              {client.goal.goal_category === "weight" && (
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Starting", val: client.goal.start_weight,   unit: "lbs" },
+                    { label: "Current",  val: client.goal.current_weight, unit: "lbs" },
+                    { label: "Goal",     val: client.goal.goal_weight,    unit: "lbs" },
+                  ].map(({ label, val, unit }) => (
+                    <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                      <p className="text-base font-bold text-gray-800">
+                        {val != null ? `${val} ${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Body composition */}
+              {client.goal.goal_category === "body_composition" && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Starting BF%", val: client.goal.starting_body_fat, unit: "%" },
+                      { label: "Current BF%",  val: client.goal.current_body_fat,  unit: "%" },
+                      { label: "Goal BF%",     val: client.goal.goal_body_fat,     unit: "%" },
+                    ].map(({ label, val, unit }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                        <p className="text-base font-bold text-gray-800">
+                          {val != null ? `${val}${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Starting SMM", val: client.goal.starting_smm, unit: " lbs" },
+                      { label: "Current SMM",  val: client.goal.current_smm,  unit: " lbs" },
+                      { label: "Goal SMM",     val: client.goal.goal_smm,     unit: " lbs" },
+                    ].map(({ label, val, unit }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                        <p className="text-base font-bold text-gray-800">
+                          {val != null ? `${val}${unit}` : <span className="text-gray-300 text-sm font-normal">—</span>}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Performance */}
+              {client.goal.goal_category === "performance" && (
+                <div>
+                  {client.goal.performance_metric_name && (
+                    <p className="text-xs text-gray-400 mb-2">
+                      Metric: <strong className="text-gray-600">{client.goal.performance_metric_name}</strong>
+                      {client.goal.performance_unit && ` (${client.goal.performance_unit})`}
+                      {client.goal.performance_direction && ` · ${client.goal.performance_direction}`}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Starting", val: client.goal.starting_performance_value },
+                      { label: "Current",  val: client.goal.current_performance_value  },
+                      { label: "Goal",     val: client.goal.goal_performance_value     },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                        <p className="text-base font-bold text-gray-800">
+                          {val != null
+                            ? `${val}${client.goal!.performance_unit ? ` ${client.goal!.performance_unit}` : ""}`
+                            : <span className="text-gray-300 text-sm font-normal">—</span>}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <p className="text-sm text-gray-400">No goal set yet.</p>

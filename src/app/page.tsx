@@ -19,20 +19,6 @@ import { createAdminClient }     from "@/lib/supabase-admin";
 // date navigation actually re-fetches Supabase data on each navigation.
 export const dynamic = "force-dynamic";
 
-// Calculates how far along the client is toward their goal weight.
-// Returns 0 if any weight value is missing.
-function getGoalProgress(
-  start:   number | null,
-  current: number | null,
-  goal:    number | null
-): number {
-  if (start == null || current == null || goal == null) return 0;
-  const totalToLose = start - goal;
-  if (totalToLose <= 0) return 0;
-  const lostSoFar = start - current;
-  return Math.min(Math.max(Math.round((lostSoFar / totalToLose) * 100), 0), 100);
-}
-
 // Validates a raw date string from the URL.
 // Returns todayStr for any missing, malformed, or future value.
 function validateDate(raw: string | undefined, todayStr: string): string {
@@ -74,11 +60,7 @@ export default async function ClientDashboard({
 
   const { clientName, goal, today, week } = data;
 
-  const goalProgress = getGoalProgress(
-    goal?.start_weight ?? null,
-    goal?.current_weight ?? null,
-    goal?.goal_weight ?? null
-  );
+  const goalProgress = goal?.goalProgress ?? 0;
 
   // Friendly greeting date — always shows real today
   const todayDate = new Date().toLocaleDateString("en-US", {
@@ -131,14 +113,31 @@ export default async function ClientDashboard({
               <p className="text-base font-semibold text-gray-800 leading-snug">
                 {goal.goal_name}
               </p>
-              {goal.start_weight != null && goal.current_weight != null && (
+              {goal.goal_category === "weight" && goal.start_weight != null && goal.current_weight != null && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+                  <span>Started at <strong className="text-gray-700">{goal.start_weight} lbs</strong></span>
+                  <span className="text-gray-300">·</span>
+                  <span>Currently <strong className="text-gray-700">{goal.current_weight} lbs</strong></span>
+                </div>
+              )}
+              {goal.goal_category === "body_composition" && goal.current_body_fat != null && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+                  <span>Body fat: <strong className="text-gray-700">{goal.current_body_fat}%</strong></span>
+                  {goal.current_smm != null && (
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span>SMM: <strong className="text-gray-700">{goal.current_smm} lbs</strong></span>
+                    </>
+                  )}
+                </div>
+              )}
+              {goal.goal_category === "performance" && goal.current_performance_value != null && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
                   <span>
-                    Started at <strong className="text-gray-700">{goal.start_weight} lbs</strong>
-                  </span>
-                  <span className="text-gray-300">·</span>
-                  <span>
-                    Currently <strong className="text-gray-700">{goal.current_weight} lbs</strong>
+                    {goal.performance_metric_name ?? "Current"}:{" "}
+                    <strong className="text-gray-700">
+                      {goal.current_performance_value}{goal.performance_unit ? ` ${goal.performance_unit}` : ""}
+                    </strong>
                   </span>
                 </div>
               )}
@@ -149,7 +148,7 @@ export default async function ClientDashboard({
         </section>
 
         {/* ── Progress Toward Goal ─────────────────── */}
-        {goal?.start_weight != null && (
+        {goal && (
           <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Progress Toward Goal
@@ -162,20 +161,73 @@ export default async function ClientDashboard({
                   <span className="text-xs text-gray-400">complete</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <p className="text-xs text-gray-400">Lost so far</p>
-                  <p className="text-lg font-bold text-gray-800">
-                    {((goal.start_weight ?? 0) - (goal.current_weight ?? 0)).toFixed(1)} lbs
-                  </p>
+
+              {/* Weight details */}
+              {goal.goal_category === "weight" && goal.start_weight != null && (
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400">Lost so far</p>
+                    <p className="text-lg font-bold text-gray-800">
+                      {((goal.start_weight ?? 0) - (goal.current_weight ?? 0)).toFixed(1)} lbs
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Still to go</p>
+                    <p className="text-lg font-bold text-gray-800">
+                      {((goal.current_weight ?? 0) - (goal.goal_weight ?? 0)).toFixed(1)} lbs
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400">Still to go</p>
-                  <p className="text-lg font-bold text-gray-800">
-                    {((goal.current_weight ?? 0) - (goal.goal_weight ?? 0)).toFixed(1)} lbs
-                  </p>
+              )}
+
+              {/* Body composition details */}
+              {goal.goal_category === "body_composition" && (
+                <div className="flex flex-col gap-3">
+                  {goal.current_body_fat != null && goal.goal_body_fat != null && (
+                    <div>
+                      <p className="text-xs text-gray-400">Body fat</p>
+                      <p className="text-base font-bold text-gray-800">
+                        {goal.current_body_fat}% → {goal.goal_body_fat}%
+                      </p>
+                    </div>
+                  )}
+                  {goal.current_smm != null && goal.goal_smm != null && (
+                    <div>
+                      <p className="text-xs text-gray-400">Muscle (SMM)</p>
+                      <p className="text-base font-bold text-gray-800">
+                        {goal.current_smm} → {goal.goal_smm} lbs
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {/* Performance details */}
+              {goal.goal_category === "performance" && (
+                <div className="flex flex-col gap-3">
+                  {goal.current_performance_value != null && (
+                    <div>
+                      <p className="text-xs text-gray-400">
+                        {goal.performance_metric_name ?? "Current"}
+                      </p>
+                      <p className="text-lg font-bold text-gray-800">
+                        {goal.current_performance_value}
+                        {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
+                      </p>
+                    </div>
+                  )}
+                  {goal.goal_performance_value != null && (
+                    <div>
+                      <p className="text-xs text-gray-400">Goal</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        {goal.goal_performance_value}
+                        {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           </section>
         )}

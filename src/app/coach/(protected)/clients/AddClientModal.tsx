@@ -4,14 +4,14 @@
 // AddClientModal
 //
 // Renders the "+ Add Client" button and modal on the coach clients page.
-// Creates a new public.users row + first goal in one operation.
-// On success, calls router.refresh() so the server component re-fetches
-// and the new client appears in the table.
+// Supports three goal categories: Weight, Body Composition, Performance.
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClientWithInvite } from "./actions";
+
+type GoalCategory = "weight" | "body_composition" | "performance";
 
 type FormState = {
   firstName:      string;
@@ -20,8 +20,21 @@ type FormState = {
   phone:          string;
   goalName:       string;
   goalDate:       string;
+  goalCategory:   GoalCategory;
+  // Weight
   startingWeight: string;
   goalWeight:     string;
+  // Body composition
+  startingBodyFat: string;
+  goalBodyFat:     string;
+  startingSmm:     string;
+  goalSmm:         string;
+  // Performance
+  performanceMetricName:    string;
+  performanceUnit:          string;
+  performanceDirection:     "increase" | "decrease";
+  startingPerformanceValue: string;
+  goalPerformanceValue:     string;
 };
 
 const EMPTY: FormState = {
@@ -31,16 +44,32 @@ const EMPTY: FormState = {
   phone:          "",
   goalName:       "",
   goalDate:       "",
+  goalCategory:   "weight",
   startingWeight: "",
   goalWeight:     "",
+  startingBodyFat: "",
+  goalBodyFat:     "",
+  startingSmm:     "",
+  goalSmm:         "",
+  performanceMetricName:    "",
+  performanceUnit:          "",
+  performanceDirection:     "increase",
+  startingPerformanceValue: "",
+  goalPerformanceValue:     "",
 };
+
+function parseNum(s: string): number | null {
+  if (!s.trim()) return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
 
 export function AddClientModal() {
   const router  = useRouter();
   const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
   const [form,    setForm]    = useState<FormState>(EMPTY);
-  const [errors,  setErrors]  = useState<Partial<FormState> & { submit?: string }>({});
+  const [errors,  setErrors]  = useState<Record<string, string>>({});
 
   function set(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -56,54 +85,49 @@ export function AddClientModal() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const newErrors: typeof errors = {};
+    const newErrors: Record<string, string> = {};
     if (!form.firstName.trim()) newErrors.firstName = "Required";
     if (!form.lastName.trim())  newErrors.lastName  = "Required";
     if (!form.email.trim())     newErrors.email     = "Required";
     if (!form.goalName.trim())  newErrors.goalName  = "Required";
     if (!form.goalDate)         newErrors.goalDate  = "Required";
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const weight     = form.startingWeight ? parseFloat(form.startingWeight) : null;
-    const goalWeight = form.goalWeight     ? parseFloat(form.goalWeight)     : null;
-
-    if (form.startingWeight && (isNaN(weight!) || weight! < 50 || weight! > 600)) {
-      setErrors({ startingWeight: "Enter a valid weight (50–600 lbs)" });
-      return;
-    }
-    if (form.goalWeight && (isNaN(goalWeight!) || goalWeight! < 50 || goalWeight! > 600)) {
-      setErrors({ goalWeight: "Enter a valid weight (50–600 lbs)" });
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     setLoading(true);
     const result = await createClientWithInvite({
-      firstName:      form.firstName.trim(),
-      lastName:       form.lastName.trim(),
-      email:          form.email.trim(),
-      phone:          form.phone.trim() || null,
-      goalName:       form.goalName.trim(),
-      goalDate:       form.goalDate,
-      startingWeight: weight,
-      goalWeight,
+      firstName:    form.firstName.trim(),
+      lastName:     form.lastName.trim(),
+      email:        form.email.trim(),
+      phone:        form.phone.trim() || null,
+      goalName:     form.goalName.trim(),
+      goalDate:     form.goalDate,
+      goalCategory: form.goalCategory,
+      startingWeight:           parseNum(form.startingWeight),
+      goalWeight:               parseNum(form.goalWeight),
+      startingBodyFat:          parseNum(form.startingBodyFat),
+      goalBodyFat:              parseNum(form.goalBodyFat),
+      startingSmm:              parseNum(form.startingSmm),
+      goalSmm:                  parseNum(form.goalSmm),
+      performanceMetricName:    form.performanceMetricName.trim() || null,
+      performanceUnit:          form.performanceUnit.trim() || null,
+      performanceDirection:     form.goalCategory === "performance" ? form.performanceDirection : null,
+      startingPerformanceValue: parseNum(form.startingPerformanceValue),
+      goalPerformanceValue:     parseNum(form.goalPerformanceValue),
     });
     setLoading(false);
 
-    if (result.error) {
-      setErrors({ submit: result.error });
-      return;
-    }
-
+    if (result.error) { setErrors({ submit: result.error }); return; }
     handleClose();
     router.refresh();
   }
 
+  const inputCls = (field: string) =>
+    `w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+      errors[field] ? "border-red-300 bg-red-50" : "border-gray-200"
+    }`;
+
   return (
     <>
-      {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl transition-colors"
@@ -111,7 +135,6 @@ export function AddClientModal() {
         <span className="text-sm leading-none">+</span> Add Client
       </button>
 
-      {/* Modal overlay */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -121,83 +144,38 @@ export function AddClientModal() {
             className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white">
               <h2 className="text-base font-semibold text-gray-900">Add Client</h2>
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
-                aria-label="Close"
-              >
-                ×
-              </button>
+              <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">×</button>
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
 
-              {/* Name row */}
+              {/* Name */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    First Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.firstName}
-                    onChange={(e) => set("firstName", e.target.value)}
-                    placeholder="Jane"
-                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      errors.firstName ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                  />
+                  <label className="block text-xs font-medium text-gray-600 mb-1">First Name <span className="text-red-400">*</span></label>
+                  <input type="text" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="Jane" className={inputCls("firstName")} />
                   {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Last Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.lastName}
-                    onChange={(e) => set("lastName", e.target.value)}
-                    placeholder="Smith"
-                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      errors.lastName ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                  />
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Last Name <span className="text-red-400">*</span></label>
+                  <input type="text" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Smith" className={inputCls("lastName")} />
                   {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Email <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => set("email", e.target.value)}
-                  placeholder="jane@example.com"
-                  className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                    errors.email ? "border-red-300 bg-red-50" : "border-gray-200"
-                  }`}
-                />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Email <span className="text-red-400">*</span></label>
+                <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane@example.com" className={inputCls("email")} />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
 
               {/* Phone */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Phone <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                  placeholder="(555) 555-5555"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(555) 555-5555" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
               </div>
 
               {/* Divider */}
@@ -205,94 +183,127 @@ export function AddClientModal() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">First Goal</p>
               </div>
 
-              {/* Goal name */}
+              {/* Goal name + date */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Goal <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.goalName}
-                  onChange={(e) => set("goalName", e.target.value)}
-                  placeholder="Lose 30 lbs by summer"
-                  className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                    errors.goalName ? "border-red-300 bg-red-50" : "border-gray-200"
-                  }`}
-                />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Goal <span className="text-red-400">*</span></label>
+                <input type="text" value={form.goalName} onChange={(e) => set("goalName", e.target.value)} placeholder="Lose 30 lbs by summer" className={inputCls("goalName")} />
                 {errors.goalName && <p className="text-xs text-red-500 mt-1">{errors.goalName}</p>}
               </div>
-
-              {/* Goal date */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Target Date <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={form.goalDate}
-                  onChange={(e) => set("goalDate", e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                    errors.goalDate ? "border-red-300 bg-red-50" : "border-gray-200"
-                  }`}
-                />
+                <label className="block text-xs font-medium text-gray-600 mb-1">Target Date <span className="text-red-400">*</span></label>
+                <input type="date" value={form.goalDate} onChange={(e) => set("goalDate", e.target.value)} className={inputCls("goalDate")} />
                 {errors.goalDate && <p className="text-xs text-red-500 mt-1">{errors.goalDate}</p>}
               </div>
 
-              {/* Starting weight + goal weight */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Starting Weight <span className="text-gray-400 font-normal">(lbs, optional)</span>
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={form.startingWeight}
-                    onChange={(e) => set("startingWeight", e.target.value)}
-                    placeholder="220"
-                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      errors.startingWeight ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                  />
-                  {errors.startingWeight && <p className="text-xs text-red-500 mt-1">{errors.startingWeight}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Goal Weight <span className="text-gray-400 font-normal">(lbs, optional)</span>
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={form.goalWeight}
-                    onChange={(e) => set("goalWeight", e.target.value)}
-                    placeholder="210"
-                    className={`w-full border rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      errors.goalWeight ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                  />
-                  {errors.goalWeight && <p className="text-xs text-red-500 mt-1">{errors.goalWeight}</p>}
+              {/* Goal category */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Goal Category</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["weight", "body_composition", "performance"] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => set("goalCategory", cat)}
+                      className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${
+                        form.goalCategory === cat
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {cat === "weight" ? "Weight" : cat === "body_composition" ? "Body Comp" : "Performance"}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Submit error */}
-              {errors.submit && (
-                <p className="text-sm text-red-500">{errors.submit}</p>
+              {/* ── Weight fields ── */}
+              {form.goalCategory === "weight" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Starting Weight <span className="text-gray-400 font-normal">(lbs, optional)</span></label>
+                    <input type="number" inputMode="decimal" value={form.startingWeight} onChange={(e) => set("startingWeight", e.target.value)} placeholder="220" className={inputCls("startingWeight")} />
+                    {errors.startingWeight && <p className="text-xs text-red-500 mt-1">{errors.startingWeight}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Goal Weight <span className="text-gray-400 font-normal">(lbs, optional)</span></label>
+                    <input type="number" inputMode="decimal" value={form.goalWeight} onChange={(e) => set("goalWeight", e.target.value)} placeholder="190" className={inputCls("goalWeight")} />
+                    {errors.goalWeight && <p className="text-xs text-red-500 mt-1">{errors.goalWeight}</p>}
+                  </div>
+                </div>
               )}
 
-              {/* Actions */}
+              {/* ── Body composition fields ── */}
+              {form.goalCategory === "body_composition" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting Body Fat % <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <input type="number" inputMode="decimal" value={form.startingBodyFat} onChange={(e) => set("startingBodyFat", e.target.value)} placeholder="28.0" className={inputCls("startingBodyFat")} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal Body Fat %</label>
+                      <input type="number" inputMode="decimal" value={form.goalBodyFat} onChange={(e) => set("goalBodyFat", e.target.value)} placeholder="20.0" className={inputCls("goalBodyFat")} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting SMM (lbs) <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <input type="number" inputMode="decimal" value={form.startingSmm} onChange={(e) => set("startingSmm", e.target.value)} placeholder="75.0" className={inputCls("startingSmm")} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal SMM (lbs)</label>
+                      <input type="number" inputMode="decimal" value={form.goalSmm} onChange={(e) => set("goalSmm", e.target.value)} placeholder="82.0" className={inputCls("goalSmm")} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Performance fields ── */}
+              {form.goalCategory === "performance" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Metric Name</label>
+                      <input type="text" value={form.performanceMetricName} onChange={(e) => set("performanceMetricName", e.target.value)} placeholder="Bench Press" className={inputCls("performanceMetricName")} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                      <input type="text" value={form.performanceUnit} onChange={(e) => set("performanceUnit", e.target.value)} placeholder="lbs" className={inputCls("performanceUnit")} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">Direction</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["increase", "decrease"] as const).map((dir) => (
+                        <button key={dir} type="button" onClick={() => set("performanceDirection", dir)}
+                          className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${
+                            form.performanceDirection === dir
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                          }`}>
+                          {dir === "increase" ? "↑ Increase" : "↓ Decrease"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Starting Value</label>
+                      <input type="number" inputMode="decimal" value={form.startingPerformanceValue} onChange={(e) => set("startingPerformanceValue", e.target.value)} placeholder="135" className={inputCls("startingPerformanceValue")} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Goal Value</label>
+                      <input type="number" inputMode="decimal" value={form.goalPerformanceValue} onChange={(e) => set("goalPerformanceValue", e.target.value)} placeholder="225" className={inputCls("goalPerformanceValue")} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {errors.submit && <p className="text-sm text-red-500">{errors.submit}</p>}
+
               <div className="flex items-center justify-end gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors"
-                >
+                <button type="button" onClick={handleClose} className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+                <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
                   {loading ? "Creating & sending invite…" : "Add Client & Send Invite"}
                 </button>
               </div>

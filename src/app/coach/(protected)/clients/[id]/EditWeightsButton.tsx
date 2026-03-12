@@ -1,58 +1,96 @@
 "use client";
 
 // ─────────────────────────────────────────────
-// EditWeightsButton
+// EditWeightsButton (category-aware)
 //
-// Inline edit for Current Weight and Goal Weight on the coach client detail page.
-// Coaches use this after weigh-ins or when a client adjusts their goal.
+// Inline metric editor on the coach client detail page.
+// Shows different fields depending on the goal category:
+//   weight          → current weight + goal weight
+//   body_composition → current/goal BF% + current/goal SMM
+//   performance     → current value + goal value
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateClientWeights } from "./actions";
+import { updateClientGoalMetrics } from "./actions";
 
-export function EditWeightsButton({
-  goalId,
-  currentWeight,
-  goalWeight,
-}: {
-  goalId:        string;
+type Props = {
+  goalId:       string;
+  goalCategory: string;
+  // Weight
   currentWeight: number | null;
   goalWeight:    number | null;
-}) {
+  // Body composition
+  currentBodyFat: number | null;
+  goalBodyFat:    number | null;
+  currentSmm:     number | null;
+  goalSmm:        number | null;
+  // Performance
+  currentPerformanceValue: number | null;
+  goalPerformanceValue:    number | null;
+};
+
+export function EditWeightsButton(props: Props) {
+  const { goalId, goalCategory } = props;
   const router = useRouter();
   const [open,    setOpen]    = useState(false);
-  const [current, setCurrent] = useState(currentWeight?.toString() ?? "");
-  const [goal,    setGoal]    = useState(goalWeight?.toString()    ?? "");
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
 
+  // Weight
+  const [current, setCurrent] = useState(props.currentWeight?.toString() ?? "");
+  const [goal,    setGoal]    = useState(props.goalWeight?.toString()    ?? "");
+
+  // Body composition
+  const [currentBf,  setCurrentBf]  = useState(props.currentBodyFat?.toString() ?? "");
+  const [goalBf,     setGoalBf]     = useState(props.goalBodyFat?.toString()    ?? "");
+  const [currentSmm, setCurrentSmm] = useState(props.currentSmm?.toString()    ?? "");
+  const [goalSmm,    setGoalSmm]    = useState(props.goalSmm?.toString()        ?? "");
+
+  // Performance
+  const [currentPerf, setCurrentPerf] = useState(props.currentPerformanceValue?.toString() ?? "");
+  const [goalPerf,    setGoalPerf]    = useState(props.goalPerformanceValue?.toString()    ?? "");
+
+  function pn(s: string): number | null {
+    if (!s.trim()) return null;
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
   async function handleSave() {
     setError("");
-    const cw = current ? parseFloat(current) : null;
-    const gw = goal    ? parseFloat(goal)    : null;
 
-    if (current && (isNaN(cw!) || cw! < 50 || cw! > 600)) {
-      setError("Current weight must be 50–600 lbs");
-      return;
-    }
-    if (goal && (isNaN(gw!) || gw! < 50 || gw! > 600)) {
-      setError("Goal weight must be 50–600 lbs");
-      return;
+    let patch: Parameters<typeof updateClientGoalMetrics>[1] = {};
+
+    if (goalCategory === "body_composition") {
+      patch = {
+        current_body_fat: pn(currentBf),
+        goal_body_fat:    pn(goalBf),
+        current_smm:      pn(currentSmm),
+        goal_smm:         pn(goalSmm),
+      };
+    } else if (goalCategory === "performance") {
+      patch = {
+        current_performance_value: pn(currentPerf),
+        goal_performance_value:    pn(goalPerf),
+      };
+    } else {
+      patch = {
+        current_weight: pn(current),
+        goal_weight:    pn(goal),
+      };
     }
 
     setLoading(true);
-    const result = await updateClientWeights(goalId, { currentWeight: cw, goalWeight: gw });
+    const result = await updateClientGoalMetrics(goalId, patch);
     setLoading(false);
 
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-
+    if (result.error) { setError(result.error); return; }
     setOpen(false);
     router.refresh();
   }
+
+  const fieldCls = "w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400";
 
   if (!open) {
     return (
@@ -60,37 +98,64 @@ export function EditWeightsButton({
         onClick={() => setOpen(true)}
         className="text-xs text-blue-500 hover:text-blue-700 font-medium"
       >
-        Edit weights
+        Edit metrics
       </button>
     );
   }
 
   return (
     <div className="mt-3 p-3 bg-gray-50 rounded-xl space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Current Weight (lbs)</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            placeholder="215"
-            className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+
+      {goalCategory === "weight" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Current Weight (lbs)</label>
+            <input type="number" inputMode="decimal" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="215" className={fieldCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Goal Weight (lbs)</label>
+            <input type="number" inputMode="decimal" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="200" className={fieldCls} />
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Goal Weight (lbs)</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            placeholder="200"
-            className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+      )}
+
+      {goalCategory === "body_composition" && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Current Body Fat %</label>
+              <input type="number" inputMode="decimal" value={currentBf} onChange={(e) => setCurrentBf(e.target.value)} placeholder="25.0" className={fieldCls} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Goal Body Fat %</label>
+              <input type="number" inputMode="decimal" value={goalBf} onChange={(e) => setGoalBf(e.target.value)} placeholder="20.0" className={fieldCls} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Current SMM (lbs)</label>
+              <input type="number" inputMode="decimal" value={currentSmm} onChange={(e) => setCurrentSmm(e.target.value)} placeholder="78.0" className={fieldCls} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Goal SMM (lbs)</label>
+              <input type="number" inputMode="decimal" value={goalSmm} onChange={(e) => setGoalSmm(e.target.value)} placeholder="82.0" className={fieldCls} />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {goalCategory === "performance" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Current Value</label>
+            <input type="number" inputMode="decimal" value={currentPerf} onChange={(e) => setCurrentPerf(e.target.value)} placeholder="135" className={fieldCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Goal Value</label>
+            <input type="number" inputMode="decimal" value={goalPerf} onChange={(e) => setGoalPerf(e.target.value)} placeholder="225" className={fieldCls} />
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 
@@ -110,6 +175,7 @@ export function EditWeightsButton({
           Cancel
         </button>
       </div>
+
     </div>
   );
 }

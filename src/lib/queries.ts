@@ -80,11 +80,11 @@ export async function upsertTaskLog(
 
 
 // ── fetchGoalData ──────────────────────────────
-// Fetches weight-related goal data for the Progress page.
+// Fetches all goal metric data for the Progress page (all three categories).
 export async function fetchGoalData(userId: string) {
   const { data, error } = await supabase
     .from("goals")
-    .select("goal_name, start_weight, goal_weight, current_weight")
+    .select("id, goal_name, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -92,6 +92,60 @@ export async function fetchGoalData(userId: string) {
 
   if (error) console.error("[fetchGoalData] failed:", error);
   return data;
+}
+
+
+// ── fetchProgressLog ───────────────────────────
+// Loads body composition or performance log entries for a user's active goal.
+export async function fetchProgressLog(userId: string, goalId: string): Promise<{
+  logged_at: string;
+  body_fat: number | null;
+  smm: number | null;
+  performance_value: number | null;
+}[]> {
+  const { data, error } = await supabase
+    .from("progress_logs")
+    .select("logged_at, body_fat, smm, performance_value")
+    .eq("user_id", userId)
+    .eq("goal_id", goalId)
+    .order("logged_at", { ascending: true });
+
+  if (error) console.error("[fetchProgressLog] failed:", error);
+  return (data ?? []).map((r) => ({
+    logged_at:         r.logged_at,
+    body_fat:          r.body_fat          != null ? Number(r.body_fat)          : null,
+    smm:               r.smm               != null ? Number(r.smm)               : null,
+    performance_value: r.performance_value != null ? Number(r.performance_value) : null,
+  }));
+}
+
+
+// ── insertProgressLog ──────────────────────────
+// Upserts a progress_log row for today (body comp or performance).
+export async function insertProgressLog(
+  userId: string,
+  goalId: string,
+  patch:  { body_fat?: number | null; smm?: number | null; performance_value?: number | null }
+): Promise<void> {
+  const today = new Date().toISOString().split("T")[0];
+  const { error } = await supabase
+    .from("progress_logs")
+    .upsert(
+      { user_id: userId, goal_id: goalId, logged_at: today, ...patch },
+      { onConflict: "user_id,goal_id,logged_at" }
+    );
+  if (error) console.error("[insertProgressLog] failed:", error);
+}
+
+
+// ── updateCurrentMetrics ───────────────────────
+// Patches current_* metric columns on the user's active goal row.
+export async function updateCurrentMetrics(
+  userId: string,
+  patch:  { current_body_fat?: number | null; current_smm?: number | null; current_performance_value?: number | null }
+): Promise<void> {
+  const { error } = await supabase.from("goals").update(patch).eq("user_id", userId);
+  if (error) console.error("[updateCurrentMetrics] failed:", error);
 }
 
 

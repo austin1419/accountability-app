@@ -15,14 +15,71 @@ import { createAdminClient } from "@/lib/supabase-admin";
 
 // ── Types ─────────────────────────────────────────────────────────
 
+// Shared goal metrics type used across dashboard, coach detail, and leaderboard
+export type GoalMetrics = {
+  goal_category:              string;
+  // Weight
+  start_weight:               number | null;
+  goal_weight:                number | null;
+  current_weight:             number | null;
+  // Body composition
+  starting_body_fat:          number | null;
+  current_body_fat:           number | null;
+  goal_body_fat:              number | null;
+  starting_smm:               number | null;
+  current_smm:                number | null;
+  goal_smm:                   number | null;
+  // Performance
+  performance_metric_name:    string | null;
+  performance_unit:           string | null;
+  performance_direction:      string | null;
+  starting_performance_value: number | null;
+  current_performance_value:  number | null;
+  goal_performance_value:     number | null;
+};
+
+// Columns to SELECT from goals whenever we need full metrics
+// Must be a single string literal (not concatenated) so Supabase's TypeScript
+// type inference can parse the column names at compile time.
+const GOAL_METRICS_SELECT = "id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value" as const;
+
+// Compute goal progress (0–100) for any goal category
+function computeGoalProgress(g: GoalMetrics): number {
+  const clamp = (v: number) => Math.min(Math.max(Math.round(v), 0), 100);
+
+  if (g.goal_category === "body_composition") {
+    const parts: number[] = [];
+    if (g.starting_body_fat != null && g.current_body_fat != null && g.goal_body_fat != null
+        && g.starting_body_fat - g.goal_body_fat > 0) {
+      parts.push(clamp(((g.starting_body_fat - g.current_body_fat) / (g.starting_body_fat - g.goal_body_fat)) * 100));
+    }
+    if (g.starting_smm != null && g.current_smm != null && g.goal_smm != null
+        && g.goal_smm - g.starting_smm > 0) {
+      parts.push(clamp(((g.current_smm - g.starting_smm) / (g.goal_smm - g.starting_smm)) * 100));
+    }
+    return parts.length === 0 ? 0 : Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+  }
+
+  if (g.goal_category === "performance") {
+    const { performance_direction: dir, starting_performance_value: s,
+            current_performance_value: c, goal_performance_value: goal } = g;
+    if (s == null || c == null || goal == null || dir == null) return 0;
+    if (dir === "increase") return goal - s <= 0 ? 0 : clamp(((c - s) / (goal - s)) * 100);
+    return s - goal <= 0 ? 0 : clamp(((s - c) / (s - goal)) * 100);
+  }
+
+  // Default: weight
+  const { start_weight: s, current_weight: c, goal_weight: goal } = g;
+  if (s == null || c == null || goal == null || s - goal <= 0) return 0;
+  return clamp(((s - c) / (s - goal)) * 100);
+}
+
 export type DashboardData = {
   clientName: string;
-  goal: {
-    goal_name:      string;
-    start_weight:   number | null;
-    goal_weight:    number | null;
-    current_weight: number | null;
-  } | null;
+  goal: (GoalMetrics & {
+    goal_name:    string;
+    goalProgress: number;
+  }) | null;
   today: {
     completed: number;
     total:     number;
@@ -76,15 +133,12 @@ export type ClientDetail = {
   name:  string;
   email: string;
   phone: string | null;
-  goal: {
-    id:             string;
-    goal_name:      string;
-    goal_date:      string | null;
-    start_weight:   number | null;
-    goal_weight:    number | null;
-    current_weight: number | null;
-    goalProgress:   number;
-  } | null;
+  goal: (GoalMetrics & {
+    id:           string;
+    goal_name:    string;
+    goal_date:    string | null;
+    goalProgress: number;
+  }) | null;
   tasks:         { id: string; task_name: string; category: string | null }[];
   archivedTasks: { id: string; task_name: string; category: string | null; removal_reason: string | null }[];
   clientNotes:   ClientNote[];
@@ -106,7 +160,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
 
   const { data: goal } = await supabase
     .from("goals")
-    .select("goal_name, start_weight, goal_weight, current_weight, id")
+    .select(GOAL_METRICS_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -153,10 +207,24 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     clientName: user?.name ?? "there",
     goal: goal
       ? {
-          goal_name:      goal.goal_name,
-          start_weight:   goal.start_weight,
-          goal_weight:    goal.goal_weight,
-          current_weight: goal.current_weight,
+          goal_name:    goal.goal_name,
+          goalProgress: computeGoalProgress(goal as GoalMetrics),
+          goal_category: goal.goal_category,
+          start_weight:               goal.start_weight,
+          goal_weight:                goal.goal_weight,
+          current_weight:             goal.current_weight,
+          starting_body_fat:          goal.starting_body_fat,
+          current_body_fat:           goal.current_body_fat,
+          goal_body_fat:              goal.goal_body_fat,
+          starting_smm:               goal.starting_smm,
+          current_smm:                goal.current_smm,
+          goal_smm:                   goal.goal_smm,
+          performance_metric_name:    goal.performance_metric_name,
+          performance_unit:           goal.performance_unit,
+          performance_direction:      goal.performance_direction,
+          starting_performance_value: goal.starting_performance_value,
+          current_performance_value:  goal.current_performance_value,
+          goal_performance_value:     goal.goal_performance_value,
         }
       : null,
     today: { completed: todayCompleted, total: totalTasks, percent: todayPercent },
@@ -186,7 +254,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 
   const { data: goals } = await supabase
     .from("goals")
-    .select("id, user_id, goal_name, start_weight, goal_weight, current_weight")
+    .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
     .order("created_at", { ascending: false });
 
@@ -225,14 +293,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 
     const weekPercent  = weekTotal > 0 ? Math.round((weekDone  / weekTotal)  * 100) : 0;
     const todayPercent = taskCount > 0 ? Math.round((todayDone / taskCount)  * 100) : 0;
-
-    const goalProgress =
-      goal?.start_weight != null && goal?.current_weight != null && goal?.goal_weight != null &&
-      goal.start_weight - goal.goal_weight > 0
-        ? Math.min(Math.max(Math.round(
-            ((goal.start_weight - goal.current_weight) / (goal.start_weight - goal.goal_weight)) * 100
-          ), 0), 100)
-        : 0;
+    const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
     return { id: client.id, name: client.name, weekPercent, todayPercent, goalProgress, goalName: goal?.goal_name ?? null };
   });
@@ -269,7 +330,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
 
   const { data: goals } = await supabase
     .from("goals")
-    .select("id, user_id, goal_name, start_weight, goal_weight, current_weight")
+    .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
     .order("created_at", { ascending: false });
 
@@ -313,13 +374,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
     const monthDone    = allLogs.filter((l) => l.completed).length;
     const monthPercent = allLogs.length > 0 ? Math.round((monthDone / allLogs.length) * 100) : 0;
 
-    const goalProgress =
-      goal?.start_weight != null && goal?.current_weight != null && goal?.goal_weight != null &&
-      goal.start_weight - goal.goal_weight > 0
-        ? Math.min(Math.max(Math.round(
-            ((goal.start_weight - goal.current_weight) / (goal.start_weight - goal.goal_weight)) * 100
-          ), 0), 100)
-        : 0;
+    const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
     return {
       id:            client.id,
@@ -397,7 +452,7 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
 
   const { data: goal } = await supabase
     .from("goals")
-    .select("id, goal_name, goal_date, start_weight, goal_weight, current_weight")
+    .select(GOAL_METRICS_SELECT)
     .eq("user_id", clientId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -442,13 +497,7 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
   const monthDone    = allLogs.filter((l) => l.completed).length;
   const monthPercent = allLogs.length > 0 ? Math.round((monthDone / allLogs.length) * 100) : 0;
 
-  const goalProgress =
-    goal?.start_weight != null && goal?.current_weight != null && goal?.goal_weight != null &&
-    goal.start_weight - goal.goal_weight > 0
-      ? Math.min(Math.max(Math.round(
-          ((goal.start_weight - goal.current_weight) / (goal.start_weight - goal.goal_weight)) * 100
-        ), 0), 100)
-      : 0;
+  const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
   return {
     id:    user.id,
@@ -457,13 +506,26 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     phone: user.phone_number ?? null,
     goal: goal
       ? {
-          id:             goal.id,
-          goal_name:      goal.goal_name,
-          goal_date:      goal.goal_date ?? null,
-          start_weight:   goal.start_weight ?? null,
-          goal_weight:    goal.goal_weight ?? null,
-          current_weight: goal.current_weight ?? null,
+          id:           goal.id,
+          goal_name:    goal.goal_name,
+          goal_date:    goal.goal_date ?? null,
           goalProgress,
+          goal_category:              goal.goal_category,
+          start_weight:               goal.start_weight ?? null,
+          goal_weight:                goal.goal_weight ?? null,
+          current_weight:             goal.current_weight ?? null,
+          starting_body_fat:          goal.starting_body_fat ?? null,
+          current_body_fat:           goal.current_body_fat ?? null,
+          goal_body_fat:              goal.goal_body_fat ?? null,
+          starting_smm:               goal.starting_smm ?? null,
+          current_smm:                goal.current_smm ?? null,
+          goal_smm:                   goal.goal_smm ?? null,
+          performance_metric_name:    goal.performance_metric_name ?? null,
+          performance_unit:           goal.performance_unit ?? null,
+          performance_direction:      goal.performance_direction ?? null,
+          starting_performance_value: goal.starting_performance_value ?? null,
+          current_performance_value:  goal.current_performance_value ?? null,
+          goal_performance_value:     goal.goal_performance_value ?? null,
         }
       : null,
     tasks: (tasks ?? []).map((t) => ({
