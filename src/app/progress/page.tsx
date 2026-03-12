@@ -210,28 +210,41 @@ export default function ProgressPage() {
   const category = goalData?.goal_category ?? "weight";
 
   // ── Weight handlers ───────────────────────────
-  function handleLogWeight() {
+  async function handleLogWeight() {
     if (!userId) return;
     const w = parseFloat(weightInput);
     if (isNaN(w) || w < 50 || w > 500) { setError("Enter a valid weight between 50 and 500 lbs."); return; }
+    const r1 = await insertWeightLog(userId, w);
+    if (r1.error) { setError(r1.error); return; }
+    const r2 = await updateCurrentWeight(userId, w);
+    if (r2.error) { setError(r2.error); return; }
     const label = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
     setWeightLog((prev) => [...prev, { week: label, weight: w }]);
     setGoalData((prev) => prev ? { ...prev, current_weight: w } : prev);
-    insertWeightLog(userId, w);
-    updateCurrentWeight(userId, w);
     setWeightInput("");
     setError("");
     setShowForm(false);
   }
 
   // ── Body comp handlers ────────────────────────
-  function handleLogBodyComp() {
+  async function handleLogBodyComp() {
     if (!userId || !goalId) return;
     const bf  = bfInput.trim()  ? parseFloat(bfInput)  : null;
     const smm = smmInput.trim() ? parseFloat(smmInput) : null;
     if (bf === null && smm === null) { setError("Enter at least one value."); return; }
     if (bf  != null && (isNaN(bf)  || bf  < 1 || bf  > 60)) { setError("Body fat % must be 1–60."); return; }
     if (smm != null && (isNaN(smm) || smm < 30 || smm > 300)) { setError("SMM must be 30–300 lbs."); return; }
+
+    const patch: { body_fat?: number | null; smm?: number | null } = {};
+    if (bf  != null) patch.body_fat = bf;
+    if (smm != null) patch.smm      = smm;
+    const r1 = await insertProgressLog(userId, goalId, patch);
+    if (r1.error) { setError(r1.error); return; }
+    const r2 = await updateCurrentMetrics(userId, {
+      current_body_fat: bf  ?? undefined,
+      current_smm:      smm ?? undefined,
+    });
+    if (r2.error) { setError(r2.error); return; }
 
     const today  = new Date().toISOString().split("T")[0];
     const logObj = { logged_at: today, body_fat: bf, smm, performance_value: null };
@@ -240,16 +253,6 @@ export default function ProgressPage() {
       return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
     });
     setGoalData((prev) => prev ? { ...prev, current_body_fat: bf ?? prev.current_body_fat, current_smm: smm ?? prev.current_smm } : prev);
-
-    const patch: { body_fat?: number | null; smm?: number | null } = {};
-    if (bf  != null) patch.body_fat = bf;
-    if (smm != null) patch.smm      = smm;
-    insertProgressLog(userId, goalId, patch);
-    updateCurrentMetrics(userId, {
-      current_body_fat: bf  ?? undefined,
-      current_smm:      smm ?? undefined,
-    });
-
     setBfInput("");
     setSmmInput("");
     setError("");
@@ -257,10 +260,15 @@ export default function ProgressPage() {
   }
 
   // ── Performance handlers ──────────────────────
-  function handleLogPerformance() {
+  async function handleLogPerformance() {
     if (!userId || !goalId) return;
     const v = parseFloat(perfInput);
     if (isNaN(v)) { setError("Enter a valid number."); return; }
+
+    const r1 = await insertProgressLog(userId, goalId, { performance_value: v });
+    if (r1.error) { setError(r1.error); return; }
+    const r2 = await updateCurrentMetrics(userId, { current_performance_value: v });
+    if (r2.error) { setError(r2.error); return; }
 
     const today  = new Date().toISOString().split("T")[0];
     const logObj = { logged_at: today, body_fat: null, smm: null, performance_value: v };
@@ -269,10 +277,6 @@ export default function ProgressPage() {
       return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
     });
     setGoalData((prev) => prev ? { ...prev, current_performance_value: v } : prev);
-
-    insertProgressLog(userId, goalId, { performance_value: v });
-    updateCurrentMetrics(userId, { current_performance_value: v });
-
     setPerfInput("");
     setError("");
     setShowForm(false);

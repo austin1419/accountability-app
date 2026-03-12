@@ -231,7 +231,7 @@ export default async function ClientDetailPage({
                       <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
                         <p className="text-base font-bold text-gray-800">
                           {val != null
-                            ? `${val}${client.goal!.performance_unit ? ` ${client.goal!.performance_unit}` : ""}`
+                            ? `${val}${client.goal?.performance_unit ? ` ${client.goal.performance_unit}` : ""}`
                             : <span className="text-gray-300 text-sm font-normal">—</span>}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">{label}</p>

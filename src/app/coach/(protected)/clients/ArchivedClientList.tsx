@@ -3,24 +3,23 @@
 // ─────────────────────────────────────────────
 // ArchivedClientList
 //
-// Displays archived clients with a Re-Activate button.
-// Removes reactivated rows from local state immediately,
-// then persists via server action.
+// Displays archived clients with Re-Activate and Permanently Delete actions.
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
 import Link from "next/link";
 import type { ArchivedClientRow } from "@/lib/server-queries";
-import { reactivateClient } from "./[id]/actions";
+import { reactivateClient, permanentlyDeleteClient } from "./[id]/actions";
 
 export function ArchivedClientList({
   initialClients,
 }: {
   initialClients: ArchivedClientRow[];
 }) {
-  const [clients,    setClients]    = useState<ArchivedClientRow[]>(initialClients);
-  const [loadingId,  setLoadingId]  = useState<string | null>(null);
-  const [errorId,    setErrorId]    = useState<string | null>(null);
+  const [clients,       setClients]       = useState<ArchivedClientRow[]>(initialClients);
+  const [loadingId,     setLoadingId]     = useState<string | null>(null);
+  const [errorId,       setErrorId]       = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function handleReactivate(clientId: string) {
     setLoadingId(clientId);
@@ -33,6 +32,21 @@ export function ArchivedClientList({
     }
     setClients((prev) => prev.filter((c) => c.id !== clientId));
     setLoadingId(null);
+  }
+
+  async function handlePermanentDelete(clientId: string) {
+    setLoadingId(clientId);
+    setErrorId(null);
+    const result = await permanentlyDeleteClient(clientId);
+    if (result.error) {
+      setErrorId(clientId);
+      setLoadingId(null);
+      setConfirmDeleteId(null);
+      return;
+    }
+    setClients((prev) => prev.filter((c) => c.id !== clientId));
+    setLoadingId(null);
+    setConfirmDeleteId(null);
   }
 
   if (clients.length === 0) {
@@ -57,7 +71,7 @@ export function ArchivedClientList({
             <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-400 px-5 py-3">
               Archive Reason
             </th>
-            <th className="px-5 py-3 w-40" />
+            <th className="px-5 py-3 w-52" />
           </tr>
         </thead>
         <tbody>
@@ -78,24 +92,60 @@ export function ArchivedClientList({
                 </p>
               </td>
               <td className="px-5 py-4 text-right">
-                <div className="flex items-center justify-end gap-4">
-                  {errorId === client.id && (
-                    <span className="text-xs text-red-500">Failed — try again</span>
-                  )}
-                  <button
-                    onClick={() => handleReactivate(client.id)}
-                    disabled={loadingId === client.id}
-                    className="text-xs font-semibold text-blue-500 hover:text-blue-600 disabled:opacity-50 transition-colors"
-                  >
-                    {loadingId === client.id ? "Reactivating…" : "Re-Activate Client"}
-                  </button>
-                  <Link
-                    href={`/coach/clients/${client.id}`}
-                    className="text-xs font-medium text-gray-400 hover:text-gray-600"
-                  >
-                    View →
-                  </Link>
-                </div>
+                {confirmDeleteId === client.id ? (
+                  // ── Confirmation state ──────────────────
+                  <div className="flex flex-col items-end gap-2">
+                    <p className="text-xs text-gray-500 text-right max-w-[220px]">
+                      Permanently delete <strong>{client.name}</strong> and all their data? This cannot be undone.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        disabled={loadingId === client.id}
+                        className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handlePermanentDelete(client.id)}
+                        disabled={loadingId === client.id}
+                        className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        {loadingId === client.id ? "Deleting…" : "Delete Permanently"}
+                      </button>
+                    </div>
+                    {errorId === client.id && (
+                      <span className="text-xs text-red-500">Failed — try again</span>
+                    )}
+                  </div>
+                ) : (
+                  // ── Default action buttons ──────────────
+                  <div className="flex items-center justify-end gap-4">
+                    {errorId === client.id && (
+                      <span className="text-xs text-red-500">Failed — try again</span>
+                    )}
+                    <button
+                      onClick={() => handleReactivate(client.id)}
+                      disabled={loadingId === client.id}
+                      className="text-xs font-semibold text-blue-500 hover:text-blue-600 disabled:opacity-50 transition-colors"
+                    >
+                      {loadingId === client.id ? "Reactivating…" : "Re-Activate Client"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(client.id)}
+                      disabled={loadingId === client.id}
+                      className="text-xs font-semibold text-red-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <Link
+                      href={`/coach/clients/${client.id}`}
+                      className="text-xs font-medium text-gray-400 hover:text-gray-600"
+                    >
+                      View →
+                    </Link>
+                  </div>
+                )}
               </td>
             </tr>
           ))}

@@ -126,7 +126,7 @@ export async function insertProgressLog(
   userId: string,
   goalId: string,
   patch:  { body_fat?: number | null; smm?: number | null; performance_value?: number | null }
-): Promise<void> {
+): Promise<{ error?: string }> {
   const today = new Date().toISOString().split("T")[0];
   const { error } = await supabase
     .from("progress_logs")
@@ -134,7 +134,11 @@ export async function insertProgressLog(
       { user_id: userId, goal_id: goalId, logged_at: today, ...patch },
       { onConflict: "user_id,goal_id,logged_at" }
     );
-  if (error) console.error("[insertProgressLog] failed:", error);
+  if (error) {
+    console.error("[insertProgressLog] failed:", error);
+    return { error: "Failed to save progress." };
+  }
+  return {};
 }
 
 
@@ -143,22 +147,30 @@ export async function insertProgressLog(
 export async function updateCurrentMetrics(
   userId: string,
   patch:  { current_body_fat?: number | null; current_smm?: number | null; current_performance_value?: number | null }
-): Promise<void> {
+): Promise<{ error?: string }> {
   const { error } = await supabase.from("goals").update(patch).eq("user_id", userId);
-  if (error) console.error("[updateCurrentMetrics] failed:", error);
+  if (error) {
+    console.error("[updateCurrentMetrics] failed:", error);
+    return { error: "Failed to update metrics." };
+  }
+  return {};
 }
 
 
 // ── updateCurrentWeight ────────────────────────
 // Updates the current_weight field on the client's active goal.
 // Called when the user logs a new weight on the Progress page.
-export async function updateCurrentWeight(userId: string, weight: number): Promise<void> {
+export async function updateCurrentWeight(userId: string, weight: number): Promise<{ error?: string }> {
   const { error } = await supabase
     .from("goals")
     .update({ current_weight: weight })
     .eq("user_id", userId);
 
-  if (error) console.error("[updateCurrentWeight] failed:", error);
+  if (error) {
+    console.error("[updateCurrentWeight] failed:", error);
+    return { error: "Failed to update current weight." };
+  }
+  return {};
 }
 
 
@@ -186,7 +198,7 @@ export async function fetchWeightLog(userId: string): Promise<WeightEntry[]> {
 // ── insertWeightLog ────────────────────────────
 // Saves a new weight entry for today. Upserts so logging twice in a day
 // replaces rather than duplicates (matches the unique index on user_id + logged_at).
-export async function insertWeightLog(userId: string, weight: number): Promise<void> {
+export async function insertWeightLog(userId: string, weight: number): Promise<{ error?: string }> {
   const today = new Date().toISOString().split("T")[0];
   const { error } = await supabase
     .from("weight_logs")
@@ -195,7 +207,11 @@ export async function insertWeightLog(userId: string, weight: number): Promise<v
       { onConflict: "user_id,logged_at" },
     );
 
-  if (error) console.error("[insertWeightLog] failed:", error);
+  if (error) {
+    console.error("[insertWeightLog] failed:", error);
+    return { error: "Failed to save weight." };
+  }
+  return {};
 }
 
 

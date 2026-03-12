@@ -56,7 +56,17 @@ export default async function ClientDashboard({
   const selectedDate = validateDate(params.date, todayStr);
 
   // ── Fetch dashboard data ─────────────────────────────────────────
-  const data = await fetchDashboard(profile.id, selectedDate);
+  let data: Awaited<ReturnType<typeof fetchDashboard>>;
+  try {
+    data = await fetchDashboard(profile.id, selectedDate);
+  } catch (err) {
+    console.error("[ClientDashboard] fetchDashboard failed:", err);
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center max-w-md mx-auto px-5">
+        <p className="text-gray-500 text-sm">Unable to load your dashboard. Please refresh to try again.</p>
+      </div>
+    );
+  }
 
   const { clientName, goal, today, week } = data;
 
