@@ -1,59 +1,40 @@
 "use client";
 
 // ─────────────────────────────────────────────
-// /auth/confirm — Set Password
+// /auth/set-password — Set Password
 //
-// Clients land here after clicking their invite email link.
-// Supabase appends session tokens to the URL hash:
-//   /auth/confirm#access_token=...&refresh_token=...&type=invite
+// Clients land here after /auth/confirm exchanges the invite token and
+// writes a valid session cookie. The session is already in cookies at
+// this point — no token exchange needed on this page.
 //
-// The Supabase browser client detects those hash params automatically
-// and fires an SIGNED_IN auth state change. We then show a form
-// so the client can set a permanent password for their account.
-// After saving, they're redirected to the client dashboard.
+// We verify the session exists before showing the form. If it doesn't,
+// we show the real error instead of silently failing on updateUser.
 // ─────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function AuthConfirmPage() {
+export default function SetPasswordPage() {
   const router = useRouter();
-  const [ready,    setReady]    = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirm,  setConfirm]  = useState("");
-  const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
+  const [ready,     setReady]     = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [password,  setPassword]  = useState("");
+  const [confirm,   setConfirm]   = useState("");
+  const [error,     setError]     = useState("");
+  const [loading,   setLoading]   = useState(false);
 
   useEffect(() => {
-    // Primary path: parse hash tokens from the URL and set the session directly.
-    // More reliable than waiting for onAuthStateChange, which can fire during
-    // Supabase client initialization — before this useEffect registers.
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken  = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-
-    if (accessToken && refreshToken) {
-      supabase.auth
-        .setSession({ access_token: accessToken, refresh_token: refreshToken })
-        .then(({ error }) => { if (!error) setReady(true); });
-      return;
-    }
-
-    // Fallback: check for an existing session (e.g. page reload after token exchange)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
-          setReady(true);
-        }
+      if (session) {
+        setReady(true);
+      } else {
+        setAuthError(
+          "Session not found. Your invite link may have expired or already been used. " +
+          "Please ask your coach to send a new invite."
+        );
       }
-    );
-    return () => subscription.unsubscribe();
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -74,23 +55,27 @@ export default function AuthConfirmPage() {
     setLoading(false);
 
     if (updateError) {
-      setError("Failed to set password. Please try again.");
+      // Show the real Supabase error — do not swallow it.
+      setError(updateError.message);
       return;
     }
 
-    // Sign out the invite session so the client starts fresh from login.
-    await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
+    router.refresh();
+  }
+
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 gap-4">
+        <p className="text-sm text-red-500 text-center max-w-xs">{authError}</p>
+      </div>
+    );
   }
 
   if (!ready) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 gap-4">
-        <p className="text-sm text-gray-400">Verifying your invite…</p>
-        <p className="text-xs text-gray-400 text-center max-w-xs">
-          On iPhone? If this screen does not proceed, open the link in{" "}
-          <strong className="text-gray-500">Safari</strong> to complete your setup.
-        </p>
+        <p className="text-sm text-gray-400">Loading your account…</p>
       </div>
     );
   }
