@@ -62,8 +62,8 @@ export default async function ClientDashboard({
   } catch (err) {
     console.error("[ClientDashboard] fetchDashboard failed:", err);
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center max-w-md mx-auto px-5">
-        <p className="text-gray-500 text-sm">Unable to load your dashboard. Please refresh to try again.</p>
+      <div className="min-h-screen bg-[#111111] flex flex-col items-center justify-center max-w-md mx-auto px-5">
+        <p className="text-[#9A9080] text-sm">Unable to load your dashboard. Please refresh to try again.</p>
       </div>
     );
   }
@@ -87,23 +87,42 @@ export default async function ClientDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
       {/* ── Header ───────────────────────────────── */}
-      <header className="bg-white pt-10 border-b border-gray-100">
+      <header className="bg-[#0D0D0D] pt-10 border-b border-[#252525]">
         <div className="px-5 pb-3">
           {/* Brand mark */}
-          <div className="mb-3">
-            <p className="text-xs font-bold tracking-widest text-blue-500 uppercase">
-              IronTribe <span className="text-gray-800">PULSE</span>
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Track the habits that drive your progress
-            </p>
+          <div className="mb-3 flex items-center gap-2">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 flex-shrink-0">
+              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
+              <polyline
+                style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
+                points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
+                stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+            <div>
+              <p
+                className="text-xs tracking-[0.3em] text-[#B8933A] uppercase leading-none"
+                style={{ fontFamily: "'Cinzel', serif", fontWeight: 900 }}
+              >
+                PULSE
+              </p>
+              <p
+                className="text-[10px] text-[#807868] mt-0.5 leading-none"
+                style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}
+              >
+                Most apps track what you do. PULSE tracks who you&apos;re becoming.
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-gray-400">{todayDate}</p>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">
-            Hey, {clientName} 👋
+          <p className="text-sm text-[#9A9080]">{todayDate}</p>
+          <h1
+            className="text-2xl text-[#F4EEE4] mt-1 tracking-wide"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+          >
+            {clientName}
           </h1>
         </div>
         {/* Date navigation — step through days or open calendar */}
@@ -114,38 +133,38 @@ export default async function ClientDashboard({
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
 
         {/* ── Goal Card ────────────────────────────── */}
-        <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
             Your Goal
           </p>
           {goal ? (
             <>
-              <p className="text-base font-semibold text-gray-800 leading-snug">
+              <p className="text-base font-semibold text-[#DDD5C0] leading-snug">
                 {goal.goal_name}
               </p>
               {goal.goal_category === "weight" && goal.start_weight != null && goal.current_weight != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-                  <span>Started at <strong className="text-gray-700">{goal.start_weight} lbs</strong></span>
-                  <span className="text-gray-300">·</span>
-                  <span>Currently <strong className="text-gray-700">{goal.current_weight} lbs</strong></span>
+                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
+                  <span>Started at <strong className="text-[#DDD5C0]">{goal.start_weight} lbs</strong></span>
+                  <span className="text-[#252525]">·</span>
+                  <span>Currently <strong className="text-[#DDD5C0]">{goal.current_weight} lbs</strong></span>
                 </div>
               )}
               {goal.goal_category === "body_composition" && goal.current_body_fat != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-                  <span>Body fat: <strong className="text-gray-700">{goal.current_body_fat}%</strong></span>
+                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
+                  <span>Body fat: <strong className="text-[#DDD5C0]">{goal.current_body_fat}%</strong></span>
                   {goal.current_smm != null && (
                     <>
-                      <span className="text-gray-300">·</span>
-                      <span>SMM: <strong className="text-gray-700">{goal.current_smm} lbs</strong></span>
+                      <span className="text-[#252525]">·</span>
+                      <span>SMM: <strong className="text-[#DDD5C0]">{goal.current_smm} lbs</strong></span>
                     </>
                   )}
                 </div>
               )}
               {goal.goal_category === "performance" && goal.current_performance_value != null && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+                <div className="mt-3 flex items-center gap-2 text-sm text-[#9A9080] flex-wrap">
                   <span>
                     {goal.performance_metric_name ?? "Current"}:{" "}
-                    <strong className="text-gray-700">
+                    <strong className="text-[#DDD5C0]">
                       {goal.current_performance_value}{goal.performance_unit ? ` ${goal.performance_unit}` : ""}
                     </strong>
                   </span>
@@ -153,22 +172,22 @@ export default async function ClientDashboard({
               )}
             </>
           ) : (
-            <p className="text-sm text-gray-400">No goal set yet.</p>
+            <p className="text-sm text-[#9A9080]">No goal set yet.</p>
           )}
         </section>
 
         {/* ── Progress Toward Goal ─────────────────── */}
         {goal && (
-          <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
               Progress Toward Goal
             </p>
             <div className="flex items-center gap-5">
               <div className="relative flex items-center justify-center flex-shrink-0">
-                <ProgressRing percent={goalProgress} color="#3b82f6" />
+                <ProgressRing percent={goalProgress} color="#B8933A" />
                 <div className="absolute flex flex-col items-center">
-                  <span className="text-2xl font-bold text-gray-900">{goalProgress}%</span>
-                  <span className="text-xs text-gray-400">complete</span>
+                  <span className="text-2xl font-bold text-[#DDD5C0]">{goalProgress}%</span>
+                  <span className="text-xs text-[#9A9080]">complete</span>
                 </div>
               </div>
 
@@ -176,14 +195,14 @@ export default async function ClientDashboard({
               {goal.goal_category === "weight" && goal.start_weight != null && (
                 <div className="flex flex-col gap-3">
                   <div>
-                    <p className="text-xs text-gray-400">Lost so far</p>
-                    <p className="text-lg font-bold text-gray-800">
+                    <p className="text-xs text-[#9A9080]">Lost so far</p>
+                    <p className="text-lg font-bold text-[#B8933A]">
                       {((goal.start_weight ?? 0) - (goal.current_weight ?? 0)).toFixed(1)} lbs
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Still to go</p>
-                    <p className="text-lg font-bold text-gray-800">
+                    <p className="text-xs text-[#9A9080]">Still to go</p>
+                    <p className="text-lg font-bold text-[#DDD5C0]">
                       {((goal.current_weight ?? 0) - (goal.goal_weight ?? 0)).toFixed(1)} lbs
                     </p>
                   </div>
@@ -195,16 +214,16 @@ export default async function ClientDashboard({
                 <div className="flex flex-col gap-3">
                   {goal.current_body_fat != null && goal.goal_body_fat != null && (
                     <div>
-                      <p className="text-xs text-gray-400">Body fat</p>
-                      <p className="text-base font-bold text-gray-800">
+                      <p className="text-xs text-[#9A9080]">Body fat</p>
+                      <p className="text-base font-bold text-[#DDD5C0]">
                         {goal.current_body_fat}% → {goal.goal_body_fat}%
                       </p>
                     </div>
                   )}
                   {goal.current_smm != null && goal.goal_smm != null && (
                     <div>
-                      <p className="text-xs text-gray-400">Muscle (SMM)</p>
-                      <p className="text-base font-bold text-gray-800">
+                      <p className="text-xs text-[#9A9080]">Muscle (SMM)</p>
+                      <p className="text-base font-bold text-[#DDD5C0]">
                         {goal.current_smm} → {goal.goal_smm} lbs
                       </p>
                     </div>
@@ -217,10 +236,10 @@ export default async function ClientDashboard({
                 <div className="flex flex-col gap-3">
                   {goal.current_performance_value != null && (
                     <div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[#9A9080]">
                         {goal.performance_metric_name ?? "Current"}
                       </p>
-                      <p className="text-lg font-bold text-gray-800">
+                      <p className="text-lg font-bold text-[#DDD5C0]">
                         {goal.current_performance_value}
                         {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
                       </p>
@@ -228,8 +247,8 @@ export default async function ClientDashboard({
                   )}
                   {goal.goal_performance_value != null && (
                     <div>
-                      <p className="text-xs text-gray-400">Goal</p>
-                      <p className="text-lg font-bold text-gray-800">
+                      <p className="text-xs text-[#9A9080]">Goal</p>
+                      <p className="text-lg font-bold text-[#DDD5C0]">
                         {goal.goal_performance_value}
                         {goal.performance_unit ? ` ${goal.performance_unit}` : ""}
                       </p>
@@ -243,33 +262,33 @@ export default async function ClientDashboard({
         )}
 
         {/* ── Today's Compliance ───────────────────── */}
-        <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
             {isToday ? "Today\u2019s Compliance" : `${shortDateLabel} Compliance`}
           </p>
           <div className="flex items-center gap-5">
             <div className="relative flex items-center justify-center flex-shrink-0">
               <ProgressRing
                 percent={today.percent}
-                color={today.percent >= 70 ? "#22c55e" : "#f59e0b"}
+                color={today.percent >= 70 ? "#B8933A" : "#7A1E1E"}
               />
               <div className="absolute flex flex-col items-center">
-                <span className="text-2xl font-bold text-gray-900">{today.percent}%</span>
-                <span className="text-xs text-gray-400">done</span>
+                <span className="text-2xl font-bold text-[#DDD5C0]">{today.percent}%</span>
+                <span className="text-xs text-[#9A9080]">done</span>
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <p className="text-sm text-gray-500">
-                <strong className="text-gray-800">{today.completed}</strong> of{" "}
-                <strong className="text-gray-800">{today.total}</strong> tasks complete
+              <p className="text-sm text-[#9A9080]">
+                <strong className="text-[#DDD5C0]">{today.completed}</strong> of{" "}
+                <strong className="text-[#DDD5C0]">{today.total}</strong> tasks complete
               </p>
-              <p className="text-xs text-gray-400 mt-1">Target: 70% or better</p>
+              <p className="text-xs text-[#807868] mt-1">Target: 70% or better</p>
               {today.percent >= 70 ? (
-                <span className="mt-2 inline-block text-xs font-semibold text-green-600 bg-green-50 rounded-full px-3 py-1">
+                <span className="mt-2 inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
                   On track
                 </span>
               ) : (
-                <span className="mt-2 inline-block text-xs font-semibold text-amber-600 bg-amber-50 rounded-full px-3 py-1">
+                <span className="mt-2 inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
                   Needs attention
                 </span>
               )}
@@ -278,34 +297,34 @@ export default async function ClientDashboard({
         </section>
 
         {/* ── Weekly Compliance ────────────────────── */}
-        <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
               {isToday ? "Weekly Compliance" : `7 Days to ${shortDateLabel}`}
             </p>
             {week.percent >= 70 ? (
-              <span className="text-xs font-semibold text-green-600 bg-green-50 rounded-full px-3 py-1">
+              <span className="text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
                 On track
               </span>
             ) : (
-              <span className="text-xs font-semibold text-amber-600 bg-amber-50 rounded-full px-3 py-1">
+              <span className="text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
                 Needs attention
               </span>
             )}
           </div>
-          <p className="text-4xl font-bold text-gray-900 mb-3">
+          <p className="text-4xl font-bold text-[#DDD5C0] mb-3">
             {week.percent}
-            <span className="text-2xl text-gray-400">%</span>
+            <span className="text-2xl text-[#9A9080]">%</span>
           </p>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[#252525] rounded overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                week.percent >= 70 ? "bg-green-500" : "bg-amber-400"
+              className={`h-full rounded transition-all duration-500 ${
+                week.percent >= 70 ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
               }`}
               style={{ width: `${week.percent}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-2">Target: 70% or better</p>
+          <p className="text-xs text-[#807868] mt-2">Target: 70% or better</p>
         </section>
 
       </main>
