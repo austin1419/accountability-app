@@ -69,10 +69,10 @@ export default async function ClientsListPage({
       <div className="flex gap-1 border-b border-[#252525]">
         <Link
           href="/coach/clients"
-          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2 text-xs font-semibold transition-all duration-150 border-b-2 -mb-px cursor-pointer ${
             tab === "active"
               ? "border-[#B8933A] text-[#B8933A]"
-              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0] hover:bg-[#1A1A1A]"
           }`}
           style={{ fontFamily: "'Cinzel', serif" }}
         >
@@ -83,10 +83,10 @@ export default async function ClientsListPage({
         </Link>
         <Link
           href="/coach/clients?tab=archived"
-          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2 text-xs font-semibold transition-all duration-150 border-b-2 -mb-px cursor-pointer ${
             tab === "archived"
               ? "border-[#B8933A] text-[#B8933A]"
-              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0] hover:bg-[#1A1A1A]"
           }`}
           style={{ fontFamily: "'Cinzel', serif" }}
         >
@@ -214,7 +214,7 @@ export default async function ClientsListPage({
                   <td className="px-5 py-4 text-right">
                     <Link
                       href={`/coach/clients/${client.id}`}
-                      className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] transition-colors"
+                      className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
                       style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       View →

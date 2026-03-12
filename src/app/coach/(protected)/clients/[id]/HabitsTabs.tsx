@@ -49,10 +49,10 @@ export function HabitsTabs({
       <div className="flex gap-1 mb-4 border-b border-[#252525]">
         <button
           onClick={() => setTab("active")}
-          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2 text-xs font-semibold transition-all duration-150 border-b-2 -mb-px cursor-pointer ${
             tab === "active"
               ? "border-[#B8933A] text-[#B8933A]"
-              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0] hover:bg-[#1A1A1A]"
           }`}
           style={{ fontFamily: "'Cinzel', serif" }}
         >
@@ -63,10 +63,10 @@ export function HabitsTabs({
         </button>
         <button
           onClick={() => setTab("archived")}
-          className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2 text-xs font-semibold transition-all duration-150 border-b-2 -mb-px cursor-pointer ${
             tab === "archived"
               ? "border-[#B8933A] text-[#B8933A]"
-              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0] hover:bg-[#1A1A1A]"
           }`}
           style={{ fontFamily: "'Cinzel', serif" }}
         >

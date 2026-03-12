@@ -70,7 +70,7 @@ export default async function ClientDetailPage({
       {/* ── Back link ───────────────────────────── */}
       <Link
         href="/coach/clients"
-        className="inline-flex items-center gap-1 text-sm text-[#9A9080] hover:text-[#DDD5C0] transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-3 py-1.5 rounded cursor-pointer transition-all duration-150"
       >
         ← Back to Clients
       </Link>

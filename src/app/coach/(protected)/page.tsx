@@ -48,7 +48,7 @@ function FlaggedClientCard({ client }: { client: CoachClientRow }) {
         </div>
         <Link
           href={`/coach/clients/${client.id}`}
-          className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] whitespace-nowrap flex-shrink-0 mt-0.5 transition-colors"
+          className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded whitespace-nowrap flex-shrink-0 cursor-pointer transition-all duration-150"
           style={{ fontFamily: "'Cinzel', serif" }}
         >
           View →
@@ -128,7 +128,7 @@ export default async function CoachDashboard() {
         </div>
         <Link
           href="/coach/clients"
-          className="text-sm font-medium text-[#B8933A] hover:text-[#C9A44A] transition-colors"
+          className="text-sm font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
           style={{ fontFamily: "'Cinzel', serif" }}
         >
           View all clients →
@@ -273,7 +273,7 @@ export default async function CoachDashboard() {
                   </div>
                   <Link
                     href={`/coach/clients/${client.id}`}
-                    className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] whitespace-nowrap flex-shrink-0 mt-0.5 transition-colors"
+                    className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded whitespace-nowrap flex-shrink-0 cursor-pointer transition-all duration-150"
                     style={{ fontFamily: "'Cinzel', serif" }}
                   >
                     View →
