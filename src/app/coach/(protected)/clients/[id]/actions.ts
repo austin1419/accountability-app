@@ -333,6 +333,48 @@ export async function changeClientGoal(
     // Do not roll back the goal change for a task migration failure.
   }
 
+  // 8. Insert a starting progress log entry to anchor the chart's leftmost point.
+  //    This seeds the first data point so the chart renders after the client's first
+  //    subsequent log (requires 2 points). For body_composition and performance this
+  //    goes into progress_logs (scoped by goal_id — no collision risk on a new goal).
+  //    For weight this goes into weight_logs (user-scoped, upsert safe).
+  const seedDate = new Date().toISOString().split("T")[0];
+
+  if (
+    newGoalData.goal_category === "body_composition" &&
+    (newGoalData.starting_body_fat != null || newGoalData.starting_smm != null)
+  ) {
+    const { error: seedError } = await admin.from("progress_logs").insert({
+      user_id:   clientId,
+      goal_id:   newGoal.id,
+      logged_at: seedDate,
+      body_fat:  newGoalData.starting_body_fat ?? null,
+      smm:       newGoalData.starting_smm       ?? null,
+    });
+    if (seedError) console.error("[changeClientGoal] failed to seed body comp progress log:", seedError.message);
+  }
+
+  if (
+    newGoalData.goal_category === "performance" &&
+    newGoalData.starting_performance_value != null
+  ) {
+    const { error: seedError } = await admin.from("progress_logs").insert({
+      user_id:           clientId,
+      goal_id:           newGoal.id,
+      logged_at:         seedDate,
+      performance_value: newGoalData.starting_performance_value,
+    });
+    if (seedError) console.error("[changeClientGoal] failed to seed performance progress log:", seedError.message);
+  }
+
+  if (newGoalData.goal_category === "weight" && newGoalData.start_weight != null) {
+    const { error: seedError } = await admin.from("weight_logs").upsert(
+      { user_id: clientId, weight: newGoalData.start_weight, logged_at: seedDate },
+      { onConflict: "user_id,logged_at" },
+    );
+    if (seedError) console.error("[changeClientGoal] failed to seed weight log:", seedError.message);
+  }
+
   return {};
 }
 

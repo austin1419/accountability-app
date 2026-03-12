@@ -85,6 +85,144 @@ function MetricChart({
   );
 }
 
+// ─────────────────────────────────────────────
+// Dual-line chart for body composition recomposition.
+// Body Fat (crimson) and SMM (gold) share the same time axis
+// but use independent Y scales — so the diverging trend
+// (BF decreasing, SMM increasing) is visible regardless of units.
+// ─────────────────────────────────────────────
+const BF_COLOR  = "#C04040";
+const SMM_COLOR = "#B89B3A";
+
+function DualMetricChart({
+  bfData,
+  smmData,
+  goalBf,
+  goalSmm,
+}: {
+  bfData:  { date: string; value: number }[];
+  smmData: { date: string; value: number }[];
+  goalBf?:  number | null;
+  goalSmm?: number | null;
+}) {
+  const hasBf  = bfData.length  >= 2;
+  const hasSmm = smmData.length >= 2;
+  if (!hasBf && !hasSmm) return null;
+
+  const SVG_W  = 300;
+  const SVG_H  = 150;
+  const PAD_L  = 32;
+  const PAD_R  = 32;
+  const PAD_T  = 20;
+  const PAD_B  = 28;
+  const chartW = SVG_W - PAD_L - PAD_R;
+  const chartH = SVG_H - PAD_T - PAD_B;
+
+  // Unified time axis from all available dates across both series
+  const allDates = [
+    ...new Set([...bfData.map((d) => d.date), ...smmData.map((d) => d.date)]),
+  ].sort();
+
+  const toX = (date: string) => {
+    const i = allDates.indexOf(date);
+    return allDates.length <= 1 ? PAD_L : PAD_L + (i / (allDates.length - 1)) * chartW;
+  };
+
+  // BF Y scale — left axis (descending values = improvement)
+  const bfVals  = [...bfData.map((d) => d.value), ...(goalBf  != null ? [goalBf]  : [])];
+  const bfMin   = bfVals.length  ? Math.min(...bfVals)  : 0;
+  const bfMax   = bfVals.length  ? Math.max(...bfVals)  : 1;
+  const bfRange = bfMax - bfMin || 1;
+  const toYBf   = (v: number) => PAD_T + chartH * (1 - (v - bfMin) / bfRange);
+
+  // SMM Y scale — right axis (ascending values = improvement)
+  const smmVals  = [...smmData.map((d) => d.value), ...(goalSmm != null ? [goalSmm] : [])];
+  const smmMin   = smmVals.length ? Math.min(...smmVals) : 0;
+  const smmMax   = smmVals.length ? Math.max(...smmVals) : 1;
+  const smmRange = smmMax - smmMin || 1;
+  const toYSmm   = (v: number) => PAD_T + chartH * (1 - (v - smmMin) / smmRange);
+
+  const shortDate = (iso: string) =>
+    new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  return (
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
+      {/* Legend */}
+      <circle cx={PAD_L}      cy={8} r={3} fill={BF_COLOR}  />
+      <text   x={PAD_L + 7}   y={12} fontSize={9} fill={BF_COLOR}>Body Fat</text>
+      <circle cx={PAD_L + 58} cy={8} r={3} fill={SMM_COLOR} />
+      <text   x={PAD_L + 65}  y={12} fontSize={9} fill={SMM_COLOR}>SMM</text>
+
+      {/* BF goal dashed line */}
+      {hasBf && goalBf != null && (
+        <line
+          x1={PAD_L} y1={toYBf(goalBf)} x2={SVG_W - PAD_R} y2={toYBf(goalBf)}
+          stroke={BF_COLOR} strokeWidth={1} strokeDasharray="4 3" opacity={0.4}
+        />
+      )}
+
+      {/* SMM goal dashed line */}
+      {hasSmm && goalSmm != null && (
+        <line
+          x1={PAD_L} y1={toYSmm(goalSmm)} x2={SVG_W - PAD_R} y2={toYSmm(goalSmm)}
+          stroke={SMM_COLOR} strokeWidth={1} strokeDasharray="4 3" opacity={0.4}
+        />
+      )}
+
+      {/* BF line (crimson) */}
+      {hasBf && (
+        <>
+          <polyline
+            points={bfData.map((d) => `${toX(d.date)},${toYBf(d.value)}`).join(" ")}
+            fill="none" stroke={BF_COLOR} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+          />
+          {bfData.map((d, i) => (
+            <circle key={`bf-${i}`} cx={toX(d.date)} cy={toYBf(d.value)} r={3} fill={BF_COLOR} />
+          ))}
+        </>
+      )}
+
+      {/* SMM line (gold) */}
+      {hasSmm && (
+        <>
+          <polyline
+            points={smmData.map((d) => `${toX(d.date)},${toYSmm(d.value)}`).join(" ")}
+            fill="none" stroke={SMM_COLOR} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+          />
+          {smmData.map((d, i) => (
+            <circle key={`smm-${i}`} cx={toX(d.date)} cy={toYSmm(d.value)} r={3} fill={SMM_COLOR} />
+          ))}
+        </>
+      )}
+
+      {/* Left Y axis labels (BF%) */}
+      {hasBf && (
+        <>
+          <text x={PAD_L - 2} y={PAD_T + 4}        fontSize={8} fill={BF_COLOR}  textAnchor="end">{bfMax.toFixed(1)}%</text>
+          <text x={PAD_L - 2} y={PAD_T + chartH}   fontSize={8} fill={BF_COLOR}  textAnchor="end">{bfMin.toFixed(1)}%</text>
+        </>
+      )}
+
+      {/* Right Y axis labels (SMM lbs) */}
+      {hasSmm && (
+        <>
+          <text x={SVG_W - PAD_R + 2} y={PAD_T + 4}      fontSize={8} fill={SMM_COLOR} textAnchor="start">{smmMax.toFixed(0)}</text>
+          <text x={SVG_W - PAD_R + 2} y={PAD_T + chartH} fontSize={8} fill={SMM_COLOR} textAnchor="start">{smmMin.toFixed(0)}</text>
+        </>
+      )}
+
+      {/* X axis date labels */}
+      {allDates.map((date, i) =>
+        i % 2 === 0 ? (
+          <text key={date} x={toX(date)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
+            {shortDate(date)}
+          </text>
+        ) : null
+      )}
+    </svg>
+  );
+}
+
 // Original weight chart — keeps "week" label format from WeightEntry
 function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: number }) {
   if (data.length < 2) return null;
@@ -290,10 +428,10 @@ export default function ProgressPage() {
   // WEIGHT VIEW
   // ─────────────────────────────────────────────
   if (category === "weight") {
-    const startWeight   = goalData?.start_weight   ?? 240;
+    const startWeight   = goalData?.start_weight   ?? null;
     const goalWeight    = goalData?.goal_weight     ?? 190;
     const currentWeight = goalData?.current_weight  ?? weightLog[weightLog.length - 1]?.weight ?? 0;
-    const lostSoFar     = startWeight - currentWeight;
+    const improved      = startWeight != null ? startWeight - currentWeight : null;
     const stillToGo     = currentWeight - goalWeight;
 
     return (
@@ -306,15 +444,16 @@ export default function ProgressPage() {
           <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
         </header>
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-          <section className="grid grid-cols-3 gap-3">
+          <section className="grid grid-cols-4 gap-2">
             {[
-              { label: "Current", value: `${currentWeight} lbs`, color: "text-[#DDD5C0]" },
-              { label: "Lost",    value: `${lostSoFar} lbs`,     color: "text-[#B8933A]" },
-              { label: "To go",   value: `${stillToGo} lbs`,     color: "text-[#9A9080]" },
+              { label: "Starting", value: startWeight   != null ? `${startWeight} lbs`   : "—", color: "text-[#9A9080]" },
+              { label: "Current",  value: `${currentWeight} lbs`,                                color: "text-[#DDD5C0]" },
+              { label: "Improved", value: improved       != null ? `${improved.toFixed(1)} lbs` : "—", color: "text-[#B8933A]" },
+              { label: "To Goal",  value: `${stillToGo.toFixed(1)} lbs`,                         color: "text-[#9A9080]" },
             ].map((s) => (
-              <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
-                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
+              <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
+                <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
               </div>
             ))}
           </section>
@@ -377,8 +516,23 @@ export default function ProgressPage() {
   // BODY COMPOSITION VIEW
   // ─────────────────────────────────────────────
   if (category === "body_composition") {
-    const bfSeries   = progressLog.filter((e) => e.body_fat != null).map((e) => ({ date: e.logged_at, value: e.body_fat! }));
-    const smmSeries  = progressLog.filter((e) => e.smm     != null).map((e) => ({ date: e.logged_at, value: e.smm!     }));
+    const bfSeries  = progressLog.filter((e) => e.body_fat != null).map((e) => ({ date: e.logged_at, value: e.body_fat! }));
+    const smmSeries = progressLog.filter((e) => e.smm     != null).map((e) => ({ date: e.logged_at, value: e.smm!     }));
+
+    const startBf  = goalData?.starting_body_fat  ?? null;
+    const currBf   = goalData?.current_body_fat   ?? null;
+    const goalBf   = goalData?.goal_body_fat       ?? null;
+    const bfImproved = (startBf != null && currBf != null) ? startBf - currBf        : null;
+    const bfToGoal   = (currBf  != null && goalBf  != null) ? currBf - goalBf         : null;
+
+    const startSmm = goalData?.starting_smm ?? null;
+    const currSmm  = goalData?.current_smm  ?? null;
+    const goalSmm  = goalData?.goal_smm     ?? null;
+    const smmImproved = (startSmm != null && currSmm != null) ? currSmm - startSmm   : null;
+    const smmToGoal   = (currSmm  != null && goalSmm  != null) ? goalSmm - currSmm    : null;
+
+    const fmtBf  = (v: number | null) => v != null ? `${v.toFixed(1)}%`   : "—";
+    const fmtSmm = (v: number | null) => v != null ? `${v.toFixed(1)} lbs` : "—";
 
     return (
       <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
@@ -390,42 +544,52 @@ export default function ProgressPage() {
           <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
         </header>
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-          {/* Stats */}
-          <section className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Body Fat", value: goalData?.current_body_fat != null ? `${goalData.current_body_fat}%` : "—",    sub: goalData?.goal_body_fat != null ? `Goal: ${goalData.goal_body_fat}%` : undefined },
-              { label: "SMM",      value: goalData?.current_smm      != null ? `${goalData.current_smm} lbs` : "—",      sub: goalData?.goal_smm      != null ? `Goal: ${goalData.goal_smm} lbs` : undefined },
-            ].map((s) => (
-              <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
-                <p className="text-lg font-bold text-[#DDD5C0]">{s.value}</p>
-                <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
-                {s.sub && <p className="text-xs text-[#807868] mt-0.5">{s.sub}</p>}
-              </div>
-            ))}
+
+          {/* Body Fat row */}
+          <section>
+            <p className="text-[10px] uppercase tracking-widest text-[#C04040] mb-2 px-0.5" style={{ fontFamily: "'Cinzel', serif" }}>Body Fat</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "Starting", value: fmtBf(startBf),   color: "text-[#9A9080]" },
+                { label: "Current",  value: fmtBf(currBf),    color: "text-[#DDD5C0]" },
+                { label: "Improved", value: bfImproved != null ? `${bfImproved.toFixed(1)}%`  : "—", color: "text-[#B8933A]" },
+                { label: "To Goal",  value: bfToGoal   != null ? `${bfToGoal.toFixed(1)}%`    : "—", color: "text-[#9A9080]" },
+              ].map((s) => (
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                  <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
+                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </section>
 
-          {/* Body fat chart */}
-          {bfSeries.length >= 2 && (
-            <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Body Fat Trend</p>
-              <MetricChart
-                data={bfSeries}
-                goalValue={goalData?.goal_body_fat}
-                goalLabel={goalData?.goal_body_fat != null ? `Goal ${goalData.goal_body_fat}%` : undefined}
-                color="#B8933A"
-              />
-            </section>
-          )}
+          {/* Muscle (SMM) row */}
+          <section>
+            <p className="text-[10px] uppercase tracking-widest text-[#B89B3A] mb-2 px-0.5" style={{ fontFamily: "'Cinzel', serif" }}>Muscle (SMM)</p>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "Starting", value: fmtSmm(startSmm),  color: "text-[#9A9080]" },
+                { label: "Current",  value: fmtSmm(currSmm),   color: "text-[#DDD5C0]" },
+                { label: "Improved", value: smmImproved != null ? `${smmImproved.toFixed(1)} lbs` : "—", color: "text-[#B8933A]" },
+                { label: "To Goal",  value: smmToGoal   != null ? `${smmToGoal.toFixed(1)} lbs`   : "—", color: "text-[#9A9080]" },
+              ].map((s) => (
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                  <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
+                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
-          {/* SMM chart */}
-          {smmSeries.length >= 2 && (
+          {/* Recomposition chart — BF and SMM on same graph */}
+          {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
             <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Muscle (SMM) Trend</p>
-              <MetricChart
-                data={smmSeries}
-                goalValue={goalData?.goal_smm}
-                goalLabel={goalData?.goal_smm != null ? `Goal ${goalData.goal_smm} lbs` : undefined}
-                color="#C9A44A"
+              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Recomposition Trend</p>
+              <DualMetricChart
+                bfData={bfSeries}
+                smmData={smmSeries}
+                goalBf={goalBf}
+                goalSmm={goalSmm}
               />
             </section>
           )}
@@ -464,8 +628,8 @@ export default function ProgressPage() {
                 <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
                   <span className="text-sm text-[#9A9080]">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                   <div className="flex items-center gap-3 text-sm font-semibold text-[#DDD5C0]">
-                    {entry.body_fat != null && <span>{entry.body_fat}%</span>}
-                    {entry.smm      != null && <span>{entry.smm} lbs SMM</span>}
+                    {entry.body_fat != null && <span style={{ color: BF_COLOR }}>{entry.body_fat}%</span>}
+                    {entry.smm      != null && <span style={{ color: SMM_COLOR }}>{entry.smm} lbs SMM</span>}
                   </div>
                 </li>
               ))}
@@ -509,15 +673,16 @@ export default function ProgressPage() {
           const fmt = (v: number | null) =>
             v != null ? `${v}${unitLabel ? ` ${unitLabel}` : ""}` : "—";
           return (
-            <section className="grid grid-cols-3 gap-3">
+            <section className="grid grid-cols-4 gap-2">
               {[
-                { label: "Current",  value: fmt(current)  },
+                { label: "Starting", value: fmt(start)   },
+                { label: "Current",  value: fmt(current) },
                 { label: "Improved", value: improved != null ? `+${improved}${unitLabel ? ` ${unitLabel}` : ""}` : "—" },
-                { label: "To Goal",  value: fmt(toGoal)   },
+                { label: "To Goal",  value: fmt(toGoal)  },
               ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-4 border border-[#252525] flex flex-col items-center">
-                  <p className="text-lg font-bold text-[#DDD5C0]">{s.value}</p>
-                  <p className="text-xs text-[#9A9080] mt-0.5">{s.label}</p>
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                  <p className="text-sm font-bold text-[#DDD5C0] text-center">{s.value}</p>
+                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
                 </div>
               ))}
             </section>
