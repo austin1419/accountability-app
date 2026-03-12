@@ -338,7 +338,7 @@ export async function changeClientGoal(
   //    subsequent log (requires 2 points). For body_composition and performance this
   //    goes into progress_logs (scoped by goal_id — no collision risk on a new goal).
   //    For weight this goes into weight_logs (user-scoped, upsert safe).
-  const seedDate = new Date().toISOString().split("T")[0];
+  const seedDate = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
 
   if (
     newGoalData.goal_category === "body_composition" &&
@@ -370,7 +370,7 @@ export async function changeClientGoal(
   if (newGoalData.goal_category === "weight" && newGoalData.start_weight != null) {
     const { error: seedError } = await admin.from("weight_logs").upsert(
       { user_id: clientId, weight: newGoalData.start_weight, logged_at: seedDate },
-      { onConflict: "user_id,logged_at" },
+      { onConflict: "user_id,logged_at", ignoreDuplicates: true },
     );
     if (seedError) console.error("[changeClientGoal] failed to seed weight log:", seedError.message);
   }
