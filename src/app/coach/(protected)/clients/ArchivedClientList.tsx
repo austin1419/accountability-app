@@ -102,14 +102,14 @@ export function ArchivedClientList({
                       <button
                         onClick={() => setConfirmDeleteId(null)}
                         disabled={loadingId === client.id}
-                        className="text-xs font-semibold text-[#9A9080] hover:text-[#DDD5C0] transition-colors"
+                        className="text-xs font-semibold text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => handlePermanentDelete(client.id)}
                         disabled={loadingId === client.id}
-                        className="text-xs font-semibold text-[#F4EEE4] bg-[#7A1E1E] hover:bg-[#8C2424] disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+                        className="text-xs font-semibold text-[#F4EEE4] bg-[#7A1E1E] hover:bg-[#8C2424] border border-[#7A1E1E] hover:border-[#8C2424] disabled:opacity-50 px-3 py-1.5 rounded cursor-pointer transition-all duration-150"
                         style={{ fontFamily: "'Cinzel', serif" }}
                       >
                         {loadingId === client.id ? "Deleting…" : "Delete Permanently"}
@@ -121,14 +121,14 @@ export function ArchivedClientList({
                   </div>
                 ) : (
                   // ── Default action buttons ──────────────
-                  <div className="flex items-center justify-end gap-4">
+                  <div className="flex items-center justify-end gap-2">
                     {errorId === client.id && (
                       <span className="text-xs text-[#7A1E1E]">Failed — try again</span>
                     )}
                     <button
                       onClick={() => handleReactivate(client.id)}
                       disabled={loadingId === client.id}
-                      className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A] disabled:opacity-50 transition-colors"
+                      className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
                       style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       {loadingId === client.id ? "Reactivating…" : "Re-Activate Client"}
@@ -136,13 +136,13 @@ export function ArchivedClientList({
                     <button
                       onClick={() => setConfirmDeleteId(client.id)}
                       disabled={loadingId === client.id}
-                      className="text-xs font-semibold text-[#7A1E1E] hover:text-[#8C2424] disabled:opacity-50 transition-colors"
+                      className="text-xs font-semibold text-[#9A9080] hover:text-[#7A1E1E] border border-[#252525] hover:border-[#7A1E1E] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
                     >
                       Delete
                     </button>
                     <Link
                       href={`/coach/clients/${client.id}`}
-                      className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] transition-colors"
+                      className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
                       style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       View →
