@@ -174,12 +174,15 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     .eq("is_active", true);
 
   const totalTasks = tasks?.length ?? 0;
+  const taskIds    = (tasks ?? []).map((t) => t.id);
+  const taskIdFilter = taskIds.length > 0 ? taskIds : [""];
 
   const { data: todayLogs } = await supabase
     .from("task_logs")
     .select("completed")
     .eq("user_id", userId)
-    .eq("date", today);
+    .eq("date", today)
+    .in("task_id", taskIdFilter);
 
   const todayCompleted = (todayLogs ?? []).filter((l) => l.completed).length;
   const todayPercent   = totalTasks > 0
@@ -195,7 +198,8 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     .select("completed")
     .eq("user_id", userId)
     .gte("date", weekStart)
-    .lte("date", today);
+    .lte("date", today)
+    .in("task_id", taskIdFilter);
 
   const weekTotal     = weekLogs?.length ?? 0;
   const weekCompleted = (weekLogs ?? []).filter((l) => l.completed).length;
@@ -273,12 +277,15 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     taskCountByGoal.set(t.goal_id, (taskCountByGoal.get(t.goal_id) ?? 0) + 1);
   }
 
+  const allTaskIds = (tasks ?? []).map((t) => t.id);
+
   const { data: logs } = await supabase
     .from("task_logs")
     .select("user_id, date, completed")
     .in("user_id", clientIds)
     .gte("date", weekStart)
-    .lte("date", today);
+    .lte("date", today)
+    .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]);
 
   const entries: LeaderboardEntry[] = clients.map((client) => {
     const goal      = goalByUser.get(client.id) ?? null;
@@ -350,12 +357,15 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
     taskCountByGoal.set(t.goal_id, (taskCountByGoal.get(t.goal_id) ?? 0) + 1);
   }
 
+  const allTaskIds = (tasks ?? []).map((t) => t.id);
+
   const { data: logs } = await supabase
     .from("task_logs")
     .select("user_id, date, completed")
     .in("user_id", clientIds)
     .gte("date", monthStart)
-    .lte("date", today);
+    .lte("date", today)
+    .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]);
 
   return clients.map((client) => {
     const goal      = goalByUser.get(client.id) ?? null;
@@ -474,12 +484,15 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
 
+  const taskIds = (tasks ?? []).map((t) => t.id);
+
   const { data: logs } = await supabase
     .from("task_logs")
     .select("date, completed")
     .eq("user_id", clientId)
     .gte("date", monthStart)
-    .lte("date", today);
+    .lte("date", today)
+    .in("task_id", taskIds.length > 0 ? taskIds : [""]);
 
   const totalTasks = tasks?.length ?? 0;
   const allLogs    = logs ?? [];

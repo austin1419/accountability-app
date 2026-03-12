@@ -283,13 +283,18 @@ export async function changeClientGoal(
     return { error: "Failed to close current goal. Please try again." };
   }
 
-  // 5. Insert the new active goal — select the id back so we can migrate tasks
+  // 5. Insert the new active goal — select the id back so we can migrate tasks.
+  //    For weight goals, seed current_weight = start_weight so the client
+  //    dashboard shows correct values immediately (not null / "0 lbs lost").
   const { data: newGoal, error: insertError } = await admin
     .from("goals")
     .insert({
       user_id:   clientId,
       is_active: true,
       ...newGoalData,
+      ...(newGoalData.goal_category === "weight" && newGoalData.start_weight != null
+        ? { current_weight: newGoalData.start_weight }
+        : {}),
     })
     .select("id")
     .single();

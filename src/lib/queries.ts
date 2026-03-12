@@ -331,17 +331,21 @@ export async function fetchMonthCompliance(
   const { data: tasks } = await supabase
     .from("tasks")
     .select("id")
-    .eq("goal_id", goal.id);
+    .eq("goal_id", goal.id)
+    .eq("is_active", true);
 
   const totalTasks = tasks?.length ?? 0;
   if (totalTasks === 0) return {};
+
+  const taskIds = (tasks ?? []).map((t) => t.id);
 
   const { data: logs } = await supabase
     .from("task_logs")
     .select("date, completed")
     .eq("user_id", userId)
     .gte("date", monthStart)
-    .lte("date", monthEnd);
+    .lte("date", monthEnd)
+    .in("task_id", taskIds.length > 0 ? taskIds : [""]);
 
   if (!logs || logs.length === 0) return {};
 
