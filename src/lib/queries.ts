@@ -23,8 +23,7 @@ export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
     .from("goals")
     .select("id")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (goalError) console.error("[fetchTodaysTasks] goals query failed:", goalError);
@@ -86,8 +85,7 @@ export async function fetchGoalData(userId: string) {
     .from("goals")
     .select("id, goal_name, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (error) console.error("[fetchGoalData] failed:", error);
@@ -148,7 +146,7 @@ export async function updateCurrentMetrics(
   userId: string,
   patch:  { current_body_fat?: number | null; current_smm?: number | null; current_performance_value?: number | null }
 ): Promise<{ error?: string }> {
-  const { error } = await supabase.from("goals").update(patch).eq("user_id", userId);
+  const { error } = await supabase.from("goals").update(patch).eq("user_id", userId).eq("is_active", true);
   if (error) {
     console.error("[updateCurrentMetrics] failed:", error);
     return { error: "Failed to update metrics." };
@@ -164,7 +162,8 @@ export async function updateCurrentWeight(userId: string, weight: number): Promi
   const { error } = await supabase
     .from("goals")
     .update({ current_weight: weight })
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("is_active", true);
 
   if (error) {
     console.error("[updateCurrentWeight] failed:", error);
@@ -324,8 +323,7 @@ export async function fetchMonthCompliance(
     .from("goals")
     .select("id")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (!goal) return {};

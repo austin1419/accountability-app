@@ -162,8 +162,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     .from("goals")
     .select(GOAL_METRICS_SELECT)
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .eq("is_active", true)
     .maybeSingle();
 
   const today = date;
@@ -256,11 +255,11 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     .from("goals")
     .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
-    .order("created_at", { ascending: false });
+    .eq("is_active", true);
 
   const goalByUser = new Map<string, NonNullable<typeof goals>[number]>();
   for (const g of goals ?? []) {
-    if (!goalByUser.has(g.user_id)) goalByUser.set(g.user_id, g);
+    goalByUser.set(g.user_id, g);
   }
 
   const goalIds = [...goalByUser.values()].map((g) => g.id);
@@ -332,11 +331,11 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
     .from("goals")
     .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
-    .order("created_at", { ascending: false });
+    .eq("is_active", true);
 
   const goalByUser = new Map<string, NonNullable<typeof goals>[number]>();
   for (const g of goals ?? []) {
-    if (!goalByUser.has(g.user_id)) goalByUser.set(g.user_id, g);
+    goalByUser.set(g.user_id, g);
   }
 
   const goalIds = [...goalByUser.values()].map((g) => g.id);
@@ -411,11 +410,11 @@ export async function fetchArchivedClientsForCoach(): Promise<ArchivedClientRow[
     .from("goals")
     .select("user_id, goal_name")
     .in("user_id", clientIds)
-    .order("created_at", { ascending: false });
+    .eq("is_active", true);
 
   const goalByUser = new Map<string, string>();
   for (const g of goals ?? []) {
-    if (!goalByUser.has(g.user_id)) goalByUser.set(g.user_id, g.goal_name);
+    goalByUser.set(g.user_id, g.goal_name);
   }
 
   return clients.map((c) => ({
@@ -454,8 +453,7 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     .from("goals")
     .select(GOAL_METRICS_SELECT)
     .eq("user_id", clientId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .eq("is_active", true)
     .maybeSingle();
 
   const { data: tasks } = await supabase

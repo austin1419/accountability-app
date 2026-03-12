@@ -45,6 +45,9 @@ export type Database = {
       }
       goals: {
         Row: {
+          change_reason: string | null
+          completed_at: string | null
+          completed_by: string | null
           created_at: string
           current_body_fat: number | null
           current_performance_value: number | null
@@ -58,6 +61,7 @@ export type Database = {
           goal_smm: number | null
           goal_weight: number | null
           id: string
+          is_active: boolean
           performance_direction: string | null
           performance_metric_name: string | null
           performance_unit: string | null
@@ -69,6 +73,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          change_reason?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           created_at?: string
           current_body_fat?: number | null
           current_performance_value?: number | null
@@ -82,6 +89,7 @@ export type Database = {
           goal_smm?: number | null
           goal_weight?: number | null
           id?: string
+          is_active?: boolean
           performance_direction?: string | null
           performance_metric_name?: string | null
           performance_unit?: string | null
@@ -93,6 +101,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          change_reason?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           created_at?: string
           current_body_fat?: number | null
           current_performance_value?: number | null
@@ -106,6 +117,7 @@ export type Database = {
           goal_smm?: number | null
           goal_weight?: number | null
           id?: string
+          is_active?: boolean
           performance_direction?: string | null
           performance_metric_name?: string | null
           performance_unit?: string | null

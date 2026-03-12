@@ -3,8 +3,11 @@
 import { createAdminClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
-// Verifies the caller is an authenticated coach. Returns an error object if not.
-async function assertCoach(): Promise<{ error: string } | null> {
+// Verifies the caller is an authenticated coach.
+// Returns the coach's internal users.id on success, or an error object on failure.
+async function assertCoach(): Promise<{ error: string } | null>;
+async function assertCoach(withId: true): Promise<{ error: string } | { coachId: string }>;
+async function assertCoach(withId?: true): Promise<{ error: string } | { coachId: string } | null> {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized." };
@@ -16,6 +19,7 @@ async function assertCoach(): Promise<{ error: string } | null> {
     .eq("role", "coach")
     .maybeSingle();
   if (!data) return { error: "Unauthorized." };
+  if (withId) return { coachId: data.id };
   return null;
 }
 
@@ -177,6 +181,123 @@ export async function removeClientHabit(
   if (error) {
     console.error("[removeClientHabit] failed:", error.message);
     return { error: "Failed to remove habit. Please try again." };
+  }
+
+  return {};
+}
+
+// ── changeClientGoal ──────────────────────────────────────────────
+//
+// Closes the client's current active goal and opens a new one.
+//
+// Steps:
+//   1. Verify caller is a coach (captures coach id for audit trail)
+//   2. Verify clientId belongs to an active client user
+//   3. Find the client's current active goal
+//   4. Mark it inactive (is_active=false, completed_at, change_reason, completed_by)
+//   5. Insert a new goal row with is_active=true and the new category/values
+//   6. On insert failure, restore the old goal to is_active=true (compensating update)
+//
+// Does NOT touch: tasks, task_logs, weight_logs, progress_logs, client_notes.
+
+type WeightGoalData = {
+  goal_category: "weight";
+  goal_name:     string;
+  goal_date?:    string | null;
+  start_weight?: number | null;
+  goal_weight?:  number | null;
+};
+
+type BodyCompGoalData = {
+  goal_category:    "body_composition";
+  goal_name:        string;
+  goal_date?:       string | null;
+  starting_body_fat?: number | null;
+  goal_body_fat?:     number | null;
+  starting_smm?:      number | null;
+  goal_smm?:          number | null;
+};
+
+type PerformanceGoalData = {
+  goal_category:              "performance";
+  goal_name:                  string;
+  goal_date?:                 string | null;
+  performance_metric_name?:   string | null;
+  performance_unit?:          string | null;
+  performance_direction?:     string | null;
+  starting_performance_value?: number | null;
+  goal_performance_value?:     number | null;
+};
+
+export type NewGoalData = WeightGoalData | BodyCompGoalData | PerformanceGoalData;
+
+export async function changeClientGoal(
+  clientId:   string,
+  reason:     string,
+  newGoalData: NewGoalData,
+): Promise<{ error?: string }> {
+
+  // 1. Auth — capture coach id for the audit trail
+  const authResult = await assertCoach(true);
+  if ("error" in authResult) return authResult;
+  const { coachId } = authResult;
+
+  const admin = createAdminClient();
+
+  // 2. Verify the target is an active client user (ownership + existence check)
+  const { data: clientUser } = await admin
+    .from("users")
+    .select("id")
+    .eq("id", clientId)
+    .eq("role", "client")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!clientUser) return { error: "Client not found or not active." };
+
+  // 3. Find the current active goal
+  const { data: currentGoal } = await admin
+    .from("goals")
+    .select("id")
+    .eq("user_id", clientId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!currentGoal) return { error: "No active goal found for this client." };
+
+  // 4. Close the current goal
+  const { error: closeError } = await admin
+    .from("goals")
+    .update({
+      is_active:     false,
+      completed_at:  new Date().toISOString(),
+      change_reason: reason.trim() || null,
+      completed_by:  coachId,
+    })
+    .eq("id", currentGoal.id);
+
+  if (closeError) {
+    console.error("[changeClientGoal] failed to close current goal:", closeError.message);
+    return { error: "Failed to close current goal. Please try again." };
+  }
+
+  // 5. Insert the new active goal
+  const { error: insertError } = await admin
+    .from("goals")
+    .insert({
+      user_id:   clientId,
+      is_active: true,
+      ...newGoalData,
+    });
+
+  if (insertError) {
+    console.error("[changeClientGoal] failed to insert new goal:", insertError.message);
+    // 6. Compensating update — restore the old goal so the client is not left without one
+    await admin
+      .from("goals")
+      .update({ is_active: true, completed_at: null, change_reason: null, completed_by: null })
+      .eq("id", currentGoal.id);
+    return { error: "Failed to create new goal. Please try again." };
   }
 
   return {};

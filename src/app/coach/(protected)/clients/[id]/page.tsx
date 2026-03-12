@@ -16,6 +16,7 @@ import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
 import { ClientNotes } from "./ClientNotes";
 import { ArchiveClientButton } from "./ArchiveClientButton";
+import { ChangeGoalModal } from "./ChangeGoalModal";
 
 export const dynamic = "force-dynamic";
 
@@ -101,7 +102,12 @@ export default async function ClientDetailPage({
             >
               {isOnTrack ? "On track" : "Needs attention"}
             </span>
-            <ArchiveClientButton clientId={client.id} clientName={client.name} />
+            <div className="flex items-center gap-2">
+              {client.goal && (
+                <ChangeGoalModal clientId={client.id} clientName={client.name} />
+              )}
+              <ArchiveClientButton clientId={client.id} clientName={client.name} />
+            </div>
           </div>
         </div>
       </div>
