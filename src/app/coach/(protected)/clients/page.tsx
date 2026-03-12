@@ -17,11 +17,11 @@ export const dynamic = "force-dynamic";
 
 function ComplianceBadge({ pct }: { pct: number }) {
   const cls =
-    pct >= 70 ? "bg-green-100 text-green-700" :
-    pct >= 50 ? "bg-amber-100 text-amber-700" :
-                "bg-red-100   text-red-700";
+    pct >= 70 ? "text-[#B8933A] border border-[#B8933A]" :
+    pct >= 50 ? "text-[#C9A44A] border border-[#C9A44A]" :
+                "text-[#7A1E1E] border border-[#7A1E1E]";
   return (
-    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${cls}`}>
+    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded ${cls}`} style={{ fontFamily: "'Cinzel', serif" }}>
       {pct}%
     </span>
   );
@@ -48,12 +48,17 @@ export default async function ClientsListPage({
       {/* ── Page header ─────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1
+            className="text-2xl text-[#F4EEE4] tracking-wide"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+          >
+            Clients
+          </h1>
+          <p className="text-sm text-[#9A9080] mt-1">
             {clients.length} active &middot;{" "}
-            <span className="text-green-600 font-medium">{onTrack} on track</span>
+            <span className="text-[#B8933A] font-medium">{onTrack} on track</span>
             {clients.length - onTrack > 0 && (
-              <> &middot; <span className="text-red-500 font-medium">{clients.length - onTrack} flagged</span></>
+              <> &middot; <span className="text-[#7A1E1E] font-medium">{clients.length - onTrack} flagged</span></>
             )}
           </p>
         </div>
@@ -61,31 +66,33 @@ export default async function ClientsListPage({
       </div>
 
       {/* ── Tab bar ──────────────────────────────── */}
-      <div className="flex gap-1 border-b border-gray-100">
+      <div className="flex gap-1 border-b border-[#252525]">
         <Link
           href="/coach/clients"
           className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
             tab === "active"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-400 hover:text-gray-600"
+              ? "border-[#B8933A] text-[#B8933A]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
           }`}
+          style={{ fontFamily: "'Cinzel', serif" }}
         >
           Active
           {clients.length > 0 && (
-            <span className="ml-1.5 text-gray-400 font-normal">({clients.length})</span>
+            <span className="ml-1.5 text-[#807868] font-normal">({clients.length})</span>
           )}
         </Link>
         <Link
           href="/coach/clients?tab=archived"
           className={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px ${
             tab === "archived"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-400 hover:text-gray-600"
+              ? "border-[#B8933A] text-[#B8933A]"
+              : "border-transparent text-[#9A9080] hover:text-[#DDD5C0]"
           }`}
+          style={{ fontFamily: "'Cinzel', serif" }}
         >
           Archived
           {archivedClients.length > 0 && (
-            <span className="ml-1.5 text-gray-400 font-normal">({archivedClients.length})</span>
+            <span className="ml-1.5 text-[#807868] font-normal">({archivedClients.length})</span>
           )}
         </Link>
       </div>
@@ -96,32 +103,32 @@ export default async function ClientsListPage({
       )}
 
       {/* ── Active clients table ─────────────────── */}
-      {tab === "active" && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {tab === "active" && <div className="bg-[#141414] rounded border border-[#252525] overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-400 px-5 py-3 w-40">
+            <tr className="bg-[#0D0D0D] border-b border-[#252525]">
+              <th className="text-left text-xs uppercase tracking-wider text-[#9A9080] px-5 py-3 w-40" style={{ fontFamily: "'Cinzel', serif" }}>
                 Client
               </th>
-              <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-400 px-5 py-3">
+              <th className="text-left text-xs uppercase tracking-wider text-[#9A9080] px-5 py-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Goal
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-28">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-28" style={{ fontFamily: "'Cinzel', serif" }}>
                 Progress
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-24">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif" }}>
                 Today
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-24">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif" }}>
                 7-Day
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-24">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif" }}>
                 30-Day
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-32">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-32" style={{ fontFamily: "'Cinzel', serif" }}>
                 Current Weight
               </th>
-              <th className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-3 w-36">
+              <th className="text-center text-xs uppercase tracking-wider text-[#9A9080] px-4 py-3 w-36" style={{ fontFamily: "'Cinzel', serif" }}>
                 Status
               </th>
               <th className="px-5 py-3 w-16" />
@@ -131,7 +138,7 @@ export default async function ClientsListPage({
           <tbody>
             {clients.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-5 py-14 text-center text-sm text-gray-400">
+                <td colSpan={9} className="px-5 py-14 text-center text-sm text-[#9A9080]">
                   No clients yet. Add clients in Supabase to get started.
                 </td>
               </tr>
@@ -139,31 +146,31 @@ export default async function ClientsListPage({
               clients.map((client) => (
                 <tr
                   key={client.id}
-                  className={`border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors ${
-                    client.isFlagged ? "border-l-4 border-l-red-300" : ""
+                  className={`border-b border-[#252525] last:border-0 hover:bg-[#1A1A1A] transition-colors ${
+                    client.isFlagged ? "border-l-4 border-l-[#7A1E1E]" : ""
                   }`}
                 >
                   {/* Name */}
                   <td className="px-5 py-4">
-                    <p className="font-medium text-gray-900">{client.name}</p>
+                    <p className="font-medium text-[#DDD5C0]">{client.name}</p>
                   </td>
 
                   {/* Goal */}
                   <td className="px-5 py-4">
-                    <p className="text-sm text-gray-600 truncate max-w-xs">
-                      {client.goalName ?? <span className="text-gray-300">—</span>}
+                    <p className="text-sm text-[#9A9080] truncate max-w-xs">
+                      {client.goalName ?? <span className="text-[#2E2E2E]">—</span>}
                     </p>
                   </td>
 
                   {/* Goal progress */}
                   <td className="px-4 py-4">
                     <div className="flex flex-col items-center gap-1.5">
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-[#DDD5C0]">
                         {client.goalProgress}%
                       </span>
-                      <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="w-20 h-1.5 bg-[#252525] rounded overflow-hidden">
                         <div
-                          className="h-full bg-blue-400 rounded-full"
+                          className="h-full bg-[#B8933A] rounded"
                           style={{ width: `${client.goalProgress}%` }}
                         />
                       </div>
@@ -183,31 +190,32 @@ export default async function ClientsListPage({
 
                   {/* Current weight */}
                   <td className="px-4 py-4 text-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-[#9A9080]">
                       {client.currentWeight != null
                         ? `${client.currentWeight} lbs`
-                        : <span className="text-gray-300">—</span>}
+                        : <span className="text-[#2E2E2E]">—</span>}
                     </span>
                   </td>
 
                   {/* Status badge */}
                   <td className="px-4 py-4 text-center">
                     {client.isFlagged ? (
-                      <span className="inline-block text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full">
+                      <span className="inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] px-2.5 py-1 rounded" style={{ fontFamily: "'Cinzel', serif" }}>
                         Needs attention
                       </span>
                     ) : (
-                      <span className="inline-block text-xs font-semibold bg-green-50 text-green-600 px-2.5 py-1 rounded-full">
+                      <span className="inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] px-2.5 py-1 rounded" style={{ fontFamily: "'Cinzel', serif" }}>
                         On track
                       </span>
                     )}
                   </td>
 
-                  {/* View link (Phase 2: opens client profile) */}
+                  {/* View link */}
                   <td className="px-5 py-4 text-right">
                     <Link
                       href={`/coach/clients/${client.id}`}
-                      className="text-xs font-medium text-blue-500 hover:text-blue-600"
+                      className="text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] transition-colors"
+                      style={{ fontFamily: "'Cinzel', serif" }}
                     >
                       View →
                     </Link>
@@ -221,18 +229,18 @@ export default async function ClientsListPage({
 
       {/* ── Legend (active tab only) ─────────────── */}
       {tab === "active" && (
-        <div className="flex items-center gap-6 text-xs text-gray-400">
+        <div className="flex items-center gap-6 text-xs text-[#9A9080]">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-green-200 inline-block" /> ≥70% on track
+            <span className="w-3 h-3 rounded bg-[#B8933A] inline-block" /> ≥70% on track
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-amber-200 inline-block" /> 50–69% at risk
+            <span className="w-3 h-3 rounded bg-[#C9A44A] inline-block" /> 50–69% at risk
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-200 inline-block" /> &lt;50% critical
+            <span className="w-3 h-3 rounded bg-[#7A1E1E] inline-block" /> &lt;50% critical
           </span>
           <span className="flex items-center gap-1.5 ml-4">
-            <span className="w-3 h-1 rounded-full bg-red-300 inline-block" /> Left border = flagged
+            <span className="w-3 h-1 rounded bg-[#7A1E1E] inline-block" /> Left border = flagged
           </span>
         </div>
       )}
