@@ -357,12 +357,15 @@ export default function ProgressPage() {
     if (isNaN(w) || w < 50 || w > 500) { setError("Enter a valid weight between 50 and 500 lbs."); return; }
     const r1 = await insertWeightLog(userId, w, selectedDate);
     if (r1.error) { setError(r1.error); return; }
-    const r2 = await updateCurrentWeight(userId, w);
+    // Re-fetch full log — sorted by logged_at ASC — then use the LATEST entry
+    // to update current_weight. This prevents backfilling an older date from
+    // overwriting a newer measurement.
+    const freshLog = await fetchWeightLog(userId);
+    setWeightLog(freshLog);
+    const latestWeight = freshLog.length > 0 ? freshLog[freshLog.length - 1].weight : w;
+    const r2 = await updateCurrentWeight(userId, latestWeight);
     if (r2.error) { setError(r2.error); return; }
-    // Re-fetch full log from DB after insert — keeps state in sync with the upsert
-    // (same-day logs replace rather than append, so manual append would create duplicates)
-    fetchWeightLog(userId).then(setWeightLog);
-    setGoalData((prev) => prev ? { ...prev, current_weight: w } : prev);
+    setGoalData((prev) => prev ? { ...prev, current_weight: latestWeight } : prev);
     setWeightInput("");
     setError("");
     setShowForm(false);
@@ -382,18 +385,26 @@ export default function ProgressPage() {
     if (smm != null) patch.smm      = smm;
     const r1 = await insertProgressLog(userId, goalId, patch, selectedDate);
     if (r1.error) { setError(r1.error); return; }
-    const r2 = await updateCurrentMetrics(userId, {
-      current_body_fat: bf  ?? undefined,
-      current_smm:      smm ?? undefined,
-    });
-    if (r2.error) { setError(r2.error); return; }
-
-    const logObj = { logged_at: selectedDate, body_fat: bf, smm, performance_value: null };
-    setProgressLog((prev) => {
-      const without = prev.filter((e) => e.logged_at !== selectedDate);
-      return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
-    });
-    setGoalData((prev) => prev ? { ...prev, current_body_fat: bf ?? prev.current_body_fat, current_smm: smm ?? prev.current_smm } : prev);
+    // Re-fetch full log — sorted by logged_at ASC — then derive the latest
+    // bf and smm values to update current_* fields. Walking backwards ensures
+    // we find the most recent non-null value for each metric independently.
+    const freshLog = await fetchProgressLog(userId, goalId);
+    setProgressLog(freshLog);
+    let latestBf:  number | null = null;
+    let latestSmm: number | null = null;
+    for (let i = freshLog.length - 1; i >= 0; i--) {
+      if (latestBf  === null && freshLog[i].body_fat != null) latestBf  = freshLog[i].body_fat;
+      if (latestSmm === null && freshLog[i].smm      != null) latestSmm = freshLog[i].smm;
+      if (latestBf !== null && latestSmm !== null) break;
+    }
+    const metricsPatch: { current_body_fat?: number | null; current_smm?: number | null } = {};
+    if (latestBf  != null) metricsPatch.current_body_fat = latestBf;
+    if (latestSmm != null) metricsPatch.current_smm      = latestSmm;
+    if (Object.keys(metricsPatch).length > 0) {
+      const r2 = await updateCurrentMetrics(userId, metricsPatch);
+      if (r2.error) { setError(r2.error); return; }
+    }
+    setGoalData((prev) => prev ? { ...prev, current_body_fat: latestBf ?? prev.current_body_fat, current_smm: latestSmm ?? prev.current_smm } : prev);
     setBfInput("");
     setSmmInput("");
     setError("");
@@ -408,15 +419,19 @@ export default function ProgressPage() {
 
     const r1 = await insertProgressLog(userId, goalId, { performance_value: v }, selectedDate);
     if (r1.error) { setError(r1.error); return; }
-    const r2 = await updateCurrentMetrics(userId, { current_performance_value: v });
-    if (r2.error) { setError(r2.error); return; }
-
-    const logObj = { logged_at: selectedDate, body_fat: null, smm: null, performance_value: v };
-    setProgressLog((prev) => {
-      const without = prev.filter((e) => e.logged_at !== selectedDate);
-      return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
-    });
-    setGoalData((prev) => prev ? { ...prev, current_performance_value: v } : prev);
+    // Re-fetch full log — sorted by logged_at ASC — then use the latest
+    // performance entry to update current_performance_value.
+    const freshLog = await fetchProgressLog(userId, goalId);
+    setProgressLog(freshLog);
+    let latestPerf: number | null = null;
+    for (let i = freshLog.length - 1; i >= 0; i--) {
+      if (freshLog[i].performance_value != null) { latestPerf = freshLog[i].performance_value; break; }
+    }
+    if (latestPerf != null) {
+      const r2 = await updateCurrentMetrics(userId, { current_performance_value: latestPerf });
+      if (r2.error) { setError(r2.error); return; }
+    }
+    setGoalData((prev) => prev ? { ...prev, current_performance_value: latestPerf ?? prev.current_performance_value } : prev);
     setPerfInput("");
     setError("");
     setShowForm(false);
