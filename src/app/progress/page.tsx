@@ -62,9 +62,11 @@ function MetricChart({
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  // Projected line starts from last actual point
+  // Projected line starts from last actual point (anchor for visual continuity)
   const projPoints = projectedData && projectedData.length > 0
-    ? projectedData.map((d, i) => `${toX(data.length - 1 + i)},${toY(d.value)}`).join(" ")
+    ? [data[data.length - 1], ...projectedData]
+        .map((d, i) => `${toX(data.length - 1 + i)},${toY(d.value)}`)
+        .join(" ")
     : null;
 
   return (
