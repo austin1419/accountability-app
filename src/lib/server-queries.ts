@@ -11,6 +11,7 @@
 
 import "server-only";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { generateProjection, type ChartPoint } from "@/lib/projection";
 
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -1038,10 +1039,7 @@ export async function fetchProgressSummary(userId: string): Promise<ProgressSumm
 // Each series entry has { date: string; value: number } for easy Recharts mapping.
 // The projected series starts from the last actual point so the lines connect.
 
-export type ChartPoint = {
-  date:  string;   // YYYY-MM-DD
-  value: number;
-};
+export type { ChartPoint } from "@/lib/projection";
 
 export type ProjectionSeries = {
   actual:    ChartPoint[];
@@ -1077,32 +1075,16 @@ export function buildProjectionSeries(
     maxDays = Math.min(projDays + 7, 365); // cap at 1 year
   }
 
-  // Generate weekly points along the projection line
+  // Anchor + shared projection math
   const projected: ChartPoint[] = [
     { date: last.date, value: last.value }, // anchor to connect with actual line
+    ...generateProjection({
+      anchor: last,
+      velocity,
+      goalValue: trends.goalValue,
+      maxDays,
+    }),
   ];
-
-  const cursor = new Date(last.date + "T00:00:00");
-  const interval = 7; // one point per week
-
-  for (let d = interval; d <= maxDays; d += interval) {
-    cursor.setDate(cursor.getDate() + interval);
-    const dateStr = cstDate(cursor);
-    const value   = +(last.value + velocity * d).toFixed(2);
-
-    // Stop if we've passed the goal in the right direction
-    if (trends.goalValue != null) {
-      const passedGoal = velocity < 0
-        ? value <= trends.goalValue
-        : value >= trends.goalValue;
-      if (passedGoal) {
-        projected.push({ date: dateStr, value: trends.goalValue });
-        break;
-      }
-    }
-
-    projected.push({ date: dateStr, value });
-  }
 
   return { actual: actualPoints, projected, goalLine };
 }

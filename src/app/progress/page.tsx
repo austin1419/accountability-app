@@ -15,6 +15,7 @@ import {
   insertProgressLog,
   updateCurrentMetrics,
 } from "@/lib/queries";
+import { projectFromData } from "@/lib/projection";
 
 // ─────────────────────────────────────────────
 // Generic SVG line chart — works for any numeric series
@@ -300,61 +301,7 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
   );
 }
 
-// ─────────────────────────────────────────────
-// Projection helper — computes projected points from logged data
-// Uses 30-day velocity (or all data if < 30 days). Returns empty
-// array if fewer than 2 data points or velocity moves wrong direction.
-// ─────────────────────────────────────────────
-function computeProjectedPoints(
-  data:      { date: string; value: number }[],
-  goalValue: number | null,
-  direction: "decrease" | "increase",
-): { date: string; value: number }[] {
-  if (data.length < 2 || goalValue == null) return [];
-
-  // Find entries in the last 30 days
-  const last  = data[data.length - 1];
-  const cutoff = new Date(last.date + "T00:00:00");
-  cutoff.setDate(cutoff.getDate() - 30);
-  const cutoffStr = cutoff.toISOString().split("T")[0];
-
-  const window = data.filter((d) => d.date >= cutoffStr);
-  if (window.length < 2) return [];
-
-  const first = window[0];
-  const dayMs = 86_400_000;
-  const days  = Math.round((new Date(last.date + "T00:00:00").getTime() - new Date(first.date + "T00:00:00").getTime()) / dayMs);
-  if (days <= 0) return [];
-
-  const velocity = (last.value - first.value) / days; // per day
-
-  // Check velocity is in the right direction
-  const movingRight = direction === "decrease" ? velocity < 0 : velocity > 0;
-  if (!movingRight || velocity === 0) return [];
-
-  const projected: { date: string; value: number }[] = [];
-  const interval = 7;
-  const maxDays  = 180;
-
-  for (let d = interval; d <= maxDays; d += interval) {
-    const cursor = new Date(last.date + "T00:00:00");
-    cursor.setDate(cursor.getDate() + d);
-    const dateStr = cursor.toISOString().split("T")[0];
-    const value   = +(last.value + velocity * d).toFixed(2);
-
-    const passedGoal = direction === "decrease"
-      ? value <= goalValue
-      : value >= goalValue;
-
-    if (passedGoal) {
-      projected.push({ date: dateStr, value: goalValue });
-      break;
-    }
-    projected.push({ date: dateStr, value });
-  }
-
-  return projected;
-}
+// Projection math is in @/lib/projection.ts (single source of truth)
 
 // ─────────────────────────────────────────────
 // Date-range filter — slices data to 7d, 30d, or all
@@ -619,11 +566,11 @@ export default function ProgressPage() {
                   data={filtered}
                   goalWeight={goalWeight}
                   projectedData={
-                    computeProjectedPoints(
-                      filtered.map((e) => ({ date: e.logged_at, value: e.weight })),
-                      goalWeight,
-                      goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
-                    ).map((p) => ({ value: p.value }))
+                    projectFromData({
+                      data: filtered.map((e) => ({ date: e.logged_at, value: e.weight })),
+                      goalValue: goalWeight,
+                      direction: goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
+                    }).map((p) => ({ value: p.value }))
                   }
                 />
               );
@@ -886,11 +833,11 @@ export default function ProgressPage() {
                   goalValue={goalData?.goal_performance_value}
                   goalLabel={goalData?.goal_performance_value != null ? `Goal ${goalData.goal_performance_value}${unitLabel ? ` ${unitLabel}` : ""}` : undefined}
                   color="#B8933A"
-                  projectedData={computeProjectedPoints(
-                    filtered,
-                    goalData?.goal_performance_value ?? null,
-                    (goalData?.performance_direction === "decrease") ? "decrease" : "increase",
-                  )}
+                  projectedData={projectFromData({
+                    data: filtered,
+                    goalValue: goalData?.goal_performance_value ?? null,
+                    direction: (goalData?.performance_direction === "decrease") ? "decrease" : "increase",
+                  })}
                 />
               ) : (
                 <p className="text-xs text-[#807868] text-center py-4">Not enough data for this range</p>
