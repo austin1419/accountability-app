@@ -41,7 +41,7 @@ export type GoalMetrics = {
 // Columns to SELECT from goals whenever we need full metrics
 // Must be a single string literal (not concatenated) so Supabase's TypeScript
 // type inference can parse the column names at compile time.
-const GOAL_METRICS_SELECT = "id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value" as const;
+const GOAL_METRICS_SELECT = "id, created_at, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value" as const;
 
 // Clamp a window start so it never precedes the user's created_at date.
 // Returns the later of windowStart and createdAt (both YYYY-MM-DD).
@@ -177,14 +177,16 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
     .eq("id", userId)
     .maybeSingle();
 
-  const createdDate = user?.created_at ? toDateStr(user.created_at) : "2000-01-01";
-
   const { data: goal } = await supabase
     .from("goals")
     .select(GOAL_METRICS_SELECT)
     .eq("user_id", userId)
     .eq("is_active", true)
     .maybeSingle();
+
+  const createdDate = goal?.created_at
+    ? toDateStr(goal.created_at)
+    : user?.created_at ? toDateStr(user.created_at) : "2000-01-01";
 
   const today = date;
 
@@ -283,7 +285,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 
   const { data: goals } = await supabase
     .from("goals")
-    .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
+    .select("user_id, id, created_at, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
     .eq("is_active", true);
 
@@ -317,7 +319,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     const goal      = goalByUser.get(client.id) ?? null;
     const taskCount = goal ? (taskCountByGoal.get(goal.id) ?? 0) : 0;
 
-    const createdDate   = toDateStr(client.created_at);
+    const createdDate   = goal?.created_at ? toDateStr(goal.created_at) : toDateStr(client.created_at);
     const weekEff       = effectiveStart(weekStart, createdDate);
     const clientLogs    = (logs ?? []).filter((l) => l.user_id === client.id);
     const todayLogs     = clientLogs.filter((l) => l.date === today);
@@ -364,7 +366,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
 
   const { data: goals } = await supabase
     .from("goals")
-    .select("user_id, id, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
+    .select("user_id, id, created_at, goal_name, goal_date, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .in("user_id", clientIds)
     .eq("is_active", true);
 
@@ -398,7 +400,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
   return clients.map((client) => {
     const goal        = goalByUser.get(client.id) ?? null;
     const taskCount   = goal ? (taskCountByGoal.get(goal.id) ?? 0) : 0;
-    const createdDate = toDateStr(client.created_at);
+    const createdDate = goal?.created_at ? toDateStr(goal.created_at) : toDateStr(client.created_at);
     const allLogs     = (logs ?? []).filter((l) => l.user_id === client.id);
 
     const todayLogs    = allLogs.filter((l) => l.date === today);
@@ -495,21 +497,24 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
   // Calendar-month anchor (1st of the month containing asOfDate)
   const monthStart = asOfDate.slice(0, 7) + "-01";
 
-  // Get user created_at for window clamping
+  // Get user created_at as fallback for window clamping
   const { data: userRow } = await supabase
     .from("users")
     .select("created_at")
     .eq("id", userId)
     .maybeSingle();
-  const createdDate = userRow?.created_at ? toDateStr(userRow.created_at) : "2000-01-01";
 
   // Get active goal + tasks
   const { data: goal } = await supabase
     .from("goals")
-    .select("id")
+    .select("id, created_at")
     .eq("user_id", userId)
     .eq("is_active", true)
     .maybeSingle();
+
+  const createdDate = goal?.created_at
+    ? toDateStr(goal.created_at)
+    : userRow?.created_at ? toDateStr(userRow.created_at) : "2000-01-01";
 
   const { data: tasks } = await supabase
     .from("tasks")
@@ -573,7 +578,6 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     .maybeSingle();
 
   if (!user) return null;
-  const createdDate = toDateStr(user.created_at);
 
   const { data: goal } = await supabase
     .from("goals")
@@ -581,6 +585,10 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     .eq("user_id", clientId)
     .eq("is_active", true)
     .maybeSingle();
+
+  const createdDate = goal?.created_at
+    ? toDateStr(goal.created_at)
+    : toDateStr(user.created_at);
 
   const { data: tasks } = await supabase
     .from("tasks")
