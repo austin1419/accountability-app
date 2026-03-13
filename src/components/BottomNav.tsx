@@ -39,7 +39,7 @@ const tabs = [
   },
   {
     label: "Profile",
-    href: "/accountability",
+    href: "/profile",
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
         <circle cx="10" cy="7" r="3.5" />
