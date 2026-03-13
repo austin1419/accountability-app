@@ -435,7 +435,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
       todayPercent,
       weekPercent,
       monthPercent,
-      isFlagged:     todayPercent < 70 || weekPercent < 70 || monthPercent < 70,
+      isFlagged:     taskCount > 0 && (todayPercent < 70 || weekPercent < 70 || monthPercent < 70),
     };
   });
 }
