@@ -7,13 +7,13 @@ import { StreakCard } from "@/components/StreakCard";
 import { useTasks }  from "@/context/TasksContext";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Activity:    "Labor",
-  Nutrition:   "Nourish",
-  Sleep:       "Sabbath",
-  Supplements: "Tend",
+  Activity:         "Labor",
+  Nutrition:        "Nourish",
+  "Sleep/Recovery": "Sabbath",
+  Supplements:      "Tend",
 };
 
-const CATEGORY_ORDER = ["Activity", "Nutrition", "Supplements", "Sleep"];
+const CATEGORY_ORDER = ["Activity", "Nutrition", "Supplements", "Sleep/Recovery"];
 
 export default function TasksPage() {
   // Read tasks and toggleTask from shared context instead of local useState.
