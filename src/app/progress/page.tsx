@@ -385,7 +385,7 @@ export default function ProgressPage() {
     });
     if (r2.error) { setError(r2.error); return; }
 
-    const today  = new Date().toISOString().split("T")[0];
+    const today  = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
     const logObj = { logged_at: today, body_fat: bf, smm, performance_value: null };
     setProgressLog((prev) => {
       const without = prev.filter((e) => e.logged_at !== today);
@@ -409,7 +409,7 @@ export default function ProgressPage() {
     const r2 = await updateCurrentMetrics(userId, { current_performance_value: v });
     if (r2.error) { setError(r2.error); return; }
 
-    const today  = new Date().toISOString().split("T")[0];
+    const today  = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
     const logObj = { logged_at: today, body_fat: null, smm: null, performance_value: v };
     setProgressLog((prev) => {
       const without = prev.filter((e) => e.logged_at !== today);

@@ -17,7 +17,7 @@ import type { Task, WeightEntry } from "@/lib/mockData";
 // Fetches tasks for the client's active goal, with today's completion status.
 // Used by TasksContext to load real data from Supabase on mount.
 export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
 
   const { data: goal, error: goalError } = await supabase
     .from("goals")
@@ -65,7 +65,7 @@ export async function upsertTaskLog(
   userId:    string,
   completed: boolean,
 ): Promise<void> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
 
   const { error } = await supabase
     .from("task_logs")
@@ -125,7 +125,7 @@ export async function insertProgressLog(
   goalId: string,
   patch:  { body_fat?: number | null; smm?: number | null; performance_value?: number | null }
 ): Promise<{ error?: string }> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const { error } = await supabase
     .from("progress_logs")
     .upsert(
@@ -198,7 +198,7 @@ export async function fetchWeightLog(userId: string): Promise<WeightEntry[]> {
 // Saves a new weight entry for today. Upserts so logging twice in a day
 // replaces rather than duplicates (matches the unique index on user_id + logged_at).
 export async function insertWeightLog(userId: string, weight: number): Promise<{ error?: string }> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const { error } = await supabase
     .from("weight_logs")
     .upsert(
@@ -313,7 +313,7 @@ export async function fetchMonthCompliance(
   const monthStr   = String(month).padStart(2, "0");
   const monthStart = `${year}-${monthStr}-01`;
   const lastDay    = new Date(year, month, 0).getDate();
-  const todayStr   = new Date().toISOString().split("T")[0];
+  const todayStr   = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const rawEnd     = `${year}-${monthStr}-${String(lastDay).padStart(2, "0")}`;
   const monthEnd   = rawEnd < todayStr ? rawEnd : todayStr;
 
