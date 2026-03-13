@@ -28,25 +28,6 @@ export default function RootLayout({
       <body
         className="antialiased"
       >
-        {/* Static splash blocker — rendered in server HTML so it covers
-            the page before any client JS hydrates. SplashScreen.tsx
-            removes it on mount; the inline script is a safe fallback
-            in case hydration is delayed or fails entirely. */}
-        <div
-          id="splash-blocker"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9998,
-            background: "#0D0D0D",
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `setTimeout(function(){var b=document.getElementById("splash-blocker");if(b)b.remove()},6000);`,
-          }}
-        />
-
         <DateProvider>
           <TasksProvider>{children}</TasksProvider>
         </DateProvider>
