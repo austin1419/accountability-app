@@ -900,3 +900,129 @@ export async function fetchProgressTrends(userId: string): Promise<ProgressTrend
     status,
   };
 }
+
+
+// ── fetchProgressSummary ─────────────────────────────────────────
+// Returns simple week/month deltas for weight, body fat, and SMM.
+// Each delta compares the most recent log value against the closest
+// entry to 7 or 30 days ago. Returns null per metric if insufficient data.
+
+export type MetricDelta = {
+  current:  number;
+  prior:    number;
+  change:   number;   // current - prior
+};
+
+export type ProgressSummary = {
+  weight:  { week: MetricDelta | null; month: MetricDelta | null } | null;
+  bodyFat: { week: MetricDelta | null; month: MetricDelta | null } | null;
+  smm:     { week: MetricDelta | null; month: MetricDelta | null } | null;
+};
+
+export async function fetchProgressSummary(userId: string): Promise<ProgressSummary> {
+  const supabase = createAdminClient();
+  const today = cstDate();
+
+  const sevenAgo  = new Date(today + "T00:00:00");
+  sevenAgo.setDate(sevenAgo.getDate() - 7);
+  const weekTarget = cstDate(sevenAgo);
+
+  const thirtyAgo = new Date(today + "T00:00:00");
+  thirtyAgo.setDate(thirtyAgo.getDate() - 30);
+  const monthTarget = cstDate(thirtyAgo);
+
+  // ── Helper: find closest entry to a target date ────────────────
+  // Searches sorted points for the entry whose date is nearest to targetDate.
+  type Point = { date: string; value: number };
+
+  function closestTo(points: Point[], targetDate: string): Point | null {
+    if (points.length === 0) return null;
+    let best = points[0];
+    let bestDist = Math.abs(daysBetween(
+      best.date < targetDate ? best.date : targetDate,
+      best.date < targetDate ? targetDate : best.date,
+    ));
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i];
+      const dist = Math.abs(daysBetween(
+        p.date < targetDate ? p.date : targetDate,
+        p.date < targetDate ? targetDate : p.date,
+      ));
+      if (dist < bestDist) { best = p; bestDist = dist; }
+    }
+    return best;
+  }
+
+  function buildDelta(points: Point[], targetDate: string): MetricDelta | null {
+    if (points.length < 2) return null;
+    const current = points[points.length - 1];
+    const prior   = closestTo(points, targetDate);
+    if (!prior || prior.date === current.date) return null;
+    return { current: current.value, prior: prior.value, change: +(current.value - prior.value).toFixed(2) };
+  }
+
+  // ── Fetch weight logs ──────────────────────────────────────────
+  let weight: ProgressSummary["weight"] = null;
+
+  const { data: wLogs } = await supabase
+    .from("weight_logs")
+    .select("logged_at, weight")
+    .eq("user_id", userId)
+    .order("logged_at", { ascending: true });
+
+  const weightPoints: Point[] = [];
+  for (const row of wLogs ?? []) {
+    if (row.weight != null) weightPoints.push({ date: row.logged_at, value: Number(row.weight) });
+  }
+
+  if (weightPoints.length >= 2) {
+    weight = {
+      week:  buildDelta(weightPoints, weekTarget),
+      month: buildDelta(weightPoints, monthTarget),
+    };
+  }
+
+  // ── Fetch progress logs (body fat + SMM) ───────────────────────
+  let bodyFat: ProgressSummary["bodyFat"] = null;
+  let smm:     ProgressSummary["smm"]     = null;
+
+  const { data: goal } = await supabase
+    .from("goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (goal) {
+    const { data: pLogs } = await supabase
+      .from("progress_logs")
+      .select("logged_at, body_fat, smm")
+      .eq("user_id", userId)
+      .eq("goal_id", goal.id)
+      .order("logged_at", { ascending: true });
+
+    const bfPoints:  Point[] = [];
+    const smmPoints: Point[] = [];
+
+    for (const row of pLogs ?? []) {
+      if (row.body_fat != null) bfPoints.push({ date: row.logged_at, value: Number(row.body_fat) });
+      if (row.smm     != null) smmPoints.push({ date: row.logged_at, value: Number(row.smm) });
+    }
+
+    if (bfPoints.length >= 2) {
+      bodyFat = {
+        week:  buildDelta(bfPoints, weekTarget),
+        month: buildDelta(bfPoints, monthTarget),
+      };
+    }
+
+    if (smmPoints.length >= 2) {
+      smm = {
+        week:  buildDelta(smmPoints, weekTarget),
+        month: buildDelta(smmPoints, monthTarget),
+      };
+    }
+  }
+
+  return { weight, bodyFat, smm };
+}
