@@ -441,6 +441,74 @@ export async function fetchArchivedClientsForCoach(): Promise<ArchivedClientRow[
 }
 
 
+// ── fetchProfileCompliance ────────────────────────────────────────
+// Returns weekly, monthly, and overall compliance for a single user.
+// Used by the client-facing Profile page.
+export type ProfileCompliance = {
+  weekPercent:    number;
+  monthPercent:   number;
+  overallPercent: number;
+};
+
+export async function fetchProfileCompliance(userId: string): Promise<ProfileCompliance> {
+  const supabase = createAdminClient();
+
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+
+  // Sunday-anchored week
+  const anchor = new Date(today + "T00:00:00");
+  const sundayOffset = anchor.getDay();
+  const sunday = new Date(anchor);
+  sunday.setDate(anchor.getDate() - sundayOffset);
+  const weekStart = sunday.toISOString().split("T")[0];
+
+  // 30-day month window
+  const monthAnchor = new Date(today + "T00:00:00");
+  monthAnchor.setDate(monthAnchor.getDate() - 29);
+  const monthStart = monthAnchor.toISOString().split("T")[0];
+
+  // Get active goal + tasks
+  const { data: goal } = await supabase
+    .from("goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("goal_id", goal?.id ?? "")
+    .eq("is_active", true);
+
+  const taskIds = (tasks ?? []).map((t) => t.id);
+  if (taskIds.length === 0) return { weekPercent: 0, monthPercent: 0, overallPercent: 0 };
+
+  // All logs for these tasks (all time, up to today)
+  const { data: allLogs } = await supabase
+    .from("task_logs")
+    .select("date, completed")
+    .eq("user_id", userId)
+    .lte("date", today)
+    .in("task_id", taskIds);
+
+  const logs = allLogs ?? [];
+
+  const weekLogs    = logs.filter((l) => l.date >= weekStart);
+  const weekDone    = weekLogs.filter((l) => l.completed).length;
+  const weekPercent = weekLogs.length > 0 ? Math.round((weekDone / weekLogs.length) * 100) : 0;
+
+  const monthLogs    = logs.filter((l) => l.date >= monthStart);
+  const monthDone    = monthLogs.filter((l) => l.completed).length;
+  const monthPercent = monthLogs.length > 0 ? Math.round((monthDone / monthLogs.length) * 100) : 0;
+
+  const overallDone    = logs.filter((l) => l.completed).length;
+  const overallPercent = logs.length > 0 ? Math.round((overallDone / logs.length) * 100) : 0;
+
+  return { weekPercent, monthPercent, overallPercent };
+}
+
+
 // ── fetchClientDetail ──────────────────────────────────────────────
 export async function fetchClientDetail(clientId: string): Promise<ClientDetail | null> {
   const supabase = createAdminClient();

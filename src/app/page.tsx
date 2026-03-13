@@ -9,6 +9,7 @@
 
 import { redirect }              from "next/navigation";
 import { ProgressRing }          from "@/components/ProgressRing";
+import { ProgressTowardGoal }    from "@/components/ProgressTowardGoal";
 import { BottomNav }             from "@/components/BottomNav";
 import { DateHeader }            from "@/components/DateHeader";
 import { DateSync }              from "@/components/DateSync";
@@ -70,9 +71,7 @@ export default async function ClientDashboard({
     );
   }
 
-  const { clientName, goal, today, week } = data;
-
-  const goalProgress = goal?.goalProgress ?? 0;
+  const { clientName, goal, today } = data;
 
   // Short label for the compliance section header when viewing a past date
   const isToday = selectedDate === todayStr;
@@ -146,87 +145,7 @@ export default async function ClientDashboard({
         </section>
 
         {/* ── Progress Toward Goal ─────────────────── */}
-        {goal && (
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-              Progress Toward Goal
-            </p>
-            <div className="flex items-center gap-5">
-              <div className="relative flex items-center justify-center flex-shrink-0">
-                <ProgressRing percent={goalProgress} color="#B8933A" />
-                <div className="absolute flex flex-col items-center">
-                  <span className="text-2xl font-bold text-[#DDD5C0]">{goalProgress}%</span>
-                  <span className="text-xs text-[#9A9080]">complete</span>
-                </div>
-              </div>
-
-              {/* Weight: Starting → Current → Goal */}
-              {goal.goal_category === "weight" && (
-                <div className="flex flex-col gap-2">
-                  {[
-                    { label: "Starting", value: goal.start_weight   != null ? `${goal.start_weight} lbs`   : "—", color: "text-[#9A9080]" },
-                    { label: "Current",  value: goal.current_weight != null ? `${goal.current_weight} lbs` : "—", color: "text-[#DDD5C0]" },
-                    { label: "Goal",     value: goal.goal_weight    != null ? `${goal.goal_weight} lbs`    : "—", color: "text-[#B8933A]" },
-                  ].map((row) => (
-                    <div key={row.label}>
-                      <p className="text-[10px] text-[#807868]">{row.label}</p>
-                      <p className={`text-sm font-semibold ${row.color}`}>{row.value}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Body composition: two groups (BF + SMM), each Starting → Current → Goal */}
-              {goal.goal_category === "body_composition" && (
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[#C04040] mb-1">Body Fat</p>
-                    {[
-                      { label: "Starting", value: goal.starting_body_fat != null ? `${goal.starting_body_fat}%` : "—" },
-                      { label: "Current",  value: goal.current_body_fat  != null ? `${goal.current_body_fat}%`  : "—" },
-                      { label: "Goal",     value: goal.goal_body_fat     != null ? `${goal.goal_body_fat}%`     : "—" },
-                    ].map((row) => (
-                      <div key={row.label} className="flex justify-between gap-3">
-                        <p className="text-[10px] text-[#807868]">{row.label}</p>
-                        <p className="text-xs font-semibold text-[#DDD5C0]">{row.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[#B89B3A] mb-1">SMM</p>
-                    {[
-                      { label: "Starting", value: goal.starting_smm != null ? `${goal.starting_smm} lbs` : "—" },
-                      { label: "Current",  value: goal.current_smm  != null ? `${goal.current_smm} lbs`  : "—" },
-                      { label: "Goal",     value: goal.goal_smm     != null ? `${goal.goal_smm} lbs`     : "—" },
-                    ].map((row) => (
-                      <div key={row.label} className="flex justify-between gap-3">
-                        <p className="text-[10px] text-[#807868]">{row.label}</p>
-                        <p className="text-xs font-semibold text-[#DDD5C0]">{row.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Performance: Starting → Current → Goal */}
-              {goal.goal_category === "performance" && (
-                <div className="flex flex-col gap-2">
-                  {[
-                    { label: "Starting", value: goal.starting_performance_value != null ? `${goal.starting_performance_value}${goal.performance_unit ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#9A9080]" },
-                    { label: "Current",  value: goal.current_performance_value  != null ? `${goal.current_performance_value}${goal.performance_unit  ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#DDD5C0]" },
-                    { label: "Goal",     value: goal.goal_performance_value     != null ? `${goal.goal_performance_value}${goal.performance_unit     ? ` ${goal.performance_unit}` : ""}` : "—", color: "text-[#B8933A]" },
-                  ].map((row) => (
-                    <div key={row.label}>
-                      <p className="text-[10px] text-[#807868]">{row.label}</p>
-                      <p className={`text-sm font-semibold ${row.color}`}>{row.value}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-            </div>
-          </section>
-        )}
+        {goal && <ProgressTowardGoal goal={goal} />}
 
         {/* ── Today's Compliance ───────────────────── */}
         <section className="bg-[#141414] rounded p-5 border border-[#252525]">
@@ -263,35 +182,57 @@ export default async function ClientDashboard({
           </div>
         </section>
 
-        {/* ── Weekly Compliance ────────────────────── */}
+        {/* ── Status Stamp (placeholder) ──────────── */}
         <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
-              {isToday ? "Weekly Compliance" : `7 Days to ${shortDateLabel}`}
-            </p>
-            {week.percent >= 70 ? (
-              <span className="text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                On track
-              </span>
-            ) : (
-              <span className="text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                Needs attention
-              </span>
-            )}
-          </div>
-          <p className="text-4xl font-bold text-[#DDD5C0] mb-3">
-            {week.percent}
-            <span className="text-2xl text-[#9A9080]">%</span>
+          <p
+            className="text-xs uppercase tracking-widest text-[#9A9080] mb-3"
+            style={{ fontFamily: "'Cinzel', serif" }}
+          >
+            Status
           </p>
-          <div className="h-1.5 bg-[#252525] rounded overflow-hidden">
-            <div
-              className={`h-full rounded transition-all duration-500 ${
-                week.percent >= 70 ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
-              }`}
-              style={{ width: `${week.percent}%` }}
-            />
-          </div>
-          <p className="text-xs text-[#807868] mt-2">Target: 70% or better</p>
+          {today.percent >= 70 ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#B8933A]/15 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 10L8.5 14.5L16 5.5" stroke="#B8933A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-base font-semibold text-[#B8933A]" style={{ fontFamily: "'Cinzel', serif" }}>
+                  On Track
+                </p>
+                <p className="text-xs text-[#807868]">Keep up the discipline.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#7A1E1E]/15 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 5V11" stroke="#7A1E1E" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="10" cy="14.5" r="1" fill="#7A1E1E" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-base font-semibold text-[#7A1E1E]" style={{ fontFamily: "'Cinzel', serif" }}>
+                  Behind Pace
+                </p>
+                <p className="text-xs text-[#807868]">Finish your tasks to get back on track.</p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ── Daily Coaching Note (placeholder) ───── */}
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
+          <p
+            className="text-xs uppercase tracking-widest text-[#9A9080] mb-3"
+            style={{ fontFamily: "'Cinzel', serif" }}
+          >
+            Coaching Note
+          </p>
+          <p className="text-sm text-[#807868] italic leading-relaxed">
+            Your coach hasn&apos;t left a note yet.
+          </p>
         </section>
 
       </main>
