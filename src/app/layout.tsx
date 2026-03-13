@@ -3,21 +3,25 @@ import "./globals.css";
 import { TasksProvider } from "@/context/TasksContext";
 
 export const metadata: Metadata = {
-  title: "IronTribe PULSE",
+  title: "PULSE",
   description: "Track the habits that drive your progress",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable:        true,
     statusBarStyle: "default",
-    title:          "IronTribe Pulse",
+    title:          "Pulse",
+  },
+  icons: {
+    icon: "/pulse-icon.svg",
+    apple: "/pulse-icon.svg",
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
