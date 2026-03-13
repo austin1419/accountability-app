@@ -11,6 +11,7 @@ import { redirect }              from "next/navigation";
 import { ProgressRing }          from "@/components/ProgressRing";
 import { BottomNav }             from "@/components/BottomNav";
 import { DateHeader }            from "@/components/DateHeader";
+import { SplashScreen }          from "@/components/SplashScreen";
 import { fetchDashboard }        from "@/lib/server-queries";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }     from "@/lib/supabase-admin";
@@ -72,13 +73,6 @@ export default async function ClientDashboard({
 
   const goalProgress = goal?.goalProgress ?? 0;
 
-  // Friendly greeting date — always shows real today
-  const todayDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month:   "long",
-    day:     "numeric",
-  });
-
   // Short label for the compliance section header when viewing a past date
   const isToday = selectedDate === todayStr;
   const shortDateLabel = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
@@ -89,41 +83,25 @@ export default async function ClientDashboard({
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
+      <SplashScreen />
+
       {/* ── Header ───────────────────────────────── */}
       <header className="bg-[#0D0D0D] pt-10 border-b border-[#252525]">
-        <div className="px-5 pb-3">
-          {/* Brand mark */}
-          <div className="mb-3 flex items-center gap-2">
-            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 flex-shrink-0">
-              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
-              <polyline
-                style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
-                points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
-                stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
-              />
-            </svg>
-            <div>
-              <p
-                className="text-xs tracking-[0.3em] text-[#B8933A] uppercase leading-none"
-                style={{ fontFamily: "'Cinzel', serif", fontWeight: 900 }}
-              >
-                PULSE
-              </p>
-              <p
-                className="text-[10px] text-[#807868] mt-0.5 leading-none"
-                style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}
-              >
-                Most apps track what you do. PULSE tracks who you&apos;re becoming.
-              </p>
-            </div>
-          </div>
-          <p className="text-sm text-[#9A9080]">{todayDate}</p>
+        <div className="flex items-center justify-between px-5 pb-3">
           <h1
-            className="text-2xl text-[#F4EEE4] mt-1 tracking-wide"
+            className="text-xl text-[#F4EEE4] tracking-wide"
             style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
           >
             {clientName}
           </h1>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 flex-shrink-0">
+            <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
+            <polyline
+              style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
+              points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
+              stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+            />
+          </svg>
         </div>
         {/* Date navigation — step through days or open calendar */}
         <DateHeader selectedDate={selectedDate} todayDate={todayStr} userId={profile.id} />
