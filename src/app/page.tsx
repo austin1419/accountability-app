@@ -194,54 +194,29 @@ export default async function ClientDashboard({
         </LinkCard>
 
         {/* ── Status (powered by status engine) ──── */}
-        {(() => {
-          const cfg: Record<string, { label: string; color: string; bg: string; icon: "check" | "alert"; message: string }> = {
-            ahead:    { label: "Ahead of Pace", color: "#4CAF50", bg: "bg-[#4CAF50]/15", icon: "check",  message: "You\u2019re ahead of schedule." },
-            on_track: { label: "On Track",      color: "#B8933A", bg: "bg-[#B8933A]/15", icon: "check",  message: "Keep up the discipline." },
-            behind:   { label: "Behind Pace",   color: "#7A1E1E", bg: "bg-[#7A1E1E]/15", icon: "alert",  message: "Finish your tasks to get back on track." },
-            no_data:  { label: "No Data Yet",   color: "#807868", bg: "bg-[#807868]/15", icon: "alert",  message: "Log progress to see your status." },
-          };
-          const s = cfg[statusScore.progressStatus] ?? cfg.no_data;
-          return (
-            <section className="bg-[#141414] rounded p-5 border border-[#252525]" id="status-section">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-                Status
-              </p>
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-10 h-10 rounded-full ${s.bg} flex items-center justify-center flex-shrink-0`}>
-                  {s.icon === "check" ? (
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M4 10L8.5 14.5L16 5.5" stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M10 5V11" stroke={s.color} strokeWidth="2" strokeLinecap="round" />
-                      <circle cx="10" cy="14.5" r="1" fill={s.color} />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <p className="text-base font-semibold" style={{ fontFamily: "'Cinzel', serif", color: s.color }}>
-                    {s.label}
-                  </p>
-                  <p className="text-xs text-[#807868]">{s.message}</p>
-                </div>
+        <section className="bg-[#141414] rounded p-5 border border-[#252525]" id="status-section">
+          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
+            Status
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { label: "Compliance", value: statusScore.complianceScore },
+              { label: "Progress",   value: statusScore.progressScore },
+              { label: "Overall",    value: statusScore.overallScore },
+            ].map((item) => (
+              <div key={item.label} className="flex flex-col items-center">
+                <p className="text-sm font-bold text-[#DDD5C0]">{item.value}</p>
+                <p className="text-[10px] text-[#9A9080] mt-0.5">{item.label}</p>
               </div>
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#252525]">
-                {[
-                  { label: "Compliance", value: statusScore.complianceScore },
-                  { label: "Progress",   value: statusScore.progressScore },
-                  { label: "Overall",    value: statusScore.overallScore },
-                ].map((item) => (
-                  <div key={item.label} className="flex flex-col items-center">
-                    <p className="text-sm font-bold text-[#DDD5C0]">{item.value}</p>
-                    <p className="text-[10px] text-[#9A9080] mt-0.5">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          );
-        })()}
+            ))}
+          </div>
+          <div className="pt-3 border-t border-[#252525]">
+            <p className="text-[10px] uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
+              Coach Eval
+            </p>
+            <p className="text-sm text-[#807868] italic">Coming Soon</p>
+          </div>
+        </section>
 
         {/* ── Daily Coaching Note (placeholder) ───── */}
         <section className="bg-[#141414] rounded p-5 border border-[#252525]">
