@@ -9,9 +9,10 @@ import { redirect }                   from "next/navigation";
 import { BottomNav }                  from "@/components/BottomNav";
 import { ProfileHeader }              from "@/components/profile/ProfileHeader";
 import { GoalCard }                   from "@/components/profile/GoalCard";
-import { ProgressTowardGoal }         from "@/components/ProgressTowardGoal";
-import { CoachingProfileCard }        from "@/components/profile/CoachingProfileCard";
 import { ComplianceSection }          from "@/components/profile/ComplianceSection";
+import { CoachingProfileCard }        from "@/components/profile/CoachingProfileCard";
+import { AchievementsCard }           from "@/components/profile/AchievementsCard";
+import { BadgesCard }                 from "@/components/profile/BadgesCard";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }          from "@/lib/supabase-admin";
 import { fetchProfileCompliance }     from "@/lib/server-queries";
@@ -89,31 +90,6 @@ export default async function ProfilePage() {
   // Fetch compliance data for the profile
   const compliance = await fetchProfileCompliance(profile.id);
 
-  // Build the goal prop for ProgressTowardGoal (needs GoalMetrics + name/date/progress)
-  const goalForProgress = goalData
-    ? {
-        goal_name:                  goalData.goal_name,
-        goal_date:                  goalData.goal_date ?? null,
-        goalProgress,
-        goal_category:              goalData.goal_category,
-        start_weight:               goalData.start_weight ?? null,
-        goal_weight:                goalData.goal_weight ?? null,
-        current_weight:             goalData.current_weight ?? null,
-        starting_body_fat:          goalData.starting_body_fat ?? null,
-        current_body_fat:           goalData.current_body_fat ?? null,
-        goal_body_fat:              goalData.goal_body_fat ?? null,
-        starting_smm:               goalData.starting_smm ?? null,
-        current_smm:                goalData.current_smm ?? null,
-        goal_smm:                   goalData.goal_smm ?? null,
-        performance_metric_name:    goalData.performance_metric_name ?? null,
-        performance_unit:           goalData.performance_unit ?? null,
-        performance_direction:      goalData.performance_direction ?? null,
-        starting_performance_value: goalData.starting_performance_value ?? null,
-        current_performance_value:  goalData.current_performance_value ?? null,
-        goal_performance_value:     goalData.goal_performance_value ?? null,
-      }
-    : null;
-
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
@@ -125,15 +101,17 @@ export default async function ProfilePage() {
           progress={goalProgress}
         />
 
-        {goalForProgress && <ProgressTowardGoal goal={goalForProgress} />}
-
-        <CoachingProfileCard />
-
         <ComplianceSection
           weekPercent={compliance.weekPercent}
           monthPercent={compliance.monthPercent}
           overallPercent={compliance.overallPercent}
         />
+
+        <CoachingProfileCard />
+
+        <AchievementsCard />
+
+        <BadgesCard />
       </main>
 
       <BottomNav />

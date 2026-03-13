@@ -31,10 +31,11 @@ const navIcons = {
   ),
 };
 
-const contactIcon = (
+const pulseAiIcon = (
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round"
-      d="M2 4.5A1.5 1.5 0 013.5 3h13A1.5 1.5 0 0118 4.5v8A1.5 1.5 0 0116.5 14H11l-4 3v-3H3.5A1.5 1.5 0 012 12.5v-8z" />
+    <circle cx="10" cy="10" r="8" opacity={0.4} />
+    <polyline strokeLinecap="round" strokeLinejoin="round"
+      points="4,10 7,10 8.5,6 10,14 11.5,8 13,10 16,10" />
   </svg>
 );
 
@@ -50,7 +51,7 @@ export function BottomNav() {
 
   // Build tabs with dynamic href for Today (includes date param for dashboard sync)
   const navTabs = [
-    { label: "Today",   href: `/?date=${selectedDate}`, match: "/",         icon: navIcons.Today },
+    { label: "Dash",    href: `/?date=${selectedDate}`, match: "/",         icon: navIcons.Today },
     { label: "Tasks",   href: "/tasks",                  match: "/tasks",    icon: navIcons.Tasks },
     { label: "Record",  href: "/progress",               match: "/progress", icon: navIcons.Record },
     { label: "Profile", href: "/profile",                match: "/profile",  icon: navIcons.Profile },
@@ -87,13 +88,13 @@ export function BottomNav() {
           );
         })}
 
-        {/* Contact — visual placeholder, no navigation */}
+        {/* PulseAI — visual placeholder, no navigation */}
         <span
           className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-full text-[#3A3530] cursor-default select-none"
-          aria-label="Contact — coming soon"
+          aria-label="PulseAI — coming soon"
         >
-          {contactIcon}
-          <span style={labelStyle} className="uppercase">Contact</span>
+          {pulseAiIcon}
+          <span style={labelStyle} className="uppercase">PulseAI</span>
         </span>
       </nav>
     </>

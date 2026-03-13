@@ -450,22 +450,21 @@ export type ProfileCompliance = {
   overallPercent: number;
 };
 
-export async function fetchProfileCompliance(userId: string): Promise<ProfileCompliance> {
+export async function fetchProfileCompliance(userId: string, date?: string): Promise<ProfileCompliance> {
   const supabase = createAdminClient();
 
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+  // Use provided date or default to today (CST)
+  const asOfDate = date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
 
   // Sunday-anchored week
-  const anchor = new Date(today + "T00:00:00");
+  const anchor = new Date(asOfDate + "T00:00:00");
   const sundayOffset = anchor.getDay();
   const sunday = new Date(anchor);
   sunday.setDate(anchor.getDate() - sundayOffset);
   const weekStart = sunday.toISOString().split("T")[0];
 
-  // 30-day month window
-  const monthAnchor = new Date(today + "T00:00:00");
-  monthAnchor.setDate(monthAnchor.getDate() - 29);
-  const monthStart = monthAnchor.toISOString().split("T")[0];
+  // Calendar-month anchor (1st of the month containing asOfDate)
+  const monthStart = asOfDate.slice(0, 7) + "-01";
 
   // Get active goal + tasks
   const { data: goal } = await supabase
@@ -484,12 +483,12 @@ export async function fetchProfileCompliance(userId: string): Promise<ProfileCom
   const taskIds = (tasks ?? []).map((t) => t.id);
   if (taskIds.length === 0) return { weekPercent: 0, monthPercent: 0, overallPercent: 0 };
 
-  // All logs for these tasks (all time, up to today)
+  // All logs for these tasks (all time, up to asOfDate)
   const { data: allLogs } = await supabase
     .from("task_logs")
     .select("date, completed")
     .eq("user_id", userId)
-    .lte("date", today)
+    .lte("date", asOfDate)
     .in("task_id", taskIds);
 
   const logs = allLogs ?? [];
