@@ -46,26 +46,6 @@ function computeGoalProgress(g: GoalMetrics): number {
   return clamp(((s - c) / (s - goal)) * 100);
 }
 
-// Returns display strings for the start and goal values based on category.
-function getStartGoalValues(g: GoalMetrics): { start: string; goalVal: string } {
-  if (g.goal_category === "body_composition") {
-    return {
-      start:   g.starting_body_fat != null ? `${g.starting_body_fat}% BF` : "—",
-      goalVal: g.goal_body_fat     != null ? `${g.goal_body_fat}% BF`     : "—",
-    };
-  }
-  if (g.goal_category === "performance") {
-    const unit = g.performance_unit ? ` ${g.performance_unit}` : "";
-    return {
-      start:   g.starting_performance_value != null ? `${g.starting_performance_value}${unit}` : "—",
-      goalVal: g.goal_performance_value     != null ? `${g.goal_performance_value}${unit}`     : "—",
-    };
-  }
-  return {
-    start:   g.start_weight != null ? `${g.start_weight} lbs` : "—",
-    goalVal: g.goal_weight  != null ? `${g.goal_weight} lbs`  : "—",
-  };
-}
 
 export default async function ProfilePage() {
   // ── Auth check ───────────────────────────────────────────────────
@@ -104,7 +84,6 @@ export default async function ProfilePage() {
     : "—";
 
   const goalProgress = goalData ? computeGoalProgress(goalData as GoalMetrics) : 0;
-  const startGoal    = goalData ? getStartGoalValues(goalData as GoalMetrics) : null;
 
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
@@ -115,8 +94,6 @@ export default async function ProfilePage() {
         <GoalCard
           goalName={goalData?.goal_name ?? null}
           progress={goalProgress}
-          startVal={startGoal?.start ?? null}
-          goalVal={startGoal?.goalVal ?? null}
         />
         <AchievementsCard />
         <BadgesCard />
