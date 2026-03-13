@@ -49,9 +49,9 @@ function effectiveStart(windowStart: string, createdAt: string): string {
   return createdAt > windowStart ? createdAt : windowStart;
 }
 
-// Extract YYYY-MM-DD from a timestamp string (e.g. "2026-03-10T14:30:00+00:00")
+// Extract YYYY-MM-DD from a timestamp, using CST to match task_log dates
 function toDateStr(timestamp: string): string {
-  return timestamp.slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date(timestamp));
 }
 
 // Count calendar days between two YYYY-MM-DD strings (inclusive)
@@ -528,22 +528,19 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
 
   const taskCount = taskIds.length;
 
-  const weekEffective  = effectiveStart(weekStart, createdDate);
-  const weekDone       = logs.filter((l) => l.date >= weekEffective && l.completed).length;
-  const weekExpected   = taskCount * daysBetween(weekEffective, asOfDate);
+  // Filter logs by raw window boundaries; use effectiveStart only in denominator
+  const weekDone       = logs.filter((l) => l.date >= weekStart && l.completed).length;
+  const weekExpected   = taskCount * daysBetween(effectiveStart(weekStart, createdDate), asOfDate);
   const weekPercent    = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
 
-  const monthEffective = effectiveStart(monthStart, createdDate);
-  const monthDone      = logs.filter((l) => l.date >= monthEffective && l.completed).length;
-  const monthExpected  = taskCount * daysBetween(monthEffective, asOfDate);
+  const monthDone      = logs.filter((l) => l.date >= monthStart && l.completed).length;
+  const monthExpected  = taskCount * daysBetween(effectiveStart(monthStart, createdDate), asOfDate);
   const monthPercent   = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
 
-  // Overall: earliest log date to asOfDate
-  const dates = logs.map((l) => l.date).sort();
-  const overallStart   = dates.length > 0 ? dates[0] : asOfDate;
-  const overallDone    = logs.filter((l) => l.completed).length;
-  const overallExpected = taskCount * daysBetween(overallStart, asOfDate);
-  const overallPercent = overallExpected > 0 ? Math.round((overallDone / overallExpected) * 100) : 0;
+  // Overall: from user creation date to asOfDate
+  const overallDone     = logs.filter((l) => l.date >= createdDate && l.completed).length;
+  const overallExpected = taskCount * daysBetween(createdDate, asOfDate);
+  const overallPercent  = overallExpected > 0 ? Math.round((overallDone / overallExpected) * 100) : 0;
 
   return { weekPercent, monthPercent, overallPercent };
 }
@@ -614,14 +611,12 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
   const todayDone    = todayLogs.filter((l) => l.completed).length;
   const todayPercent = totalTasks > 0 ? Math.round((todayDone / totalTasks) * 100) : 0;
 
-  const weekEffective  = effectiveStart(weekStart, createdDate);
-  const weekDone       = allLogs.filter((l) => l.date >= weekEffective && l.completed).length;
-  const weekExpected   = totalTasks * daysBetween(weekEffective, today);
+  const weekDone       = allLogs.filter((l) => l.date >= weekStart && l.completed).length;
+  const weekExpected   = totalTasks * daysBetween(effectiveStart(weekStart, createdDate), today);
   const weekPercent    = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
 
-  const monthEffective = effectiveStart(monthStart, createdDate);
-  const monthDone      = allLogs.filter((l) => l.date >= monthEffective && l.completed).length;
-  const monthExpected  = totalTasks * daysBetween(monthEffective, today);
+  const monthDone      = allLogs.filter((l) => l.date >= monthStart && l.completed).length;
+  const monthExpected  = totalTasks * daysBetween(effectiveStart(monthStart, createdDate), today);
   const monthPercent   = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
 
   const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
