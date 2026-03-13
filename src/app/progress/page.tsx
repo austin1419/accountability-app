@@ -18,19 +18,24 @@ import {
 
 // ─────────────────────────────────────────────
 // Generic SVG line chart — works for any numeric series
+// Optional projectedData renders as a white dashed line
 // ─────────────────────────────────────────────
 function MetricChart({
   data,
   goalValue,
   goalLabel,
   color = "#B8933A",
+  projectedData,
 }: {
-  data:       { date: string; value: number }[];
-  goalValue?: number | null;
-  goalLabel?: string;
-  color?:     string;
+  data:           { date: string; value: number }[];
+  goalValue?:     number | null;
+  goalLabel?:     string;
+  color?:         string;
+  projectedData?: { date: string; value: number }[];
 }) {
   if (data.length < 2) return null;
+
+  const allPoints = [...data, ...(projectedData ?? [])];
 
   const SVG_W  = 300;
   const SVG_H  = 130;
@@ -41,20 +46,26 @@ function MetricChart({
   const chartW = SVG_W - PAD_L - PAD_R;
   const chartH = SVG_H - PAD_T - PAD_B;
 
-  const allVals = data.map((d) => d.value);
+  const allVals = allPoints.map((d) => d.value);
   const minVal  = goalValue != null ? Math.min(...allVals, goalValue) : Math.min(...allVals);
   const maxVal  = goalValue != null ? Math.max(...allVals, goalValue) : Math.max(...allVals);
   const range   = maxVal - minVal || 1;
 
   const toY = (v: number) => PAD_T + chartH * (1 - (v - minVal) / range);
-  const toX = (i: number) => PAD_L + (i / (data.length - 1)) * chartW;
+  const totalLen = allPoints.length;
+  const toX = (i: number) => PAD_L + (i / (totalLen - 1)) * chartW;
 
-  const points = data.map((d, i) => `${toX(i)},${toY(d.value)}`).join(" ");
+  const actualPoints = data.map((d, i) => `${toX(i)},${toY(d.value)}`).join(" ");
 
   const shortDate = (iso: string) => {
     const d = new Date(iso + "T00:00:00");
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
+
+  // Projected line starts from last actual point
+  const projPoints = projectedData && projectedData.length > 0
+    ? projectedData.map((d, i) => `${toX(data.length - 1 + i)},${toY(d.value)}`).join(" ")
+    : null;
 
   return (
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
@@ -72,10 +83,13 @@ function MetricChart({
           )}
         </>
       )}
-      <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={actualPoints} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {data.map((d, i) => (
         <circle key={i} cx={toX(i)} cy={toY(d.value)} r={3} fill={color} />
       ))}
+      {projPoints && (
+        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+      )}
       {data.map((d, i) =>
         i % 2 === 0 ? (
           <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
@@ -226,8 +240,11 @@ function DualMetricChart({
 }
 
 // Original weight chart — keeps "week" label format from WeightEntry
-function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: number }) {
+// Optional projectedData renders as a white dashed line
+function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[]; goalWeight: number; projectedData?: { value: number }[] }) {
   if (data.length < 2) return null;
+
+  const totalLen = data.length + (projectedData?.length ?? 0);
 
   const SVG_W  = 300;
   const SVG_H  = 130;
@@ -238,16 +255,23 @@ function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: nu
   const chartW = SVG_W - PAD_L - PAD_R;
   const chartH = SVG_H - PAD_T - PAD_B;
 
-  const allWeights = data.map((d) => d.weight);
-  const yMin = goalWeight - 5;
+  const allWeights = [...data.map((d) => d.weight), ...(projectedData ?? []).map((d) => d.value)];
+  const yMin = Math.min(goalWeight, ...allWeights) - 5;
   const yMax = Math.max(...allWeights) + 5;
   const yRange = yMax - yMin;
 
   const toY = (w: number) => PAD_T + chartH * (1 - (w - yMin) / yRange);
-  const toX = (i: number) => PAD_L + (i / (data.length - 1)) * chartW;
+  const toX = (i: number) => PAD_L + (i / (totalLen - 1)) * chartW;
 
   const points = data.map((d, i) => `${toX(i)},${toY(d.weight)}`).join(" ");
   const goalY  = toY(goalWeight);
+
+  // Projected line starts from last actual point
+  const projPoints = projectedData && projectedData.length > 0
+    ? [{ value: data[data.length - 1].weight }, ...projectedData]
+        .map((d, i) => `${toX(data.length - 1 + i)},${toY(d.value)}`)
+        .join(" ")
+    : null;
 
   return (
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
@@ -260,6 +284,9 @@ function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: nu
       {data.map((d, i) => (
         <circle key={i} cx={toX(i)} cy={toY(d.weight)} r={3} fill="#B8933A" />
       ))}
+      {projPoints && (
+        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+      )}
       {data.map((d, i) =>
         i % 2 === 0 ? (
           <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
@@ -269,6 +296,62 @@ function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: nu
       )}
     </svg>
   );
+}
+
+// ─────────────────────────────────────────────
+// Projection helper — computes projected points from logged data
+// Uses 30-day velocity (or all data if < 30 days). Returns empty
+// array if fewer than 2 data points or velocity moves wrong direction.
+// ─────────────────────────────────────────────
+function computeProjectedPoints(
+  data:      { date: string; value: number }[],
+  goalValue: number | null,
+  direction: "decrease" | "increase",
+): { date: string; value: number }[] {
+  if (data.length < 2 || goalValue == null) return [];
+
+  // Find entries in the last 30 days
+  const last  = data[data.length - 1];
+  const cutoff = new Date(last.date + "T00:00:00");
+  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffStr = cutoff.toISOString().split("T")[0];
+
+  const window = data.filter((d) => d.date >= cutoffStr);
+  if (window.length < 2) return [];
+
+  const first = window[0];
+  const dayMs = 86_400_000;
+  const days  = Math.round((new Date(last.date + "T00:00:00").getTime() - new Date(first.date + "T00:00:00").getTime()) / dayMs);
+  if (days <= 0) return [];
+
+  const velocity = (last.value - first.value) / days; // per day
+
+  // Check velocity is in the right direction
+  const movingRight = direction === "decrease" ? velocity < 0 : velocity > 0;
+  if (!movingRight || velocity === 0) return [];
+
+  const projected: { date: string; value: number }[] = [];
+  const interval = 7;
+  const maxDays  = 180;
+
+  for (let d = interval; d <= maxDays; d += interval) {
+    const cursor = new Date(last.date + "T00:00:00");
+    cursor.setDate(cursor.getDate() + d);
+    const dateStr = cursor.toISOString().split("T")[0];
+    const value   = +(last.value + velocity * d).toFixed(2);
+
+    const passedGoal = direction === "decrease"
+      ? value <= goalValue
+      : value >= goalValue;
+
+    if (passedGoal) {
+      projected.push({ date: dateStr, value: goalValue });
+      break;
+    }
+    projected.push({ date: dateStr, value });
+  }
+
+  return projected;
 }
 
 // ─────────────────────────────────────────────
@@ -484,7 +567,17 @@ export default function ProgressPage() {
               <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
               <span className="text-xs text-[#9A9080]">Goal: {goalWeight} lbs</span>
             </div>
-            <WeightChart data={weightLog} goalWeight={goalWeight} />
+            <WeightChart
+              data={weightLog}
+              goalWeight={goalWeight}
+              projectedData={
+                computeProjectedPoints(
+                  weightLog.map((e) => ({ date: e.logged_at, value: e.weight })),
+                  goalWeight,
+                  goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
+                ).map((p) => ({ value: p.value }))
+              }
+            />
           </section>
           <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between">
@@ -738,6 +831,11 @@ export default function ProgressPage() {
               goalValue={goalData?.goal_performance_value}
               goalLabel={goalData?.goal_performance_value != null ? `Goal ${goalData.goal_performance_value}${unitLabel ? ` ${unitLabel}` : ""}` : undefined}
               color="#B8933A"
+              projectedData={computeProjectedPoints(
+                perfSeries,
+                goalData?.goal_performance_value ?? null,
+                (goalData?.performance_direction === "decrease") ? "decrease" : "increase",
+              )}
             />
           </section>
         )}
