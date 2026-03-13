@@ -93,7 +93,7 @@ export function SplashScreen() {
 
         {/* Tagline */}
         <p
-          className="text-sm text-[#807868] mt-3 max-w-xs text-center leading-relaxed px-8"
+          className="text-sm text-[#807868] mt-3 text-center leading-relaxed flex flex-col"
           style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle:  "italic",
@@ -101,7 +101,8 @@ export function SplashScreen() {
             animation:  "splashTextIn 0.7s ease-out 2.2s forwards",
           }}
         >
-          Most apps track what you do. PULSE tracks who you&apos;re becoming.
+          <span>Most apps track what you do.</span>
+          <span>PULSE tracks who you&apos;re becoming.</span>
         </p>
       </div>
     </>
