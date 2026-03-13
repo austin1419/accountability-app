@@ -13,6 +13,7 @@ import { ComplianceSection }          from "@/components/profile/ComplianceSecti
 import { CoachingProfileCard }        from "@/components/profile/CoachingProfileCard";
 import { AchievementsCard }           from "@/components/profile/AchievementsCard";
 import { BadgesCard }                 from "@/components/profile/BadgesCard";
+import { SignOutButton }              from "@/components/SignOutButton";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }          from "@/lib/supabase-admin";
 import { fetchProfileCompliance }     from "@/lib/server-queries";
@@ -112,6 +113,12 @@ export default async function ProfilePage() {
         <AchievementsCard />
 
         <BadgesCard />
+
+        <SignOutButton
+          className="mt-4 w-full py-3 rounded bg-[#7A1E1E] text-sm font-semibold text-[#F4EEE4] hover:bg-[#8B2222] active:bg-[#6A1A1A] transition-colors mb-2"
+        >
+          Logout
+        </SignOutButton>
       </main>
 
       <BottomNav />
