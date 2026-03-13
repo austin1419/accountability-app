@@ -71,7 +71,7 @@ export function DateHeader({ userId }: Props) {
         {/* Date label — opens calendar */}
         <button
           onClick={() => setCalendarOpen(true)}
-          className="flex-1 text-center text-sm font-semibold text-[#DDD5C0] hover:text-[#B8933A] transition-colors px-2 py-1 rounded hover:bg-[#1A1A1A]"
+          className="flex-1 text-center text-base font-semibold text-[#DDD5C0] hover:text-[#B8933A] transition-colors px-2 py-1 rounded hover:bg-[#1A1A1A]"
           style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.08em" }}
           aria-label="Open calendar"
         >
