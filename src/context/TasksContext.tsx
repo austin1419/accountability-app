@@ -19,7 +19,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { Task } from "@/lib/mockData";
 import { supabase } from "@/lib/supabase";
-import { fetchTodaysTasks, upsertTaskLog } from "@/lib/queries";
+import { fetchTodaysTasks, upsertTaskLog, fetchStreak } from "@/lib/queries";
 
 // ── Shape of what the context exposes ─────────
 type TasksContextType = {
@@ -28,6 +28,7 @@ type TasksContextType = {
   completedCount: number;
   totalCount: number;
   compliancePercent: number;
+  streak: number;
 };
 
 // ── Create the context (starts empty — provider fills it in) ──
@@ -38,6 +39,7 @@ const TasksContext = createContext<TasksContextType | null>(null);
 export function TasksProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [tasks,  setTasks]  = useState<Task[]>([]);
+  const [streak, setStreak] = useState(0);
 
   // Resolve the current user's public.users id, then load their tasks
   useEffect(() => {
@@ -55,6 +57,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       setUserId(profile.id);
       fetchTodaysTasks(profile.id).then(setTasks);
+      fetchStreak(profile.id).then(setStreak);
     }
     init();
   }, []);
@@ -68,9 +71,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       const newDone = !task.done;
 
-      // Write the new status to Supabase in the background (fire-and-forget)
-      // The Dashboard will pick up the saved value on next navigation
-      upsertTaskLog(id, userId, newDone);
+      // Write to Supabase, then re-derive streak from the saved state
+      upsertTaskLog(id, userId, newDone).then(() => {
+        fetchStreak(userId).then(setStreak);
+      });
 
       return prev.map((t) => (t.id === id ? { ...t, done: newDone } : t));
     });
@@ -84,7 +88,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TasksContext.Provider
-      value={{ tasks, toggleTask, completedCount, totalCount, compliancePercent }}
+      value={{ tasks, toggleTask, completedCount, totalCount, compliancePercent, streak }}
     >
       {children}
     </TasksContext.Provider>

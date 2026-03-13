@@ -302,6 +302,82 @@ export async function deleteHabit(taskId: string, reason?: string): Promise<{ er
 }
 
 
+// ── fetchStreak ────────────────────────────────
+// Calculates the user's current daily streak from task_logs.
+// A day counts if ALL active tasks were completed that day.
+// Today counts if complete; if today is incomplete the streak
+// reflects the most recent consecutive run ending yesterday.
+export async function fetchStreak(userId: string): Promise<number> {
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d);
+
+  const today = fmt(new Date());
+
+  const { data: goal } = await supabase
+    .from("goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!goal) return 0;
+
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("goal_id", goal.id)
+    .eq("is_active", true);
+
+  const totalTasks = tasks?.length ?? 0;
+  if (totalTasks === 0) return 0;
+
+  const taskIds = (tasks ?? []).map((t) => t.id);
+
+  // Fetch up to 90 days of logs — enough for any realistic streak
+  const lookback = new Date();
+  lookback.setDate(lookback.getDate() - 90);
+  const startStr = fmt(lookback);
+
+  const { data: logs } = await supabase
+    .from("task_logs")
+    .select("date, completed")
+    .eq("user_id", userId)
+    .gte("date", startStr)
+    .lte("date", today)
+    .in("task_id", taskIds);
+
+  // Count completed tasks per calendar day
+  const completedByDate: Record<string, number> = {};
+  for (const log of logs ?? []) {
+    if (log.completed) {
+      completedByDate[log.date] = (completedByDate[log.date] ?? 0) + 1;
+    }
+  }
+
+  // Walk backwards from today:
+  // • today not yet complete → skip (streak not broken, just in progress)
+  // • past day fully complete → count it
+  // • past day not fully complete → stop
+  let streak = 0;
+  const cursor = new Date(today + "T12:00:00");
+
+  for (let i = 0; i <= 90; i++) {
+    const dateStr   = fmt(cursor);
+    const completed = completedByDate[dateStr] ?? 0;
+
+    if (completed >= totalTasks) {
+      streak++;
+    } else if (dateStr < today) {
+      break; // past day incomplete — streak is over
+    }
+    // dateStr === today && not complete → fall through, keep checking yesterday
+
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}
+
+
 // ── fetchMonthCompliance ───────────────────────
 // Returns a map of date → compliance % for all days in a given month that have data.
 // Used by CalendarModal to color-code each day.

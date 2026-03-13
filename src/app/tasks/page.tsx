@@ -3,12 +3,13 @@
 
 import { TaskItem }  from "@/components/TaskItem";
 import { BottomNav } from "@/components/BottomNav";
+import { StreakCard } from "@/components/StreakCard";
 import { useTasks }  from "@/context/TasksContext";
 
 export default function TasksPage() {
   // Read tasks and toggleTask from shared context instead of local useState.
   // Changes made here are instantly reflected on the Dashboard's compliance wheel.
-  const { tasks, toggleTask, completedCount, totalCount, compliancePercent } = useTasks();
+  const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak } = useTasks();
 
   const allDone = completedCount === totalCount;
 
@@ -106,6 +107,8 @@ export default function TasksPage() {
             </section>
           );
         })}
+
+        <StreakCard streak={streak} />
 
       </main>
 
