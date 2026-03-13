@@ -304,45 +304,26 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
 // Projection math is in @/lib/projection.ts (single source of truth)
 
 // ─────────────────────────────────────────────
-// Status Card — displays progress + compliance scores
+// Status Pill — small indicator that links to dashboard
 // ─────────────────────────────────────────────
-const STATUS_CONFIG: Record<string, { label: string; color: string; border: string }> = {
-  ahead:    { label: "Ahead",    color: "text-[#4CAF50]", border: "border-[#4CAF50]" },
-  on_track: { label: "On Track", color: "text-[#B8933A]", border: "border-[#B8933A]" },
-  behind:   { label: "Behind",   color: "text-[#7A1E1E]", border: "border-[#7A1E1E]" },
-  no_data:  { label: "No Data",  color: "text-[#807868]", border: "border-[#807868]" },
+const STATUS_PILL: Record<string, { label: string; text: string; border: string }> = {
+  ahead:    { label: "Ahead",    text: "text-[#4CAF50]", border: "border-[#4CAF50]" },
+  on_track: { label: "On Track", text: "text-[#B8933A]", border: "border-[#B8933A]" },
+  behind:   { label: "Behind",   text: "text-[#7A1E1E]", border: "border-[#7A1E1E]" },
+  no_data:  { label: "No Data",  text: "text-[#807868]", border: "border-[#807868]" },
 };
 
-function StatusCard({ data }: {
-  data: {
-    progressStatus: string;
-    progressScore:  number;
-    complianceScore: number;
-    overallScore:    number;
-  } | null;
-}) {
-  if (!data) return null;
-  const cfg = STATUS_CONFIG[data.progressStatus] ?? STATUS_CONFIG.no_data;
-
+function StatusPill({ status }: { status: string | null }) {
+  if (!status) return null;
+  const cfg = STATUS_PILL[status] ?? STATUS_PILL.no_data;
   return (
-    <section className={`bg-[#141414] rounded p-4 border ${cfg.border}`}>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Status</p>
-        <span className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Compliance", value: data.complianceScore },
-          { label: "Progress",   value: data.progressScore },
-          { label: "Overall",    value: data.overallScore },
-        ].map((s) => (
-          <div key={s.label} className="flex flex-col items-center">
-            <p className="text-sm font-bold text-[#DDD5C0]">{s.value}</p>
-            <p className="text-[10px] text-[#9A9080] mt-0.5">{s.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
+    <a
+      href="/?#status-section"
+      className={`text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded border ${cfg.text} ${cfg.border} bg-transparent`}
+      style={{ fontFamily: "'Cinzel', serif" }}
+    >
+      {cfg.label}
+    </a>
   );
 }
 
@@ -586,10 +567,13 @@ export default function ProgressPage() {
     return (
       <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
         <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-          <h1
-            className="text-2xl text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-          >Progress</h1>
+          <div className="flex items-center justify-between">
+            <h1
+              className="text-2xl text-[#F4EEE4] tracking-wide"
+              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            >Progress</h1>
+            <StatusPill status={statusData?.progressStatus ?? null} />
+          </div>
           <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
         </header>
         <EditingBanner />
@@ -607,7 +591,6 @@ export default function ProgressPage() {
               </div>
             ))}
           </section>
-          <StatusCard data={statusData} />
           <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
@@ -712,10 +695,13 @@ export default function ProgressPage() {
     return (
       <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
         <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-          <h1
-            className="text-2xl text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-          >Progress</h1>
+          <div className="flex items-center justify-between">
+            <h1
+              className="text-2xl text-[#F4EEE4] tracking-wide"
+              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            >Progress</h1>
+            <StatusPill status={statusData?.progressStatus ?? null} />
+          </div>
           <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
         </header>
         <EditingBanner />
@@ -756,8 +742,6 @@ export default function ProgressPage() {
               ))}
             </div>
           </section>
-
-          <StatusCard data={statusData} />
 
           {/* Recomposition chart — BF and SMM on same graph */}
           {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
@@ -830,10 +814,13 @@ export default function ProgressPage() {
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
       <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-        <h1
-          className="text-2xl text-[#F4EEE4] tracking-wide"
-          style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-        >Progress</h1>
+        <div className="flex items-center justify-between">
+          <h1
+            className="text-2xl text-[#F4EEE4] tracking-wide"
+            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+          >Progress</h1>
+          <StatusPill status={statusData?.progressStatus ?? null} />
+        </div>
         <p className="text-sm text-[#9A9080] mt-1">{metricName} tracking</p>
       </header>
       <EditingBanner />
@@ -873,8 +860,6 @@ export default function ProgressPage() {
             </section>
           );
         })()}
-
-        <StatusCard data={statusData} />
 
         {/* Chart */}
         {perfSeries.length >= 2 && (
