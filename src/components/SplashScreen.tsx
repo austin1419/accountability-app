@@ -5,7 +5,7 @@
 //
 // Rendered as a fixed full-screen overlay (z-9999) inside page.tsx.
 // sessionStorage prevents replay during normal navigation.
-// Total animation: ~1.6 s.
+// Total animation: ~4.2 s.
 // ─────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -16,11 +16,11 @@ export function SplashScreen() {
   useEffect(() => {
     if (sessionStorage.getItem("pulse_splash")) return;
     setPhase("in");
-    const fadeOut = setTimeout(() => setPhase("out"),    1200);
+    const fadeOut = setTimeout(() => setPhase("out"),    3500);
     const done    = setTimeout(() => {
       sessionStorage.setItem("pulse_splash", "1");
       setPhase("hidden");
-    }, 1600);
+    }, 4200);
     return () => { clearTimeout(fadeOut); clearTimeout(done); };
   }, []);
 
@@ -35,7 +35,7 @@ export function SplashScreen() {
         }
         @keyframes splashPulse {
           0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(184,147,58,0.6)); }
+          50%      { transform: scale(1.14); filter: drop-shadow(0 0 14px rgba(184,147,58,0.75)); }
         }
         @keyframes splashTextIn {
           from { opacity: 0; transform: translateY(6px); }
@@ -49,11 +49,11 @@ export function SplashScreen() {
 
       <div
         className="fixed inset-0 z-[9999] bg-[#0D0D0D] flex flex-col items-center justify-center pointer-events-none"
-        style={{ animation: phase === "out" ? "splashOut 0.4s ease-out forwards" : undefined }}
+        style={{ animation: phase === "out" ? "splashOut 0.7s ease-out forwards" : undefined }}
       >
         {/* Logo — fades in, then pulses once */}
-        <div style={{ animation: "splashFadeIn 0.4s ease-out forwards, splashPulse 0.6s ease-in-out 0.4s forwards" }}>
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-16 h-16">
+        <div style={{ animation: "splashFadeIn 0.8s ease-out forwards, splashPulse 1.5s ease-in-out 0.8s forwards" }}>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-28 h-28">
             <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
             <polygon points="50,14 80,28 90,57 76,82 50,90 24,82 10,57 20,28" stroke="#B8933A" strokeWidth={0.5} fill="none" opacity={0.2} />
             <polyline
@@ -67,12 +67,12 @@ export function SplashScreen() {
 
         {/* PULSE wordmark */}
         <p
-          className="text-2xl tracking-[0.4em] text-[#F4EEE4] uppercase mt-5"
+          className="text-4xl tracking-[0.4em] text-[#F4EEE4] uppercase mt-6"
           style={{
             fontFamily:  "'Cinzel', serif",
             fontWeight:  900,
             opacity:     0,
-            animation:   "splashTextIn 0.35s ease-out 0.6s forwards",
+            animation:   "splashTextIn 0.7s ease-out 1.5s forwards",
           }}
         >
           PULSE
@@ -85,7 +85,7 @@ export function SplashScreen() {
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle:  "italic",
             opacity:    0,
-            animation:  "splashTextIn 0.35s ease-out 0.85s forwards",
+            animation:  "splashTextIn 0.7s ease-out 2.2s forwards",
           }}
         >
           Most apps track what you do. PULSE tracks who you&apos;re becoming.
