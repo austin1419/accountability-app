@@ -9,34 +9,40 @@ export function generateImageMetadata() {
 }
 
 export default function Icon({ id }: { id: string }) {
-  const size = id === "512" ? 512 : 192;
-  const radius = Math.round(size * 0.2);
-  const fontSize = Math.round(size * 0.38);
+  const size   = id === "512" ? 512 : 192;
+  const scale  = size / 512;
 
+  // All coordinates are for a 512×512 canvas, scaled via transform
   return new ImageResponse(
     (
       <div
         style={{
-          width:           size,
-          height:          size,
-          background:      "#2563eb",
-          borderRadius:    radius,
-          display:         "flex",
-          alignItems:      "center",
-          justifyContent:  "center",
+          width:          size,
+          height:         size,
+          background:     "#0D0D0D",
+          borderRadius:   Math.round(114 * scale),
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          overflow:       "hidden",
         }}
       >
-        <span
-          style={{
-            color:      "white",
-            fontSize:   fontSize,
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: "-0.02em",
-          }}
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 512 512"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          P
-        </span>
+          <circle cx="256" cy="256" r="185" stroke="#B8933A" strokeWidth="22" fill="none" />
+          <polyline
+            points="86,256 156,256 178,256 200,148 222,368 242,256 250,256 256,110 262,256 270,256 290,180 312,332 334,256 356,256 426,256"
+            stroke="#B8933A"
+            strokeWidth="26"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
     ),
     { width: size, height: size },
