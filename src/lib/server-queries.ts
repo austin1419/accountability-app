@@ -189,10 +189,12 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
   const todayPercent   = totalTasks > 0
     ? Math.round((todayCompleted / totalTasks) * 100) : 0;
 
+  // Weekly compliance anchored to most recent Sunday (not rolling 7 days)
   const anchor = new Date(date + "T00:00:00");
-  const sixBefore = new Date(anchor);
-  sixBefore.setDate(anchor.getDate() - 6);
-  const weekStart = sixBefore.toISOString().split("T")[0];
+  const sundayOffset = anchor.getDay(); // 0 = Sunday, 1 = Mon, ... 6 = Sat
+  const sunday = new Date(anchor);
+  sunday.setDate(anchor.getDate() - sundayOffset);
+  const weekStart = sunday.toISOString().split("T")[0];
 
   const { data: weekLogs } = await supabase
     .from("task_logs")

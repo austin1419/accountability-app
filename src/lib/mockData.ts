@@ -14,8 +14,9 @@ export type Task = {
 };
 
 export type WeightEntry = {
-  week: string;   // e.g. "Jan 6"
-  weight: number; // in lbs
+  week: string;      // e.g. "Jan 6"
+  weight: number;    // in lbs
+  logged_at: string; // "YYYY-MM-DD" raw date for filtering
 };
 
 // ── Client profile ────────────────────────────
@@ -37,14 +38,14 @@ export const mockTasks: Task[] = [
 
 // ── Weekly weight log (most recent first on the chart) ───
 export const mockWeightLog: WeightEntry[] = [
-  { week: "Jan 6",  weight: 240 },
-  { week: "Jan 13", weight: 237 },
-  { week: "Jan 20", weight: 235 },
-  { week: "Jan 27", weight: 233 },
-  { week: "Feb 3",  weight: 229 },
-  { week: "Feb 10", weight: 226 },
-  { week: "Feb 17", weight: 222 },
-  { week: "Feb 24", weight: 218 },
+  { week: "Jan 6",  weight: 240, logged_at: "2026-01-06" },
+  { week: "Jan 13", weight: 237, logged_at: "2026-01-13" },
+  { week: "Jan 20", weight: 235, logged_at: "2026-01-20" },
+  { week: "Jan 27", weight: 233, logged_at: "2026-01-27" },
+  { week: "Feb 3",  weight: 229, logged_at: "2026-02-03" },
+  { week: "Feb 10", weight: 226, logged_at: "2026-02-10" },
+  { week: "Feb 17", weight: 222, logged_at: "2026-02-17" },
+  { week: "Feb 24", weight: 218, logged_at: "2026-02-24" },
 ];
 
 // ── Category color map ────────────────────────

@@ -189,7 +189,8 @@ export async function fetchWeightLog(userId: string): Promise<WeightEntry[]> {
       month: "short",
       day:   "numeric",
     }),
-    weight: Number(row.weight),
+    weight:    Number(row.weight),
+    logged_at: row.logged_at,
   }));
 }
 

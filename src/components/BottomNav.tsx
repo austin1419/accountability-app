@@ -59,7 +59,7 @@ export function BottomNav() {
   return (
     <>
       {/* Spacer — stays in normal flow so content clears the fixed nav */}
-      <div className="h-24 flex-shrink-0" aria-hidden="true" />
+      <div className="h-28 flex-shrink-0" aria-hidden="true" />
 
       {/* Floating pill nav */}
       <nav

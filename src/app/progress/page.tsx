@@ -444,11 +444,16 @@ export default function ProgressPage() {
   // WEIGHT VIEW
   // ─────────────────────────────────────────────
   if (category === "weight") {
-    const startWeight   = goalData?.start_weight   ?? null;
-    const goalWeight    = goalData?.goal_weight     ?? 190;
-    const currentWeight = goalData?.current_weight  ?? weightLog[weightLog.length - 1]?.weight ?? 0;
-    const improved      = startWeight != null ? startWeight - currentWeight : null;
-    const stillToGo     = currentWeight - goalWeight;
+    const startWeight = goalData?.start_weight ?? null;
+    const goalWeight  = goalData?.goal_weight  ?? 190;
+    // Derive "current" from the latest weight log on or before selectedDate.
+    // Never fall forward to a future metric. Show "—" if no data exists yet.
+    const asOfEntries   = weightLog.filter((e) => e.logged_at <= selectedDate);
+    const currentWeight = asOfEntries.length > 0
+      ? asOfEntries[asOfEntries.length - 1].weight
+      : null;
+    const improved = (startWeight != null && currentWeight != null) ? startWeight - currentWeight : null;
+    const stillToGo = currentWeight != null ? currentWeight - goalWeight : null;
 
     return (
       <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
@@ -463,10 +468,10 @@ export default function ProgressPage() {
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           <section className="grid grid-cols-4 gap-2">
             {[
-              { label: "Starting", value: startWeight   != null ? `${startWeight} lbs`   : "—", color: "text-[#9A9080]" },
-              { label: "Current",  value: `${currentWeight} lbs`,                                color: "text-[#DDD5C0]" },
-              { label: "Improved", value: improved       != null ? `${improved.toFixed(1)} lbs` : "—", color: "text-[#B8933A]" },
-              { label: "To Goal",  value: `${stillToGo.toFixed(1)} lbs`,                         color: "text-[#9A9080]" },
+              { label: "Starting", value: startWeight   != null ? `${startWeight} lbs`          : "—", color: "text-[#9A9080]" },
+              { label: "Current",  value: currentWeight != null ? `${currentWeight} lbs`         : "—", color: "text-[#DDD5C0]" },
+              { label: "Improved", value: improved      != null ? `${improved.toFixed(1)} lbs`   : "—", color: "text-[#B8933A]" },
+              { label: "To Goal",  value: stillToGo     != null ? `${stillToGo.toFixed(1)} lbs`  : "—", color: "text-[#9A9080]" },
             ].map((s) => (
               <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
                 <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
@@ -536,14 +541,22 @@ export default function ProgressPage() {
     const bfSeries  = progressLog.filter((e) => e.body_fat != null).map((e) => ({ date: e.logged_at, value: e.body_fat! }));
     const smmSeries = progressLog.filter((e) => e.smm     != null).map((e) => ({ date: e.logged_at, value: e.smm!     }));
 
+    // Derive "current" from the latest log entry on or before selectedDate
+    const asOfLog = progressLog.filter((e) => e.logged_at <= selectedDate);
+    let currBf:  number | null = null;
+    let currSmm: number | null = null;
+    for (let i = asOfLog.length - 1; i >= 0; i--) {
+      if (currBf  === null && asOfLog[i].body_fat != null) currBf  = asOfLog[i].body_fat;
+      if (currSmm === null && asOfLog[i].smm      != null) currSmm = asOfLog[i].smm;
+      if (currBf !== null && currSmm !== null) break;
+    }
+
     const startBf  = goalData?.starting_body_fat  ?? null;
-    const currBf   = goalData?.current_body_fat   ?? null;
     const goalBf   = goalData?.goal_body_fat       ?? null;
     const bfImproved = (startBf != null && currBf != null) ? startBf - currBf        : null;
     const bfToGoal   = (currBf  != null && goalBf  != null) ? currBf - goalBf         : null;
 
     const startSmm = goalData?.starting_smm ?? null;
-    const currSmm  = goalData?.current_smm  ?? null;
     const goalSmm  = goalData?.goal_smm     ?? null;
     const smmImproved = (startSmm != null && currSmm != null) ? currSmm - startSmm   : null;
     const smmToGoal   = (currSmm  != null && goalSmm  != null) ? goalSmm - currSmm    : null;
@@ -679,10 +692,15 @@ export default function ProgressPage() {
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {/* Stats */}
         {(() => {
-          const dir     = goalData?.performance_direction ?? "increase";
-          const start   = goalData?.starting_performance_value ?? null;
-          const current = goalData?.current_performance_value  ?? null;
-          const goal    = goalData?.goal_performance_value     ?? null;
+          const dir   = goalData?.performance_direction ?? "increase";
+          const start = goalData?.starting_performance_value ?? null;
+          const goal  = goalData?.goal_performance_value     ?? null;
+          // Derive "current" from the latest log entry on or before selectedDate
+          const asOfPerf = progressLog.filter((e) => e.logged_at <= selectedDate);
+          let current: number | null = null;
+          for (let i = asOfPerf.length - 1; i >= 0; i--) {
+            if (asOfPerf[i].performance_value != null) { current = asOfPerf[i].performance_value; break; }
+          }
           const improved = (start != null && current != null)
             ? (dir === "increase" ? current - start : start - current)
             : null;
