@@ -1026,3 +1026,83 @@ export async function fetchProgressSummary(userId: string): Promise<ProgressSumm
 
   return { weight, bodyFat, smm };
 }
+
+
+// ── buildProjectionSeries ────────────────────────────────────────
+// Pure computation helper — no DB calls.
+// Takes a ProgressTrends result and generates three chart-ready series:
+//   1. actual   — the real logged data points (pass-through, typed for chart)
+//   2. projected — extrapolated line from current value to goal (or 90 days)
+//   3. goalLine — horizontal reference at the goal value
+//
+// Each series entry has { date: string; value: number } for easy Recharts mapping.
+// The projected series starts from the last actual point so the lines connect.
+
+export type ChartPoint = {
+  date:  string;   // YYYY-MM-DD
+  value: number;
+};
+
+export type ProjectionSeries = {
+  actual:    ChartPoint[];
+  projected: ChartPoint[];
+  goalLine:  { value: number; label: string } | null;
+};
+
+export function buildProjectionSeries(
+  trends:       ProgressTrends,
+  actualPoints: ChartPoint[],
+): ProjectionSeries {
+  const goalLine = trends.goalValue != null
+    ? { value: trends.goalValue, label: `Goal: ${trends.goalValue} ${trends.unit}` }
+    : null;
+
+  // Use 30d velocity if available, fall back to 7d
+  const velocity = trends.velocity30d ?? trends.velocity7d;
+
+  if (velocity == null || velocity === 0 || actualPoints.length === 0) {
+    return { actual: actualPoints, projected: [], goalLine };
+  }
+
+  const last = actualPoints[actualPoints.length - 1];
+
+  // Determine how many days to project:
+  // - If we have a projected completion date, go to that date + 7 day buffer
+  // - Otherwise cap at 90 days
+  const today = cstDate();
+  let maxDays = 90;
+
+  if (trends.projectedDate) {
+    const projDays = daysBetween(today, trends.projectedDate);
+    maxDays = Math.min(projDays + 7, 365); // cap at 1 year
+  }
+
+  // Generate weekly points along the projection line
+  const projected: ChartPoint[] = [
+    { date: last.date, value: last.value }, // anchor to connect with actual line
+  ];
+
+  const cursor = new Date(last.date + "T00:00:00");
+  const interval = 7; // one point per week
+
+  for (let d = interval; d <= maxDays; d += interval) {
+    cursor.setDate(cursor.getDate() + interval);
+    const dateStr = cstDate(cursor);
+    const value   = +(last.value + velocity * d).toFixed(2);
+
+    // Stop if we've passed the goal in the right direction
+    if (trends.goalValue != null) {
+      const passedGoal = velocity < 0
+        ? value <= trends.goalValue
+        : value >= trends.goalValue;
+      if (passedGoal) {
+        projected.push({ date: dateStr, value: trends.goalValue });
+        break;
+      }
+    }
+
+    projected.push({ date: dateStr, value });
+  }
+
+  return { actual: actualPoints, projected, goalLine };
+}
