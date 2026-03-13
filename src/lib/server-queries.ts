@@ -865,19 +865,18 @@ export async function fetchProgressTrends(userId: string): Promise<ProgressTrend
     status = "no_data";
   } else if (goal.goal_date && projectedDate) {
     const goalDateStr = goal.goal_date;
-    // Compare projected vs goal date
+    const createdStr  = goal.created_at ? toDateStr(goal.created_at) : today;
+    const totalDays   = daysBetween(createdStr, goalDateStr);
+    const tolerance   = totalDays > 0 ? Math.ceil(totalDays * 0.1) : 0;
+
     if (projectedDate <= goalDateStr) {
-      status = "ahead";
+      // Finishing early — "ahead" only if more than 10% early
+      const earlyDays = daysBetween(projectedDate, goalDateStr) - 1;
+      status = earlyDays > tolerance ? "ahead" : "on_track";
     } else {
-      // How far off? If within 10% of total timeline, "on_track"
-      const createdStr = goal.created_at ? toDateStr(goal.created_at) : today;
-      const totalDays  = daysBetween(createdStr, goalDateStr);
-      const overDays   = daysBetween(goalDateStr, projectedDate) - 1; // excess days
-      if (totalDays > 0 && overDays / totalDays <= 0.1) {
-        status = "on_track";
-      } else {
-        status = "behind";
-      }
+      // Finishing late — "on_track" if within 10% tolerance
+      const overDays = daysBetween(goalDateStr, projectedDate) - 1;
+      status = overDays <= tolerance ? "on_track" : "behind";
     }
   } else if (bestVelocity !== 0) {
     // No goal date set — just check direction
@@ -1087,4 +1086,52 @@ export function buildProjectionSeries(
   ];
 
   return { actual: actualPoints, projected, goalLine };
+}
+
+
+// ── fetchStatusScore ──────────────────────────────────────────────
+// Combines progress status (from trends) with compliance (from Layer 1)
+// into a single weighted overall score.
+//
+// Weights: 60% compliance + 40% progress
+// If progress = no_data, overall = compliance only.
+
+export type StatusScore = {
+  progressStatus: ProgressTrends["status"];
+  progressScore:  number;
+  complianceScore: number;
+  overallScore:    number;
+};
+
+const PROGRESS_SCORE_MAP: Record<ProgressTrends["status"], number> = {
+  ahead:    100,
+  on_track: 80,
+  behind:   40,
+  no_data:  50,
+};
+
+export async function fetchStatusScore(userId: string): Promise<StatusScore> {
+  const [trends, compliance] = await Promise.all([
+    fetchProgressTrends(userId),
+    fetchProfileCompliance(userId),
+  ]);
+
+  const progressStatus = trends?.status ?? "no_data";
+  const progressScore  = PROGRESS_SCORE_MAP[progressStatus];
+  const complianceScore = compliance.overallPercent;
+
+  let overallScore: number;
+  if (progressStatus === "no_data") {
+    // Not enough progress data — use compliance only
+    overallScore = complianceScore;
+  } else {
+    overallScore = Math.round(0.60 * complianceScore + 0.40 * progressScore);
+  }
+
+  return {
+    progressStatus,
+    progressScore,
+    complianceScore,
+    overallScore,
+  };
 }
