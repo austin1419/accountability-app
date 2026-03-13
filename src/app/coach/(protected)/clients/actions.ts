@@ -15,6 +15,9 @@ export async function createClientWithInvite(data: {
   lastName:       string;
   email:          string;
   phone:          string | null;
+  gender:         string | null;
+  dateOfBirth:    string | null;
+  height:         number | null;
   goalName:       string;
   goalDate:       string;
   goalCategory:   string;
@@ -39,10 +42,13 @@ export async function createClientWithInvite(data: {
   const { data: newUser, error: userError } = await supabase
     .from("users")
     .insert({
-      name:         `${data.firstName} ${data.lastName}`,
-      email:        data.email.toLowerCase(),
-      phone_number: data.phone,
-      role:         "client",
+      name:          `${data.firstName} ${data.lastName}`,
+      email:         data.email.toLowerCase(),
+      phone_number:  data.phone,
+      gender:        data.gender,
+      date_of_birth: data.dateOfBirth,
+      height:        data.height,
+      role:          "client",
     })
     .select("id")
     .single();

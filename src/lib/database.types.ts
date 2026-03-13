@@ -271,7 +271,10 @@ export type Database = {
           archive_reason: string | null
           auth_id: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
+          gender: string | null
+          height: number | null
           id: string
           is_active: boolean
           name: string
@@ -282,7 +285,10 @@ export type Database = {
           archive_reason?: string | null
           auth_id?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
+          gender?: string | null
+          height?: number | null
           id?: string
           is_active?: boolean
           name: string
@@ -293,7 +299,10 @@ export type Database = {
           archive_reason?: string | null
           auth_id?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
+          gender?: string | null
+          height?: number | null
           id?: string
           is_active?: boolean
           name?: string

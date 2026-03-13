@@ -13,11 +13,16 @@ import { createClientWithInvite } from "./actions";
 
 type GoalCategory = "weight" | "body_composition" | "performance";
 
+type Gender = "male" | "female" | "prefer_not_to_say";
+
 type FormState = {
   firstName:      string;
   lastName:       string;
   email:          string;
   phone:          string;
+  gender:         Gender | "";
+  dateOfBirth:    string;
+  height:         string;
   goalName:       string;
   goalDate:       string;
   goalCategory:   GoalCategory;
@@ -42,6 +47,9 @@ const EMPTY: FormState = {
   lastName:       "",
   email:          "",
   phone:          "",
+  gender:         "",
+  dateOfBirth:    "",
+  height:         "",
   goalName:       "",
   goalDate:       "",
   goalCategory:   "weight",
@@ -99,6 +107,9 @@ export function AddClientModal() {
       lastName:     form.lastName.trim(),
       email:        form.email.trim(),
       phone:        form.phone.trim() || null,
+      gender:       form.gender || null,
+      dateOfBirth:  form.dateOfBirth || null,
+      height:       parseNum(form.height),
       goalName:     form.goalName.trim(),
       goalDate:     form.goalDate,
       goalCategory: form.goalCategory,
@@ -177,6 +188,40 @@ export function AddClientModal() {
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Phone <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
                 <input type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(555) 555-5555" className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]" />
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Gender <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([["male", "Male"], ["female", "Female"], ["prefer_not_to_say", "Prefer Not"]] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => set("gender", form.gender === val ? "" : val)}
+                      className={`px-3 py-2 text-xs font-semibold rounded border transition-colors ${
+                        form.gender === val
+                          ? "bg-[#B8933A] text-[#0D0D0D] border-[#B8933A]"
+                          : "bg-[#1A1A1A] text-[#9A9080] border-[#252525] hover:border-[#B8933A]"
+                      }`}
+                      style={{ fontFamily: "'Cinzel', serif" }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date of Birth & Height */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Date of Birth <span className="text-[#807868] font-normal normal-case">(optional)</span></label>
+                  <input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]" />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>Height <span className="text-[#807868] font-normal normal-case">(inches)</span></label>
+                  <input type="number" inputMode="decimal" value={form.height} onChange={(e) => set("height", e.target.value)} placeholder="70" className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] placeholder:text-[#807868] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A]" />
+                </div>
               </div>
 
               {/* Divider */}

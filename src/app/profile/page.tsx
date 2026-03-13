@@ -68,7 +68,7 @@ export default async function ProfilePage() {
   // ── Fetch user row ────────────────────────────────────────────────
   const { data: userData } = await adminSupabase
     .from("users")
-    .select("name, created_at")
+    .select("name, created_at, gender, date_of_birth, height")
     .eq("id", profile.id)
     .maybeSingle();
 
@@ -86,6 +86,18 @@ export default async function ProfilePage() {
     ? new Date(userData.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
     : "—";
 
+  // Compute age from date_of_birth
+  let age: number | null = null;
+  if (userData?.date_of_birth) {
+    const dob = new Date(userData.date_of_birth + "T00:00:00");
+    const now = new Date();
+    age = now.getFullYear() - dob.getFullYear();
+    const monthDiff = now.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) {
+      age--;
+    }
+  }
+
   const goalProgress = goalData ? computeGoalProgress(goalData as GoalMetrics) : 0;
 
   // Fetch compliance data for the profile
@@ -94,7 +106,13 @@ export default async function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
-      <ProfileHeader name={clientName} startDate={startDate} />
+      <ProfileHeader
+        name={clientName}
+        startDate={startDate}
+        gender={userData?.gender ?? null}
+        age={age}
+        height={userData?.height ?? null}
+      />
 
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         <GoalCard

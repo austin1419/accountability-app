@@ -1,9 +1,25 @@
 interface Props {
-  name:      string;
-  startDate: string;
+  name:        string;
+  startDate:   string;
+  gender:      string | null;
+  age:         number | null;
+  height:      number | null;
 }
 
-export function ProfileHeader({ name, startDate }: Props) {
+function formatHeight(inches: number): string {
+  const ft = Math.floor(inches / 12);
+  const rem = Math.round(inches % 12);
+  return `${ft}'${rem}"`;
+}
+
+function formatGender(g: string): string {
+  if (g === "male") return "Male";
+  if (g === "female") return "Female";
+  if (g === "prefer_not_to_say") return "Prefer Not to Say";
+  return g;
+}
+
+export function ProfileHeader({ name, startDate, gender, age, height }: Props) {
   return (
     <header className="bg-[#0D0D0D] pt-10 pb-6 px-5 border-b border-[#252525]">
       <div className="flex items-center justify-between gap-4">
@@ -23,22 +39,24 @@ export function ProfileHeader({ name, startDate }: Props) {
             {name}
           </h1>
           <div className="flex flex-col gap-1.5">
+            {gender && (
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Gender</span>
+                <span className="text-sm text-[#DDD5C0]">{formatGender(gender)}</span>
+              </div>
+            )}
             <div className="flex items-center gap-3">
-              <span
-                className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0"
-                style={{ fontFamily: "'Cinzel', serif" }}
-              >
-                Age
-              </span>
-              <span className="text-sm text-[#9A9080]">—</span>
+              <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Age</span>
+              <span className="text-sm text-[#DDD5C0]">{age != null ? age : "—"}</span>
             </div>
+            {height != null && (
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Height</span>
+                <span className="text-sm text-[#DDD5C0]">{formatHeight(height)}</span>
+              </div>
+            )}
             <div className="flex items-center gap-3">
-              <span
-                className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0"
-                style={{ fontFamily: "'Cinzel', serif" }}
-              >
-                Member Since
-              </span>
+              <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Member Since</span>
               <span className="text-sm text-[#DDD5C0]">{startDate}</span>
             </div>
           </div>
