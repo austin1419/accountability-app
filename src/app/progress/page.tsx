@@ -357,6 +357,45 @@ function computeProjectedPoints(
 }
 
 // ─────────────────────────────────────────────
+// Date-range filter — slices data to 7d, 30d, or all
+// ─────────────────────────────────────────────
+type ChartRange = "7d" | "30d" | "all";
+
+function filterByDateRange<T>(
+  data: T[],
+  range: ChartRange,
+  getDate: (item: T) => string,
+): T[] {
+  if (range === "all") return data;
+  const days = range === "7d" ? 7 : 30;
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+  const cutoff = new Date(today + "T00:00:00");
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().split("T")[0];
+  return data.filter((d) => getDate(d) >= cutoffStr);
+}
+
+function RangeTabs({ value, onChange }: { value: ChartRange; onChange: (r: ChartRange) => void }) {
+  return (
+    <div className="flex gap-2 mb-3">
+      {(["7d", "30d", "all"] as const).map((r) => (
+        <button
+          key={r}
+          onClick={() => onChange(r)}
+          className={`text-[10px] uppercase tracking-widest px-3 py-1 rounded border transition-colors ${
+            value === r
+              ? "border-[#B8933A] text-[#B8933A] bg-[#1A1A1A]"
+              : "border-[#252525] text-[#807868] bg-transparent hover:text-[#9A9080]"
+          }`}
+        >
+          {r === "all" ? "Since Start" : r.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // Progress Page
 // ─────────────────────────────────────────────
 export default function ProgressPage() {
@@ -382,6 +421,9 @@ export default function ProgressPage() {
 
   // Performance input
   const [perfInput, setPerfInput] = useState("");
+
+  // Chart range
+  const [chartRange, setChartRange] = useState<ChartRange>("all");
 
   const [goalData, setGoalData] = useState<{
     id:                       string;
@@ -569,17 +611,23 @@ export default function ProgressPage() {
               <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
               <span className="text-xs text-[#9A9080]">Goal: {goalWeight} lbs</span>
             </div>
-            <WeightChart
-              data={weightLog}
-              goalWeight={goalWeight}
-              projectedData={
-                computeProjectedPoints(
-                  weightLog.map((e) => ({ date: e.logged_at, value: e.weight })),
-                  goalWeight,
-                  goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
-                ).map((p) => ({ value: p.value }))
-              }
-            />
+            <RangeTabs value={chartRange} onChange={setChartRange} />
+            {(() => {
+              const filtered = filterByDateRange(weightLog, chartRange, (e) => e.logged_at);
+              return (
+                <WeightChart
+                  data={filtered}
+                  goalWeight={goalWeight}
+                  projectedData={
+                    computeProjectedPoints(
+                      filtered.map((e) => ({ date: e.logged_at, value: e.weight })),
+                      goalWeight,
+                      goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
+                    ).map((p) => ({ value: p.value }))
+                  }
+                />
+              );
+            })()}
           </section>
           <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between">
@@ -711,9 +759,10 @@ export default function ProgressPage() {
           {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
             <section className="bg-[#141414] rounded p-5 border border-[#252525]">
               <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Recomposition Trend</p>
+              <RangeTabs value={chartRange} onChange={setChartRange} />
               <DualMetricChart
-                bfData={bfSeries}
-                smmData={smmSeries}
+                bfData={filterByDateRange(bfSeries, chartRange, (e) => e.date)}
+                smmData={filterByDateRange(smmSeries, chartRange, (e) => e.date)}
                 goalBf={goalBf}
                 goalSmm={goalSmm}
               />
@@ -828,17 +877,25 @@ export default function ProgressPage() {
               <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>{metricName} Trend</p>
               {unitLabel && <span className="text-xs text-[#9A9080]">{unitLabel}</span>}
             </div>
-            <MetricChart
-              data={perfSeries}
-              goalValue={goalData?.goal_performance_value}
-              goalLabel={goalData?.goal_performance_value != null ? `Goal ${goalData.goal_performance_value}${unitLabel ? ` ${unitLabel}` : ""}` : undefined}
-              color="#B8933A"
-              projectedData={computeProjectedPoints(
-                perfSeries,
-                goalData?.goal_performance_value ?? null,
-                (goalData?.performance_direction === "decrease") ? "decrease" : "increase",
-              )}
-            />
+            <RangeTabs value={chartRange} onChange={setChartRange} />
+            {(() => {
+              const filtered = filterByDateRange(perfSeries, chartRange, (e) => e.date);
+              return filtered.length >= 2 ? (
+                <MetricChart
+                  data={filtered}
+                  goalValue={goalData?.goal_performance_value}
+                  goalLabel={goalData?.goal_performance_value != null ? `Goal ${goalData.goal_performance_value}${unitLabel ? ` ${unitLabel}` : ""}` : undefined}
+                  color="#B8933A"
+                  projectedData={computeProjectedPoints(
+                    filtered,
+                    goalData?.goal_performance_value ?? null,
+                    (goalData?.performance_direction === "decrease") ? "decrease" : "increase",
+                  )}
+                />
+              ) : (
+                <p className="text-xs text-[#807868] text-center py-4">Not enough data for this range</p>
+              );
+            })()}
           </section>
         )}
 
