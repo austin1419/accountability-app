@@ -10,11 +10,24 @@
 
 import { useState, useEffect } from "react";
 
+/** Remove the static splash blocker rendered in layout.tsx */
+function removeBlocker() {
+  const el = document.getElementById("splash-blocker");
+  if (el) el.remove();
+}
+
 export function SplashScreen() {
   const [phase, setPhase] = useState<"hidden" | "in" | "out">("hidden");
 
   useEffect(() => {
-    if (sessionStorage.getItem("pulse_splash")) return;
+    // Returning visitor — no animation, just clear the blocker immediately
+    if (sessionStorage.getItem("pulse_splash")) {
+      removeBlocker();
+      return;
+    }
+
+    // First visit — remove the blocker (splash overlay takes over) and play animation
+    removeBlocker();
     setPhase("in");
     const fadeOut = setTimeout(() => setPhase("out"),    3500);
     const done    = setTimeout(() => {
