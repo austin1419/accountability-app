@@ -6,6 +6,15 @@ import { BottomNav } from "@/components/BottomNav";
 import { StreakCard } from "@/components/StreakCard";
 import { useTasks }  from "@/context/TasksContext";
 
+const CATEGORY_LABELS: Record<string, string> = {
+  Activity:    "Labor",
+  Nutrition:   "Nourish",
+  Sleep:       "Sabbath",
+  Supplements: "Tend",
+};
+
+const CATEGORY_ORDER = ["Activity", "Nutrition", "Supplements", "Sleep"];
+
 export default function TasksPage() {
   // Read tasks and toggleTask from shared context instead of local useState.
   // Changes made here are instantly reflected on the Dashboard's compliance wheel.
@@ -13,8 +22,12 @@ export default function TasksPage() {
 
   const allDone = completedCount === totalCount;
 
-  // Group tasks by category so we can render them in sections
-  const categories = [...new Set(tasks.map((t) => t.category))];
+  // Group tasks by category, sorted by CATEGORY_ORDER
+  const categorySet = new Set(tasks.map((t) => t.category));
+  const categories = [
+    ...CATEGORY_ORDER.filter((c) => categorySet.has(c)),
+    ...[...categorySet].filter((c) => !CATEGORY_ORDER.includes(c)),
+  ];
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -91,7 +104,7 @@ export default function TasksPage() {
                   className="text-xs uppercase tracking-widest text-[#9A9080]"
                   style={{ fontFamily: "'Cinzel', serif" }}
                 >
-                  {category}
+                  {CATEGORY_LABELS[category] ?? category}
                 </p>
                 <p className="text-xs text-[#9A9080]">
                   {catDone}/{categoryTasks.length}
