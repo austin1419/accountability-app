@@ -50,7 +50,8 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="mx-5 mb-3 border border-[#252525] rounded-lg bg-[#141414]">
+        <div className="flex items-center justify-between px-4 py-3">
         {/* Left arrow — always enabled */}
         <button
           onClick={() => navigate(-1)}
@@ -83,6 +84,7 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
         >
           ›
         </button>
+      </div>
       </div>
 
       {calendarOpen && (

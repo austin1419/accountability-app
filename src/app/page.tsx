@@ -52,7 +52,7 @@ export default async function ClientDashboard({
   if (!profile) redirect("/login");
 
   // ── Date handling ────────────────────────────────────────────────
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const params   = await searchParams;
   const selectedDate = validateDate(params.date, todayStr);
 
@@ -88,13 +88,18 @@ export default async function ClientDashboard({
       {/* ── Header ───────────────────────────────── */}
       <header className="bg-[#0D0D0D] pt-10 border-b border-[#252525]">
         <div className="flex items-center justify-between px-5 pb-3">
-          <h1
-            className="text-xl text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-          >
-            {clientName}
-          </h1>
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 flex-shrink-0">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-0.5" style={{ fontFamily: "'Cinzel', serif" }}>
+              Welcome,
+            </p>
+            <h1
+              className="text-2xl text-[#F4EEE4] tracking-wide"
+              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            >
+              {clientName}
+            </h1>
+          </div>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 flex-shrink-0">
             <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
             <polyline
               style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
