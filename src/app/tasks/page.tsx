@@ -1,10 +1,12 @@
 "use client";
 // ↑ Still needed — this page calls useTasks() which is a React hook.
 
-import { TaskItem }  from "@/components/TaskItem";
-import { BottomNav } from "@/components/BottomNav";
-import { StreakCard } from "@/components/StreakCard";
-import { useTasks }  from "@/context/TasksContext";
+import { TaskItem }      from "@/components/TaskItem";
+import { BottomNav }     from "@/components/BottomNav";
+import { StreakCard }     from "@/components/StreakCard";
+import { EditingBanner } from "@/components/EditingBanner";
+import { useTasks }      from "@/context/TasksContext";
+import { useDate }       from "@/context/DateContext";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Activity:         "Labor",
@@ -16,9 +18,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER = ["Activity", "Nutrition", "Supplements", "Sleep/Recovery"];
 
 export default function TasksPage() {
-  // Read tasks and toggleTask from shared context instead of local useState.
-  // Changes made here are instantly reflected on the Dashboard's compliance wheel.
   const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak } = useTasks();
+  const { selectedDate, isViewingPast } = useDate();
 
   const allDone = completedCount === totalCount;
 
@@ -29,7 +30,7 @@ export default function TasksPage() {
     ...[...categorySet].filter((c) => !CATEGORY_ORDER.includes(c)),
   ];
 
-  const today = new Date().toLocaleDateString("en-US", {
+  const dateLabel = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
     weekday: "long",
     month:   "long",
     day:     "numeric",
@@ -40,12 +41,12 @@ export default function TasksPage() {
 
       {/* ── Header ───────────────────────────────── */}
       <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-        <p className="text-sm text-[#9A9080]">{today}</p>
+        <p className="text-sm text-[#9A9080]">{dateLabel}</p>
         <h1
           className="text-2xl text-[#F4EEE4] mt-1 tracking-wide"
           style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
         >
-          Today&apos;s Reckoning
+          {isViewingPast ? "Past Reckoning" : "Today\u2019s Reckoning"}
         </h1>
 
         {/* Compliance summary line */}
@@ -72,6 +73,8 @@ export default function TasksPage() {
           />
         </div>
       </header>
+
+      <EditingBanner />
 
       {/* ── Task sections ────────────────────────── */}
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">

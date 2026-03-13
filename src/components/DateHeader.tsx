@@ -4,18 +4,19 @@
 // DateHeader — date navigation bar for the dashboard
 //
 // Shows left arrow / centered date label / right arrow.
-// Arrows step one day at a time. Right arrow is disabled on today.
+// Arrows step one day within the editable 3-day window.
 // Tapping the label opens the CalendarModal month view.
+// Reads/writes selectedDate from DateContext.
+// Also pushes URL params so the server-rendered dashboard re-fetches.
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarModal } from "./CalendarModal";
+import { useDate } from "@/context/DateContext";
 
 interface Props {
-  userId:       string; // passed through to CalendarModal for compliance fetch
-  selectedDate: string; // "YYYY-MM-DD"
-  todayDate:    string; // "YYYY-MM-DD" — real today, used to disable forward nav
+  userId: string; // passed through to CalendarModal for compliance fetch
 }
 
 function formatLabel(dateStr: string, todayStr: string): string {
@@ -30,32 +31,38 @@ function stepDate(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
-export function DateHeader({ selectedDate, todayDate, userId }: Props) {
+export function DateHeader({ userId }: Props) {
   const router = useRouter();
+  const { selectedDate, todayDate, setSelectedDate, isEditable } = useDate();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const isToday = selectedDate === todayDate;
 
   function navigate(days: number) {
     const next = stepDate(selectedDate, days);
-    // Never allow navigating into the future
-    if (next <= todayDate) {
+    if (next <= todayDate && isEditable(next)) {
+      setSelectedDate(next);
       router.push(`/?date=${next}`);
     }
   }
 
-  function handleSelectDate(date: string) {
-    router.push(`/?date=${date}`);
-  }
+  // Check if left arrow should be disabled (at edge of 3-day window)
+  const prevDate = stepDate(selectedDate, -1);
+  const canGoBack = isEditable(prevDate);
 
   return (
     <>
       <div className="mx-5 mb-3 border border-[#252525] rounded-lg bg-[#141414]">
         <div className="flex items-center justify-between px-4 py-3">
-        {/* Left arrow — always enabled */}
+        {/* Left arrow — limited to editable window */}
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A] text-2xl transition-colors"
+          disabled={!canGoBack}
+          className={`w-9 h-9 flex items-center justify-center rounded text-2xl transition-colors ${
+            canGoBack
+              ? "text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A]"
+              : "text-[#2E2E2E] cursor-not-allowed"
+          }`}
           aria-label="Previous day"
         >
           ‹
@@ -90,9 +97,6 @@ export function DateHeader({ selectedDate, todayDate, userId }: Props) {
       {calendarOpen && (
         <CalendarModal
           userId={userId}
-          selectedDate={selectedDate}
-          todayDate={todayDate}
-          onSelectDate={handleSelectDate}
           onClose={() => setCalendarOpen(false)}
         />
       )}

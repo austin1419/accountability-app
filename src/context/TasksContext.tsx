@@ -2,24 +2,15 @@
 // ─────────────────────────────────────────────
 // TasksContext — shared task state across pages
 //
-// Why this exists:
-//   The Dashboard and Tasks pages are separate routes. React state
-//   created inside one page (e.g. useState in tasks/page.tsx) is
-//   destroyed the moment you navigate away. Context stores the state
-//   *above* both pages in the root layout, so both share the same data.
-//
-// What changed from mock data:
-//   - On mount, resolves the current user's public.users id via auth
-//   - Tasks are fetched from Supabase (real IDs, real completion status)
-//   - When a task is toggled, the new status is written to task_logs in Supabase
-//   - The Dashboard re-reads from Supabase on next navigation, so the compliance
-//     wheel reflects the real saved data
+// Consumes DateContext to know which date to load tasks for.
+// Re-fetches tasks whenever selectedDate changes.
 // ─────────────────────────────────────────────
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import type { Task } from "@/lib/mockData";
 import { supabase } from "@/lib/supabase";
-import { fetchTodaysTasks, upsertTaskLog, fetchStreak } from "@/lib/queries";
+import { fetchTasksForDate, upsertTaskLog, fetchStreak } from "@/lib/queries";
+import { useDate } from "@/context/DateContext";
 
 // ── Shape of what the context exposes ─────────
 type TasksContextType = {
@@ -37,11 +28,13 @@ const TasksContext = createContext<TasksContextType | null>(null);
 // ── Provider ──────────────────────────────────
 // Wrap this around your app (in layout.tsx) so any page can access task state.
 export function TasksProvider({ children }: { children: React.ReactNode }) {
+  const { selectedDate } = useDate();
   const [userId, setUserId] = useState<string | null>(null);
   const [tasks,  setTasks]  = useState<Task[]>([]);
   const [streak, setStreak] = useState(0);
+  const initializedRef = useRef(false);
 
-  // Resolve the current user's public.users id, then load their tasks
+  // Resolve the current user's public.users id on mount
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -56,11 +49,17 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       if (!profile) return;
 
       setUserId(profile.id);
-      fetchTodaysTasks(profile.id).then(setTasks);
-      fetchStreak(profile.id).then(setStreak);
+      initializedRef.current = true;
     }
     init();
   }, []);
+
+  // Re-fetch tasks whenever userId or selectedDate changes
+  useEffect(() => {
+    if (!userId) return;
+    fetchTasksForDate(userId, selectedDate).then(setTasks);
+    fetchStreak(userId).then(setStreak);
+  }, [userId, selectedDate]);
 
   function toggleTask(id: string) {
     if (!userId) return;
@@ -71,8 +70,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       const newDone = !task.done;
 
-      // Write to Supabase, then re-derive streak from the saved state
-      upsertTaskLog(id, userId, newDone).then(() => {
+      // Write to Supabase with the selected date, then re-derive streak
+      upsertTaskLog(id, userId, newDone, selectedDate).then(() => {
         fetchStreak(userId).then(setStreak);
       });
 

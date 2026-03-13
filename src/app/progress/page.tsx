@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import type { WeightEntry } from "@/lib/mockData";
-import { BottomNav } from "@/components/BottomNav";
+import { BottomNav }     from "@/components/BottomNav";
+import { EditingBanner } from "@/components/EditingBanner";
 import { supabase } from "@/lib/supabase";
+import { useDate } from "@/context/DateContext";
 import {
   fetchGoalData,
   updateCurrentWeight,
@@ -273,6 +275,7 @@ function WeightChart({ data, goalWeight }: { data: WeightEntry[]; goalWeight: nu
 // Progress Page
 // ─────────────────────────────────────────────
 export default function ProgressPage() {
+  const { selectedDate } = useDate();
   const [userId,      setUserId]      = useState<string | null>(null);
   const [goalId,      setGoalId]      = useState<string | null>(null);
   const [weightLog,   setWeightLog]   = useState<WeightEntry[]>([]);
@@ -352,7 +355,7 @@ export default function ProgressPage() {
     if (!userId) return;
     const w = parseFloat(weightInput);
     if (isNaN(w) || w < 50 || w > 500) { setError("Enter a valid weight between 50 and 500 lbs."); return; }
-    const r1 = await insertWeightLog(userId, w);
+    const r1 = await insertWeightLog(userId, w, selectedDate);
     if (r1.error) { setError(r1.error); return; }
     const r2 = await updateCurrentWeight(userId, w);
     if (r2.error) { setError(r2.error); return; }
@@ -377,7 +380,7 @@ export default function ProgressPage() {
     const patch: { body_fat?: number | null; smm?: number | null } = {};
     if (bf  != null) patch.body_fat = bf;
     if (smm != null) patch.smm      = smm;
-    const r1 = await insertProgressLog(userId, goalId, patch);
+    const r1 = await insertProgressLog(userId, goalId, patch, selectedDate);
     if (r1.error) { setError(r1.error); return; }
     const r2 = await updateCurrentMetrics(userId, {
       current_body_fat: bf  ?? undefined,
@@ -385,10 +388,9 @@ export default function ProgressPage() {
     });
     if (r2.error) { setError(r2.error); return; }
 
-    const today  = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
-    const logObj = { logged_at: today, body_fat: bf, smm, performance_value: null };
+    const logObj = { logged_at: selectedDate, body_fat: bf, smm, performance_value: null };
     setProgressLog((prev) => {
-      const without = prev.filter((e) => e.logged_at !== today);
+      const without = prev.filter((e) => e.logged_at !== selectedDate);
       return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
     });
     setGoalData((prev) => prev ? { ...prev, current_body_fat: bf ?? prev.current_body_fat, current_smm: smm ?? prev.current_smm } : prev);
@@ -404,15 +406,14 @@ export default function ProgressPage() {
     const v = parseFloat(perfInput);
     if (isNaN(v)) { setError("Enter a valid number."); return; }
 
-    const r1 = await insertProgressLog(userId, goalId, { performance_value: v });
+    const r1 = await insertProgressLog(userId, goalId, { performance_value: v }, selectedDate);
     if (r1.error) { setError(r1.error); return; }
     const r2 = await updateCurrentMetrics(userId, { current_performance_value: v });
     if (r2.error) { setError(r2.error); return; }
 
-    const today  = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
-    const logObj = { logged_at: today, body_fat: null, smm: null, performance_value: v };
+    const logObj = { logged_at: selectedDate, body_fat: null, smm: null, performance_value: v };
     setProgressLog((prev) => {
-      const without = prev.filter((e) => e.logged_at !== today);
+      const without = prev.filter((e) => e.logged_at !== selectedDate);
       return [...without, logObj].sort((a, b) => a.logged_at.localeCompare(b.logged_at));
     });
     setGoalData((prev) => prev ? { ...prev, current_performance_value: v } : prev);
@@ -443,6 +444,7 @@ export default function ProgressPage() {
           >Progress</h1>
           <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
         </header>
+        <EditingBanner />
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           <section className="grid grid-cols-4 gap-2">
             {[
@@ -543,6 +545,7 @@ export default function ProgressPage() {
           >Progress</h1>
           <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
         </header>
+        <EditingBanner />
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
 
           {/* Body Fat row */}
@@ -657,6 +660,7 @@ export default function ProgressPage() {
         >Progress</h1>
         <p className="text-sm text-[#9A9080] mt-1">{metricName} tracking</p>
       </header>
+      <EditingBanner />
       <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
         {/* Stats */}
         {(() => {

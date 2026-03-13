@@ -11,6 +11,7 @@ import { redirect }              from "next/navigation";
 import { ProgressRing }          from "@/components/ProgressRing";
 import { BottomNav }             from "@/components/BottomNav";
 import { DateHeader }            from "@/components/DateHeader";
+import { DateSync }              from "@/components/DateSync";
 import { SplashScreen }          from "@/components/SplashScreen";
 import { fetchDashboard }        from "@/lib/server-queries";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -109,7 +110,8 @@ export default async function ClientDashboard({
           </svg>
         </div>
         {/* Date navigation — step through days or open calendar */}
-        <DateHeader selectedDate={selectedDate} todayDate={todayStr} userId={profile.id} />
+        <DateSync date={selectedDate} />
+        <DateHeader userId={profile.id} />
       </header>
 
       {/* ── Scrollable content ───────────────────── */}

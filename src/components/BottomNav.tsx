@@ -2,49 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useDate } from "@/context/DateContext";
 
-const navTabs = [
-  {
-    label: "Today",
-    href: "/",
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 18v-6h4v6" />
-      </svg>
-    ),
-  },
-  {
-    label: "Tasks",
-    href: "/tasks",
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-        <rect x="3" y="3" width="14" height="14" rx="1" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 10l3 3 5-5" />
-      </svg>
-    ),
-  },
-  {
-    label: "Record",
-    href: "/progress",
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-        <polyline strokeLinecap="round" strokeLinejoin="round" points="2,15 7,9 11,12 18,4" />
-        <line x1="2" y1="18" x2="18" y2="18" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-        <circle cx="10" cy="7" r="3.5" />
-        <path strokeLinecap="round" d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" />
-      </svg>
-    ),
-  },
-];
+const navIcons = {
+  Today: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 18v-6h4v6" />
+    </svg>
+  ),
+  Tasks: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+      <rect x="3" y="3" width="14" height="14" rx="1" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 10l3 3 5-5" />
+    </svg>
+  ),
+  Record: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="2,15 7,9 11,12 18,4" />
+      <line x1="2" y1="18" x2="18" y2="18" strokeLinecap="round" />
+    </svg>
+  ),
+  Profile: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+      <circle cx="10" cy="7" r="3.5" />
+      <path strokeLinecap="round" d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7" />
+    </svg>
+  ),
+};
 
 const contactIcon = (
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -61,6 +46,15 @@ const labelStyle: React.CSSProperties = {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { selectedDate } = useDate();
+
+  // Build tabs with dynamic href for Today (includes date param for dashboard sync)
+  const navTabs = [
+    { label: "Today",   href: `/?date=${selectedDate}`, match: "/",         icon: navIcons.Today },
+    { label: "Tasks",   href: "/tasks",                  match: "/tasks",    icon: navIcons.Tasks },
+    { label: "Record",  href: "/progress",               match: "/progress", icon: navIcons.Record },
+    { label: "Profile", href: "/profile",                match: "/profile",  icon: navIcons.Profile },
+  ];
 
   return (
     <>
@@ -78,7 +72,7 @@ export function BottomNav() {
       >
         {/* Navigating tabs */}
         {navTabs.map((tab) => {
-          const isActive = pathname === tab.href;
+          const isActive = pathname === tab.match;
           return (
             <Link
               key={tab.label}

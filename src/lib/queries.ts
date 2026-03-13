@@ -13,12 +13,11 @@ import { supabase } from "@/lib/supabase";
 import type { Task, WeightEntry } from "@/lib/mockData";
 
 
-// ── fetchTodaysTasks ───────────────────────────
-// Fetches tasks for the client's active goal, with today's completion status.
-// Used by TasksContext to load real data from Supabase on mount.
-export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
-
+// ── fetchTasksForDate ─────────────────────────
+// Fetches tasks for the client's active goal, with completion status for a given date.
+// Used by TasksContext to load real data from Supabase.
+// The caller passes the date from DateContext — no independent "today" computation.
+export async function fetchTasksForDate(userId: string, date: string): Promise<Task[]> {
   const { data: goal, error: goalError } = await supabase
     .from("goals")
     .select("id")
@@ -26,7 +25,7 @@ export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
     .eq("is_active", true)
     .maybeSingle();
 
-  if (goalError) console.error("[fetchTodaysTasks] goals query failed:", goalError);
+  if (goalError) console.error("[fetchTasksForDate] goals query failed:", goalError);
   if (!goal) return [];
 
   const { data: tasks, error: tasksError } = await supabase
@@ -35,16 +34,16 @@ export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
     .eq("goal_id", goal.id)
     .eq("is_active", true);
 
-  if (tasksError) console.error("[fetchTodaysTasks] tasks query failed:", tasksError);
+  if (tasksError) console.error("[fetchTasksForDate] tasks query failed:", tasksError);
   if (!tasks || tasks.length === 0) return [];
 
   const { data: logs, error: logsError } = await supabase
     .from("task_logs")
     .select("task_id, completed")
     .eq("user_id", userId)
-    .eq("date", today);
+    .eq("date", date);
 
-  if (logsError) console.error("[fetchTodaysTasks] logs query failed:", logsError);
+  if (logsError) console.error("[fetchTasksForDate] logs query failed:", logsError);
 
   const logMap = new Map((logs ?? []).map((l) => [l.task_id, l.completed]));
 
@@ -58,19 +57,19 @@ export async function fetchTodaysTasks(userId: string): Promise<Task[]> {
 
 
 // ── upsertTaskLog ──────────────────────────────
-// Creates or updates a task_log row for today.
+// Creates or updates a task_log row for the given date.
 // Called whenever a user checks or unchecks a task.
+// The caller passes the date from DateContext.
 export async function upsertTaskLog(
   taskId:    string,
   userId:    string,
   completed: boolean,
+  date:      string,
 ): Promise<void> {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
-
   const { error } = await supabase
     .from("task_logs")
     .upsert(
-      { task_id: taskId, user_id: userId, date: today, completed },
+      { task_id: taskId, user_id: userId, date, completed },
       { onConflict: "task_id,user_id,date" },
     );
 
@@ -119,17 +118,18 @@ export async function fetchProgressLog(userId: string, goalId: string): Promise<
 
 
 // ── insertProgressLog ──────────────────────────
-// Upserts a progress_log row for today (body comp or performance).
+// Upserts a progress_log row for the given date (body comp or performance).
+// The caller passes the date from DateContext.
 export async function insertProgressLog(
   userId: string,
   goalId: string,
-  patch:  { body_fat?: number | null; smm?: number | null; performance_value?: number | null }
+  patch:  { body_fat?: number | null; smm?: number | null; performance_value?: number | null },
+  date:   string,
 ): Promise<{ error?: string }> {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const { error } = await supabase
     .from("progress_logs")
     .upsert(
-      { user_id: userId, goal_id: goalId, logged_at: today, ...patch },
+      { user_id: userId, goal_id: goalId, logged_at: date, ...patch },
       { onConflict: "user_id,goal_id,logged_at" }
     );
   if (error) {
@@ -195,14 +195,14 @@ export async function fetchWeightLog(userId: string): Promise<WeightEntry[]> {
 
 
 // ── insertWeightLog ────────────────────────────
-// Saves a new weight entry for today. Upserts so logging twice in a day
+// Saves a weight entry for the given date. Upserts so logging twice in a day
 // replaces rather than duplicates (matches the unique index on user_id + logged_at).
-export async function insertWeightLog(userId: string, weight: number): Promise<{ error?: string }> {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+// The caller passes the date from DateContext.
+export async function insertWeightLog(userId: string, weight: number, date: string): Promise<{ error?: string }> {
   const { error } = await supabase
     .from("weight_logs")
     .upsert(
-      { user_id: userId, weight, logged_at: today },
+      { user_id: userId, weight, logged_at: date },
       { onConflict: "user_id,logged_at" },
     );
 
