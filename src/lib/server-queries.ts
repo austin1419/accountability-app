@@ -693,3 +693,210 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     monthPercent,
   };
 }
+
+
+// ── fetchProgressTrends ──────────────────────────────────────────
+// Returns velocity, projected completion, and status for a user's active goal.
+// Consumes weight_logs (weight goals) or progress_logs (body_comp / performance).
+// No UI — pure data engine for downstream consumers.
+
+export type ProgressTrends = {
+  goalCategory:    string;
+  metricLabel:     string;           // e.g. "Weight", "Body Fat", "Bench Press"
+  unit:            string;           // e.g. "lbs", "%", "reps"
+  startValue:      number | null;
+  currentValue:    number | null;
+  goalValue:       number | null;
+  goalDate:        string | null;    // YYYY-MM-DD
+  velocity7d:      number | null;    // change per day over last 7 days
+  velocity30d:     number | null;    // change per day over last 30 days
+  projectedDate:   string | null;    // estimated completion date (YYYY-MM-DD)
+  status:          "ahead" | "on_track" | "behind" | "no_data";
+};
+
+export async function fetchProgressTrends(userId: string): Promise<ProgressTrends | null> {
+  const supabase = createAdminClient();
+  const today = cstDate();
+
+  // ── Fetch active goal ──────────────────────────────────────────
+  const { data: goal } = await supabase
+    .from("goals")
+    .select(GOAL_METRICS_SELECT)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!goal) return null;
+
+  const cat = goal.goal_category ?? "weight";
+
+  // ── Resolve metric identity ────────────────────────────────────
+  let metricLabel: string;
+  let unit: string;
+  let startValue:   number | null;
+  let currentValue: number | null;
+  let goalValue:    number | null;
+  let direction: "decrease" | "increase";
+
+  if (cat === "body_composition") {
+    // Primary metric: body fat if targets exist, otherwise SMM
+    if (goal.starting_body_fat != null && goal.goal_body_fat != null) {
+      metricLabel  = "Body Fat";
+      unit         = "%";
+      startValue   = goal.starting_body_fat;
+      currentValue = goal.current_body_fat;
+      goalValue    = goal.goal_body_fat;
+      direction    = "decrease";
+    } else {
+      metricLabel  = "Skeletal Muscle Mass";
+      unit         = "lbs";
+      startValue   = goal.starting_smm;
+      currentValue = goal.current_smm;
+      goalValue    = goal.goal_smm;
+      direction    = "increase";
+    }
+  } else if (cat === "performance") {
+    metricLabel  = goal.performance_metric_name ?? "Performance";
+    unit         = goal.performance_unit ?? "";
+    startValue   = goal.starting_performance_value;
+    currentValue = goal.current_performance_value;
+    goalValue    = goal.goal_performance_value;
+    direction    = (goal.performance_direction === "decrease") ? "decrease" : "increase";
+  } else {
+    // weight (default) — infer direction from start vs goal
+    metricLabel  = "Weight";
+    unit         = "lbs";
+    startValue   = goal.start_weight;
+    currentValue = goal.current_weight;
+    goalValue    = goal.goal_weight;
+    direction    = (startValue != null && goalValue != null && goalValue > startValue)
+      ? "increase" : "decrease";
+  }
+
+  // ── Fetch log entries ──────────────────────────────────────────
+  type LogPoint = { date: string; value: number };
+  const points: LogPoint[] = [];
+
+  if (cat === "weight") {
+    const { data: wLogs } = await supabase
+      .from("weight_logs")
+      .select("logged_at, weight")
+      .eq("user_id", userId)
+      .order("logged_at", { ascending: true });
+
+    for (const row of wLogs ?? []) {
+      if (row.weight != null) {
+        points.push({ date: row.logged_at, value: Number(row.weight) });
+      }
+    }
+  } else {
+    // body_composition or performance — use progress_logs
+    const { data: pLogs } = await supabase
+      .from("progress_logs")
+      .select("logged_at, body_fat, smm, performance_value")
+      .eq("user_id", userId)
+      .eq("goal_id", goal.id)
+      .order("logged_at", { ascending: true });
+
+    for (const row of pLogs ?? []) {
+      let val: number | null = null;
+      if (cat === "body_composition") {
+        val = metricLabel === "Body Fat"
+          ? (row.body_fat != null ? Number(row.body_fat) : null)
+          : (row.smm != null ? Number(row.smm) : null);
+      } else {
+        val = row.performance_value != null ? Number(row.performance_value) : null;
+      }
+      if (val != null) {
+        points.push({ date: row.logged_at, value: val });
+      }
+    }
+  }
+
+  // ── Compute velocities ────────────────────────────────────────
+  // velocity = (last value - first value in window) / days between them
+  function velocityForWindow(windowDays: number): number | null {
+    const cutoff = new Date(today + "T00:00:00");
+    cutoff.setDate(cutoff.getDate() - windowDays);
+    const cutoffStr = cstDate(cutoff);
+
+    const windowPoints = points.filter((p) => p.date >= cutoffStr);
+    if (windowPoints.length < 2) return null;
+
+    const first = windowPoints[0];
+    const last  = windowPoints[windowPoints.length - 1];
+    const days  = daysBetween(first.date, last.date);
+    if (days <= 0) return null;
+
+    return (last.value - first.value) / days;
+  }
+
+  const velocity7d  = velocityForWindow(7);
+  const velocity30d = velocityForWindow(30);
+
+  // Best available velocity for projection (prefer 30d, fallback to 7d)
+  const bestVelocity = velocity30d ?? velocity7d;
+
+  // ── Project completion date ───────────────────────────────────
+  let projectedDate: string | null = null;
+
+  if (bestVelocity != null && currentValue != null && goalValue != null) {
+    const remaining = goalValue - currentValue; // positive if goal > current
+    // For "decrease" goals, remaining is negative when on track (current > goal)
+    // velocity should also be negative. remaining/velocity gives positive days.
+    // For "increase" goals, remaining is positive, velocity should be positive.
+
+    if (bestVelocity !== 0) {
+      const daysToGoal = remaining / bestVelocity;
+      if (daysToGoal > 0 && daysToGoal < 36500) { // sanity cap: ~100 years
+        const projected = new Date(today + "T00:00:00");
+        projected.setDate(projected.getDate() + Math.ceil(daysToGoal));
+        projectedDate = cstDate(projected);
+      }
+      // daysToGoal <= 0 means goal already reached or moving wrong direction
+    }
+  }
+
+  // ── Determine status ──────────────────────────────────────────
+  let status: ProgressTrends["status"] = "no_data";
+
+  if (bestVelocity == null || currentValue == null || goalValue == null) {
+    status = "no_data";
+  } else if (goal.goal_date && projectedDate) {
+    const goalDateStr = goal.goal_date;
+    // Compare projected vs goal date
+    if (projectedDate <= goalDateStr) {
+      status = "ahead";
+    } else {
+      // How far off? If within 10% of total timeline, "on_track"
+      const createdStr = goal.created_at ? toDateStr(goal.created_at) : today;
+      const totalDays  = daysBetween(createdStr, goalDateStr);
+      const overDays   = daysBetween(goalDateStr, projectedDate) - 1; // excess days
+      if (totalDays > 0 && overDays / totalDays <= 0.1) {
+        status = "on_track";
+      } else {
+        status = "behind";
+      }
+    }
+  } else if (bestVelocity !== 0) {
+    // No goal date set — just check direction
+    const movingRight = direction === "decrease"
+      ? bestVelocity < 0
+      : bestVelocity > 0;
+    status = movingRight ? "on_track" : "behind";
+  }
+
+  return {
+    goalCategory: cat,
+    metricLabel,
+    unit,
+    startValue,
+    currentValue,
+    goalValue,
+    goalDate:    goal.goal_date ?? null,
+    velocity7d,
+    velocity30d,
+    projectedDate,
+    status,
+  };
+}
