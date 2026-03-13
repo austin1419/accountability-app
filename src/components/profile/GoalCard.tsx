@@ -27,32 +27,24 @@ export function GoalCard({ goalName, progress }: Props) {
 
       {goalName ? (
         <>
-          <p className="text-base font-semibold text-[#DDD5C0] leading-snug mb-5">
+          <p className="text-sm font-semibold text-[#DDD5C0] leading-snug mb-3">
             {goalName}
           </p>
 
-          <p
-            className="text-4xl font-bold text-[#DDD5C0] mb-3"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
-            {progress}
-            <span className="text-2xl text-[#9A9080]">%</span>
-          </p>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-xs text-[#9A9080]">Progress</p>
+            <p className="text-xs font-semibold text-[#B8933A]">{progress}%</p>
+          </div>
 
           <div className="h-1.5 bg-[#252525] rounded overflow-hidden">
             <div
-              style={{
-                width:      `${displayProgress}%`,
-                height:     "100%",
-                background: "#B8933A",
-                borderRadius: "9999px",
-                transition: "width 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-              }}
+              className="h-full rounded transition-all duration-500"
+              style={{ width: `${displayProgress}%`, backgroundColor: "#B8933A" }}
             />
           </div>
         </>
       ) : (
-        <p className="text-sm text-[#9A9080]">No active goal.</p>
+        <p className="text-sm text-[#807868]">No active goal.</p>
       )}
     </section>
   );
