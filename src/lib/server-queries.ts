@@ -49,9 +49,14 @@ function effectiveStart(windowStart: string, createdAt: string): string {
   return createdAt > windowStart ? createdAt : windowStart;
 }
 
-// Extract YYYY-MM-DD from a timestamp, using CST to match task_log dates
+// Format a Date (or the current moment) as YYYY-MM-DD in CST
+function cstDate(d: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d);
+}
+
+// Extract YYYY-MM-DD from a timestamp string, using CST to match task_log dates
 function toDateStr(timestamp: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date(timestamp));
+  return cstDate(new Date(timestamp));
 }
 
 // Count calendar days between two YYYY-MM-DD strings (inclusive)
@@ -216,7 +221,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
   const sundayOffset = anchor.getDay(); // 0 = Sunday, 1 = Mon, ... 6 = Sat
   const sunday = new Date(anchor);
   sunday.setDate(anchor.getDate() - sundayOffset);
-  const weekStart = sunday.toISOString().split("T")[0];
+  const weekStart = cstDate(sunday);
 
   const weekEffective  = effectiveStart(weekStart, createdDate);
 
@@ -268,10 +273,10 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
 export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   const supabase = createAdminClient();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = cstDate();
   const sixDaysAgo = new Date();
   sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-  const weekStart = sixDaysAgo.toISOString().split("T")[0];
+  const weekStart = cstDate(sixDaysAgo);
 
   const { data: clients } = await supabase
     .from("users")
@@ -342,15 +347,15 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
   const supabase = createAdminClient();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = cstDate();
 
   const sixDaysAgo = new Date();
   sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-  const weekStart = sixDaysAgo.toISOString().split("T")[0];
+  const weekStart = cstDate(sixDaysAgo);
 
   const twentyNineDaysAgo = new Date();
   twentyNineDaysAgo.setDate(twentyNineDaysAgo.getDate() - 29);
-  const monthStart = twentyNineDaysAgo.toISOString().split("T")[0];
+  const monthStart = cstDate(twentyNineDaysAgo);
 
   const { data: clients, error: clientsError } = await supabase
     .from("users")
@@ -492,7 +497,7 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
   const sundayOffset = anchor.getDay();
   const sunday = new Date(anchor);
   sunday.setDate(anchor.getDate() - sundayOffset);
-  const weekStart = sunday.toISOString().split("T")[0];
+  const weekStart = cstDate(sunday);
 
   // Calendar-month anchor (1st of the month containing asOfDate)
   const monthStart = asOfDate.slice(0, 7) + "-01";
@@ -561,15 +566,15 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
 export async function fetchClientDetail(clientId: string): Promise<ClientDetail | null> {
   const supabase = createAdminClient();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = cstDate();
 
   const sixDaysAgo = new Date();
   sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-  const weekStart = sixDaysAgo.toISOString().split("T")[0];
+  const weekStart = cstDate(sixDaysAgo);
 
   const twentyNineDaysAgo = new Date();
   twentyNineDaysAgo.setDate(twentyNineDaysAgo.getDate() - 29);
-  const monthStart = twentyNineDaysAgo.toISOString().split("T")[0];
+  const monthStart = cstDate(twentyNineDaysAgo);
 
   const { data: user } = await supabase
     .from("users")
