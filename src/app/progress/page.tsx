@@ -304,6 +304,49 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
 // Projection math is in @/lib/projection.ts (single source of truth)
 
 // ─────────────────────────────────────────────
+// Status Card — displays progress + compliance scores
+// ─────────────────────────────────────────────
+const STATUS_CONFIG: Record<string, { label: string; color: string; border: string }> = {
+  ahead:    { label: "Ahead",    color: "text-[#4CAF50]", border: "border-[#4CAF50]" },
+  on_track: { label: "On Track", color: "text-[#B8933A]", border: "border-[#B8933A]" },
+  behind:   { label: "Behind",   color: "text-[#7A1E1E]", border: "border-[#7A1E1E]" },
+  no_data:  { label: "No Data",  color: "text-[#807868]", border: "border-[#807868]" },
+};
+
+function StatusCard({ data }: {
+  data: {
+    progressStatus: string;
+    progressScore:  number;
+    complianceScore: number;
+    overallScore:    number;
+  } | null;
+}) {
+  if (!data) return null;
+  const cfg = STATUS_CONFIG[data.progressStatus] ?? STATUS_CONFIG.no_data;
+
+  return (
+    <section className={`bg-[#141414] rounded p-4 border ${cfg.border}`}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Status</p>
+        <span className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "Compliance", value: data.complianceScore },
+          { label: "Progress",   value: data.progressScore },
+          { label: "Overall",    value: data.overallScore },
+        ].map((s) => (
+          <div key={s.label} className="flex flex-col items-center">
+            <p className="text-sm font-bold text-[#DDD5C0]">{s.value}</p>
+            <p className="text-[10px] text-[#9A9080] mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
 // Date-range filter — slices data to 7d, 30d, or all
 // ─────────────────────────────────────────────
 type ChartRange = "7d" | "30d" | "all";
@@ -372,6 +415,14 @@ export default function ProgressPage() {
   // Chart range
   const [chartRange, setChartRange] = useState<ChartRange>("all");
 
+  // Status score
+  const [statusData, setStatusData] = useState<{
+    progressStatus: "ahead" | "on_track" | "behind" | "no_data";
+    progressScore:  number;
+    complianceScore: number;
+    overallScore:    number;
+  } | null>(null);
+
   const [goalData, setGoalData] = useState<{
     id:                       string;
     goal_name:                string | null;
@@ -406,6 +457,9 @@ export default function ProgressPage() {
 
       if (!profile) return;
       setUserId(profile.id);
+
+      // Fetch status score in parallel with goal data
+      fetch("/api/status-score").then((r) => r.ok ? r.json() : null).then(setStatusData);
 
       const data = await fetchGoalData(profile.id);
       if (data) {
@@ -553,6 +607,7 @@ export default function ProgressPage() {
               </div>
             ))}
           </section>
+          <StatusCard data={statusData} />
           <section className="bg-[#141414] rounded p-5 border border-[#252525]">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
@@ -702,6 +757,8 @@ export default function ProgressPage() {
             </div>
           </section>
 
+          <StatusCard data={statusData} />
+
           {/* Recomposition chart — BF and SMM on same graph */}
           {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
             <section className="bg-[#141414] rounded p-5 border border-[#252525]">
@@ -816,6 +873,8 @@ export default function ProgressPage() {
             </section>
           );
         })()}
+
+        <StatusCard data={statusData} />
 
         {/* Chart */}
         {perfSeries.length >= 2 && (
