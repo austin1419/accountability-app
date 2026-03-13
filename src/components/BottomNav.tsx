@@ -1,12 +1,9 @@
 "use client";
-// ↑ "use client" is required because this component reads the current URL
-// using usePathname(), which is a browser-only feature.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Each tab has a label, a URL path, and an SVG outline icon
-const tabs = [
+const navTabs = [
   {
     label: "Today",
     href: "/",
@@ -49,32 +46,62 @@ const tabs = [
   },
 ];
 
+const contactIcon = (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M2 4.5A1.5 1.5 0 013.5 3h13A1.5 1.5 0 0118 4.5v8A1.5 1.5 0 0116.5 14H11l-4 3v-3H3.5A1.5 1.5 0 012 12.5v-8z" />
+  </svg>
+);
+
+const labelStyle: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif",
+  fontSize: "9px",
+  letterSpacing: "0.12em",
+};
+
 export function BottomNav() {
-  // usePathname() returns the current URL path, e.g. "/tasks"
   const pathname = usePathname();
 
   return (
-    <nav className="bg-[#0D0D0D] border-t border-[#252525] flex items-center justify-around py-3 px-2">
-      {tabs.map((tab) => {
-        const isActive = pathname === tab.href;
-        return (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`flex flex-col items-center gap-1 min-w-[60px] transition-colors ${
-              isActive ? "text-[#B8933A]" : "text-[#9A9080] hover:text-[#B8B0A0]"
-            }`}
-          >
-            {tab.icon}
-            <span
-              style={{ fontFamily: "'Cinzel', serif", fontSize: "9px", letterSpacing: "0.12em" }}
-              className="uppercase"
+    <>
+      {/* Spacer — stays in normal flow so content clears the fixed nav */}
+      <div className="h-24 flex-shrink-0" aria-hidden="true" />
+
+      {/* Floating pill nav */}
+      <nav
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-4 py-2.5 rounded-full"
+        style={{
+          background: "#0D0D0D",
+          border: "1px solid #252525",
+          boxShadow: "0 4px 32px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.04) inset",
+        }}
+      >
+        {/* Navigating tabs */}
+        {navTabs.map((tab) => {
+          const isActive = pathname === tab.href;
+          return (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-full transition-colors ${
+                isActive ? "text-[#B8933A]" : "text-[#9A9080] hover:text-[#B8B0A0]"
+              }`}
             >
-              {tab.label}
-            </span>
-          </Link>
-        );
-      })}
-    </nav>
+              {tab.icon}
+              <span style={labelStyle} className="uppercase">{tab.label}</span>
+            </Link>
+          );
+        })}
+
+        {/* Contact — visual placeholder, no navigation */}
+        <span
+          className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-full text-[#3A3530] cursor-default select-none"
+          aria-label="Contact — coming soon"
+        >
+          {contactIcon}
+          <span style={labelStyle} className="uppercase">Contact</span>
+        </span>
+      </nav>
+    </>
   );
 }
