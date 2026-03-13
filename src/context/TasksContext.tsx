@@ -6,7 +6,7 @@
 // Re-fetches tasks whenever selectedDate changes.
 // ─────────────────────────────────────────────
 
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { Task } from "@/lib/mockData";
 import { supabase } from "@/lib/supabase";
 import { fetchTasksForDate, upsertTaskLog, fetchStreak } from "@/lib/queries";
@@ -61,7 +61,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     fetchStreak(userId).then(setStreak);
   }, [userId, selectedDate]);
 
-  function toggleTask(id: string) {
+  const toggleTask = useCallback((id: string) => {
     if (!userId) return;
     // Optimistic update: flip the checkbox immediately so the UI feels instant
     setTasks((prev) => {
@@ -70,14 +70,12 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       const newDone = !task.done;
 
-      // Write to Supabase with the selected date, then re-derive streak
-      upsertTaskLog(id, userId, newDone, selectedDate).then(() => {
-        fetchStreak(userId).then(setStreak);
-      });
+      // Write to Supabase with the selected date (streak refreshes on next date change)
+      upsertTaskLog(id, userId, newDone, selectedDate);
 
       return prev.map((t) => (t.id === id ? { ...t, done: newDone } : t));
     });
-  }
+  }, [userId, selectedDate]);
 
   const completedCount    = tasks.filter((t) => t.done).length;
   const totalCount        = tasks.length;
@@ -85,10 +83,12 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     ? Math.round((completedCount / totalCount) * 100)
     : 0;
 
+  const value = useMemo(() => ({
+    tasks, toggleTask, completedCount, totalCount, compliancePercent, streak,
+  }), [tasks, toggleTask, completedCount, totalCount, compliancePercent, streak]);
+
   return (
-    <TasksContext.Provider
-      value={{ tasks, toggleTask, completedCount, totalCount, compliancePercent, streak }}
-    >
+    <TasksContext.Provider value={value}>
       {children}
     </TasksContext.Provider>
   );

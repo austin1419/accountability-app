@@ -8,7 +8,7 @@
 // independently. Editable window: today + 2 previous calendar days.
 // ─────────────────────────────────────────────
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 type DateContextType = {
   selectedDate: string;           // "YYYY-MM-DD" currently active date
@@ -50,8 +50,12 @@ export function DateProvider({ children }: { children: React.ReactNode }) {
 
   const isViewingPast = selectedDate !== todayDate;
 
+  const value = useMemo(() => ({
+    selectedDate, todayDate, setSelectedDate, isEditable, isViewingPast,
+  }), [selectedDate, todayDate, setSelectedDate, isEditable, isViewingPast]);
+
   return (
-    <DateContext.Provider value={{ selectedDate, todayDate, setSelectedDate, isEditable, isViewingPast }}>
+    <DateContext.Provider value={value}>
       {children}
     </DateContext.Provider>
   );

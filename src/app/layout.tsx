@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { DateProvider }  from "@/context/DateContext";
-import { TasksProvider } from "@/context/TasksContext";
 
 export const metadata: Metadata = {
   title: "PULSE",
@@ -29,7 +28,7 @@ export default function RootLayout({
         className="antialiased"
       >
         <DateProvider>
-          <TasksProvider>{children}</TasksProvider>
+          {children}
         </DateProvider>
       </body>
     </html>
