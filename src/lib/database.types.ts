@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          conversation_id: string
+          role: string
+          content: string
+          response_mode: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          conversation_id: string
+          role: string
+          content: string
+          response_mode?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          conversation_id?: string
+          role?: string
+          content?: string
+          response_mode?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_memories: {
         Row: {
           id: string
@@ -342,6 +380,8 @@ export type Database = {
       users: {
         Row: {
           archive_reason: string | null
+          ai_access_enabled: boolean
+          ai_access_updated_at: string | null
           auth_id: string | null
           created_at: string
           date_of_birth: string | null
@@ -355,6 +395,8 @@ export type Database = {
           role: string
         }
         Insert: {
+          ai_access_enabled?: boolean
+          ai_access_updated_at?: string | null
           archive_reason?: string | null
           auth_id?: string | null
           created_at?: string
@@ -369,6 +411,8 @@ export type Database = {
           role: string
         }
         Update: {
+          ai_access_enabled?: boolean
+          ai_access_updated_at?: string | null
           archive_reason?: string | null
           auth_id?: string | null
           created_at?: string

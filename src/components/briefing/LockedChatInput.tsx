@@ -1,9 +1,12 @@
 "use client";
 
-const cinzel = "'Cinzel', serif";
+import { useRouter } from "next/navigation";
+
 const garamond = "'EB Garamond', serif";
 
 export function LockedChatInput() {
+  const router = useRouter();
+
   return (
     <div style={{
       position: "fixed", bottom: 0, left: "50%",
@@ -13,30 +16,30 @@ export function LockedChatInput() {
       padding: "24px 20px 24px",
       paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
     }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        background: "#141414", border: "1px solid #252525",
-        borderRadius: 24, padding: "12px 16px",
-        opacity: 0.5,
-      }}>
+      <button
+        onClick={() => router.push("/accountability/pulse")}
+        style={{
+          display: "flex", alignItems: "center", gap: 10,
+          background: "#141414", border: "1px solid #252525",
+          borderRadius: 24, padding: "12px 16px",
+          width: "100%", cursor: "pointer",
+          transition: "border-color 0.2s",
+        }}
+      >
         <span style={{
           fontFamily: garamond, fontSize: 14, fontStyle: "italic",
-          color: "#807868", flex: 1,
+          color: "#807868", flex: 1, textAlign: "left",
         }}>
           Ask your AI coach...
         </span>
-        <span style={{
-          fontFamily: cinzel, fontSize: 7, fontWeight: 700,
-          letterSpacing: "0.12em", color: "#3A3020",
-          textTransform: "uppercase",
-          background: "rgba(184,147,58,0.06)",
-          border: "1px solid #2A2A1A",
-          borderRadius: 3, padding: "3px 8px",
-          whiteSpace: "nowrap",
-        }}>
-          Coming Soon
-        </span>
-      </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
+            stroke="#B8933A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            opacity={0.5}
+          />
+        </svg>
+      </button>
     </div>
   );
 }
