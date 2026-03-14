@@ -162,34 +162,38 @@ export default async function ClientDashboard({
             <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
               {isToday ? "Today\u2019s Compliance" : `${shortDateLabel} Compliance`}
             </p>
-            <div className="flex items-center gap-5">
-              <div className="relative flex items-center justify-center flex-shrink-0">
-                <ProgressRing
-                  percent={today.percent}
-                  color={today.percent >= 70 ? "#B8933A" : "#7A1E1E"}
-                />
-                <div className="absolute flex flex-col items-center">
-                  <span className="text-2xl font-bold text-[#DDD5C0]">{today.percent}%</span>
-                  <span className="text-xs text-[#9A9080]">done</span>
+            {today.total === 0 ? (
+              <p className="text-sm text-[#807868] italic">Add habits to begin tracking</p>
+            ) : (
+              <div className="flex items-center gap-5">
+                <div className="relative flex items-center justify-center flex-shrink-0">
+                  <ProgressRing
+                    percent={today.percent}
+                    color={today.percent >= 70 ? "#B8933A" : "#7A1E1E"}
+                  />
+                  <div className="absolute flex flex-col items-center">
+                    <span className="text-2xl font-bold text-[#DDD5C0]">{today.percent}%</span>
+                    <span className="text-xs text-[#9A9080]">done</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm text-[#9A9080]">
+                    <strong className="text-[#DDD5C0]">{today.completed}</strong> of{" "}
+                    <strong className="text-[#DDD5C0]">{today.total}</strong> tasks complete
+                  </p>
+                  <p className="text-xs text-[#807868] mt-1">Target: 70% or better</p>
+                  {today.percent >= 70 ? (
+                    <span className="mt-2 inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
+                      On track
+                    </span>
+                  ) : (
+                    <span className="mt-2 inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
+                      Needs attention
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-[#9A9080]">
-                  <strong className="text-[#DDD5C0]">{today.completed}</strong> of{" "}
-                  <strong className="text-[#DDD5C0]">{today.total}</strong> tasks complete
-                </p>
-                <p className="text-xs text-[#807868] mt-1">Target: 70% or better</p>
-                {today.percent >= 70 ? (
-                  <span className="mt-2 inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                    On track
-                  </span>
-                ) : (
-                  <span className="mt-2 inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                    Needs attention
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
           </section>
         </LinkCard>
 
@@ -200,9 +204,9 @@ export default async function ClientDashboard({
           </p>
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
-              { label: "Compliance", value: statusScore.complianceScore },
+              { label: "Compliance", value: today.total === 0 ? "—" : statusScore.complianceScore },
               { label: "Progress",   value: statusScore.progressScore },
-              { label: "Overall",    value: statusScore.overallScore },
+              { label: "Overall",    value: today.total === 0 ? "—" : statusScore.overallScore },
             ].map((item) => (
               <div key={item.label} className="flex flex-col items-center">
                 <p className="text-sm font-bold text-[#DDD5C0]">{item.value}</p>

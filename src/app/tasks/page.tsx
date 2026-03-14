@@ -81,12 +81,12 @@ export default function TasksPage() {
 
         {/* Show a completion banner when everything is done */}
         {allDone && (
-          <div className="bg-[#141414] border border-[#B8933A] rounded p-4 text-center">
+          <div className={`bg-[#141414] border rounded p-4 text-center ${totalCount === 0 ? "border-[#252525]" : "border-[#B8933A]"}`}>
             <p
-              className="text-[#B8933A] text-sm"
+              className={`text-sm ${totalCount === 0 ? "text-[#807868]" : "text-[#B8933A]"}`}
               style={{ fontFamily: "'Cormorant Garamond', serif" }}
             >
-              Faithful today. Now do it again tomorrow.
+              {totalCount === 0 ? "Begin your habits to start your streak." : "Faithful today. Now do it again tomorrow."}
             </p>
           </div>
         )}
