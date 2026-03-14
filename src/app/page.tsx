@@ -127,23 +127,56 @@ export default async function ClientDashboard({
             Your Goal
           </p>
           {goal ? (
-            <>
-              <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                {goal.goal_category === "weight"
-                  ? "Weight"
-                  : goal.goal_category === "body_composition"
-                  ? "Body Composition"
-                  : (goal.performance_metric_name ?? "Performance")}
-              </p>
-              <p className="text-base font-semibold text-[#DDD5C0] leading-snug">{goal.goal_name}</p>
-              {goal.goal_date && (
-                <p className="text-xs text-[#9A9080] mt-1">
-                  {new Date(goal.goal_date + "T00:00:00").toLocaleDateString("en-US", {
-                    month: "short", day: "numeric", year: "numeric",
-                  })}
+            <div className="flex items-stretch justify-between gap-4">
+              <div className="flex flex-col justify-center min-w-0">
+                <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
+                  {goal.goal_category === "weight"
+                    ? "Weight"
+                    : goal.goal_category === "body_composition"
+                    ? "Body Composition"
+                    : (goal.performance_metric_name ?? "Performance")}
                 </p>
-              )}
-            </>
+                <p className="text-base font-semibold text-[#DDD5C0] leading-snug">{goal.goal_name}</p>
+                {goal.goal_date && (
+                  <p className="text-xs text-[#9A9080] mt-1">
+                    {new Date(goal.goal_date + "T00:00:00").toLocaleDateString("en-US", {
+                      month: "short", day: "numeric", year: "numeric",
+                    })}
+                  </p>
+                )}
+              </div>
+              {goal.goal_date && (() => {
+                const daysLeft = Math.ceil(
+                  (new Date(goal.goal_date + "T00:00:00").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                );
+                if (daysLeft < 0) return null;
+                return (
+                  <div
+                    className="flex flex-col items-center justify-center flex-shrink-0"
+                    style={{
+                      width: 72,
+                      minHeight: 72,
+                      borderRadius: 8,
+                      border: "1.5px solid #3A3020",
+                      background: "rgba(184,147,58,0.03)",
+                    }}
+                  >
+                    <span
+                      className="text-[#D4A84B] leading-none"
+                      style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 24 }}
+                    >
+                      {daysLeft}
+                    </span>
+                    <span
+                      className="text-[#807868] uppercase mt-1"
+                      style={{ fontFamily: "'EB Garamond', serif", fontSize: 10, letterSpacing: "0.08em" }}
+                    >
+                      days left
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
           ) : (
             <p className="text-sm text-[#9A9080]">No goal set yet.</p>
           )}
