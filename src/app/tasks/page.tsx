@@ -5,6 +5,7 @@ import { TaskItem }      from "@/components/TaskItem";
 import { BottomNav }     from "@/components/BottomNav";
 import { StreakCard }     from "@/components/StreakCard";
 import { EditingBanner } from "@/components/EditingBanner";
+import { DateHeader }    from "@/components/DateHeader";
 import { useTasks }      from "@/context/TasksContext";
 import { useDate }       from "@/context/DateContext";
 
@@ -31,20 +32,13 @@ export default function TasksPage() {
     ...[...categorySet].filter((c) => !CATEGORY_ORDER.includes(c)),
   ];
 
-  const dateLabel = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
-    weekday: "long",
-    month:   "long",
-    day:     "numeric",
-  });
-
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
 
       {/* ── Header ───────────────────────────────── */}
       <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-        <p className="text-sm text-[#9A9080]">{dateLabel}</p>
         <h1
-          className="text-2xl text-[#F4EEE4] mt-1 tracking-wide"
+          className="text-2xl text-[#F4EEE4] tracking-wide"
           style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
         >
           {isViewingPast ? "Past Reckoning" : "Today\u2019s Reckoning"}
@@ -74,6 +68,9 @@ export default function TasksPage() {
           />
         </div>
       </header>
+
+      {/* Compact date slider */}
+      <DateHeader variant="compact" />
 
       <EditingBanner />
 

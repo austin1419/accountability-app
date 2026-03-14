@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { WeightEntry } from "@/lib/mockData";
 import { BottomNav }     from "@/components/BottomNav";
 import { EditingBanner } from "@/components/EditingBanner";
+import { DateHeader }    from "@/components/DateHeader";
 import { supabase } from "@/lib/supabase";
 import { useDate } from "@/context/DateContext";
 import {
@@ -579,6 +580,7 @@ export default function ProgressPage() {
           </div>
           <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
         </header>
+        <DateHeader variant="compact" />
         <EditingBanner />
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           <section className="grid grid-cols-4 gap-2">
@@ -707,6 +709,7 @@ export default function ProgressPage() {
           </div>
           <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
         </header>
+        <DateHeader variant="compact" />
         <EditingBanner />
         <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
 
