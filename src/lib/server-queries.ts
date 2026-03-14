@@ -239,28 +239,77 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
   const weekPercent    = weekExpected > 0
     ? Math.round((weekCompleted / weekExpected) * 100) : 0;
 
+  // Build a date-aware snapshot of the goal metrics for progress calculation.
+  // Uses the latest log entry at or before `date` instead of the live goal row,
+  // so the dashboard shows historical progress for past dates.
+  let goalSnapshot: GoalMetrics | null = null;
+  if (goal) {
+    // Start with the goal row values as defaults
+    goalSnapshot = { ...goal } as unknown as GoalMetrics;
+
+    if (goal.goal_category === "weight") {
+      const { data: latestWeight } = await supabase
+        .from("weight_logs")
+        .select("weight")
+        .eq("user_id", userId)
+        .lte("logged_at", today)
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      goalSnapshot.current_weight = latestWeight?.weight ?? goal.start_weight;
+    } else if (goal.goal_category === "body_composition") {
+      const { data: latestProgress } = await supabase
+        .from("progress_logs")
+        .select("body_fat, smm")
+        .eq("user_id", userId)
+        .eq("goal_id", goal.id)
+        .lte("logged_at", today)
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestProgress) {
+        if (latestProgress.body_fat != null) goalSnapshot.current_body_fat = latestProgress.body_fat;
+        if (latestProgress.smm != null)      goalSnapshot.current_smm = latestProgress.smm;
+      } else {
+        goalSnapshot.current_body_fat = goal.starting_body_fat;
+        goalSnapshot.current_smm      = goal.starting_smm;
+      }
+    } else if (goal.goal_category === "performance") {
+      const { data: latestPerf } = await supabase
+        .from("progress_logs")
+        .select("performance_value")
+        .eq("user_id", userId)
+        .eq("goal_id", goal.id)
+        .lte("logged_at", today)
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      goalSnapshot.current_performance_value = latestPerf?.performance_value ?? goal.starting_performance_value;
+    }
+  }
+
   return {
     clientName: user?.name ?? "there",
     goal: goal
       ? {
           goal_name:    goal.goal_name,
           goal_date:    goal.goal_date ?? null,
-          goalProgress: computeGoalProgress(goal as GoalMetrics),
+          goalProgress: computeGoalProgress(goalSnapshot!),
           goal_category: goal.goal_category,
           start_weight:               goal.start_weight,
           goal_weight:                goal.goal_weight,
-          current_weight:             goal.current_weight,
+          current_weight:             goalSnapshot!.current_weight,
           starting_body_fat:          goal.starting_body_fat,
-          current_body_fat:           goal.current_body_fat,
+          current_body_fat:           goalSnapshot!.current_body_fat,
           goal_body_fat:              goal.goal_body_fat,
           starting_smm:               goal.starting_smm,
-          current_smm:                goal.current_smm,
+          current_smm:                goalSnapshot!.current_smm,
           goal_smm:                   goal.goal_smm,
           performance_metric_name:    goal.performance_metric_name,
           performance_unit:           goal.performance_unit,
           performance_direction:      goal.performance_direction,
           starting_performance_value: goal.starting_performance_value,
-          current_performance_value:  goal.current_performance_value,
+          current_performance_value:  goalSnapshot!.current_performance_value,
           goal_performance_value:     goal.goal_performance_value,
         }
       : null,
