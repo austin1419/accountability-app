@@ -249,6 +249,41 @@ export type Database = {
           },
         ]
       }
+      pulse_chat_messages: {
+        Row: {
+          id: string
+          user_id: string
+          role: string
+          message: string
+          scenario: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role: string
+          message: string
+          scenario?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: string
+          message?: string
+          scenario?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       progress_logs: {
         Row: {
           body_fat: number | null
