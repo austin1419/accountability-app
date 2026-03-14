@@ -1103,26 +1103,30 @@ export type StatusScore = {
   overallScore:    number;
 };
 
-const PROGRESS_SCORE_MAP: Record<ProgressTrends["status"], number> = {
-  ahead:    100,
-  on_track: 80,
-  behind:   40,
-  no_data:  50,
-};
-
 export async function fetchStatusScore(userId: string): Promise<StatusScore> {
-  const [trends, compliance] = await Promise.all([
+  const supabase = createAdminClient();
+
+  const [trends, compliance, goalRow] = await Promise.all([
     fetchProgressTrends(userId),
     fetchProfileCompliance(userId),
+    supabase
+      .from("goals")
+      .select(GOAL_METRICS_SELECT)
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle()
+      .then((r) => r.data),
   ]);
 
   const progressStatus = trends?.status ?? "no_data";
-  const progressScore  = PROGRESS_SCORE_MAP[progressStatus];
+  const progressScore  = goalRow
+    ? computeGoalProgress(goalRow as unknown as GoalMetrics)
+    : 0;
   const complianceScore = compliance.overallPercent;
 
   let overallScore: number;
-  if (progressStatus === "no_data") {
-    // Not enough progress data — use compliance only
+  if (progressScore === 0 && !goalRow) {
+    // No goal set — use compliance only
     overallScore = complianceScore;
   } else {
     overallScore = Math.round(0.60 * complianceScore + 0.40 * progressScore);
