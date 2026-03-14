@@ -19,6 +19,7 @@ import { buildCoachSummary }     from "@/lib/ai/buildCoachSummary";
 import { buildDailyBriefing }    from "@/lib/ai/buildDailyBriefing";
 import { getFeatureReadiness }   from "@/lib/ai/getAIFeatureReadiness";
 import { fetchRelevantMemories, detectAndStoreMemories } from "@/lib/ai/aiMemory";
+import { buildKnowledgeContext } from "@/lib/ai/knowledgeRetrieval";
 import { BriefingShell }         from "@/components/briefing/BriefingShell";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,8 @@ export default async function DailyBriefingPage() {
   const analysis      = analyzeClientContext(ctx);
   const clientSummary = buildClientSummary(ctx, analysis);
   const coachSummary  = buildCoachSummary(ctx, analysis);
-  const briefing      = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness, memories);
+  const knowledge     = await buildKnowledgeContext(ctx, analysis, coachSummary);
+  const briefing      = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness, memories, knowledge);
 
   // Store noteworthy memories from this session (fire-and-forget)
   if (readiness.available) {

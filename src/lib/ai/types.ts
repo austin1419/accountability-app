@@ -393,3 +393,41 @@ export type AIMemory = {
   createdAt:       string;       // ISO timestamp
   lastUsedAt:      string;       // ISO timestamp
 };
+
+
+// ═══════════════════════════════════════════════
+// KNOWLEDGE RETRIEVAL (expert knowledge layer)
+// ═══════════════════════════════════════════════
+
+/** A single knowledge chunk from the knowledge base. */
+export type KnowledgeChunk = {
+  id:       string;
+  domain:   string;
+  topic:    string;
+  tags:     string[];
+  priority: number;       // 1 = foundational, 2 = secondary
+  expert:   string;
+  text:     string;
+};
+
+/** A scenario route from the routing map. */
+export type ScenarioRoute = {
+  domains:        string[];
+  experts:        string[];
+  priorityCheck:  string;
+  firstQuestion:  string;
+};
+
+/** Structured knowledge context for briefing generation. */
+export type KnowledgeContext = {
+  /** Core coach identity (always loaded) */
+  coreIdentity:      string;
+  /** Matched scenario keys from routing map */
+  matchedScenarios:  string[];
+  /** Domains activated by scenario matching */
+  activeDomains:     string[];
+  /** Selected knowledge snippets (3–5) */
+  snippets:          KnowledgeChunk[];
+  /** Priority check guidance from matched scenarios */
+  priorityChecks:    string[];
+};

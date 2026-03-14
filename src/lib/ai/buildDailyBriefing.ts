@@ -18,6 +18,8 @@ import type {
   CoachSummary,
   AIFeatureReadiness,
   AIMemory,
+  KnowledgeContext,
+  KnowledgeChunk,
   DailyBriefing,
   BriefingMomentum,
   BriefingRisk,
@@ -295,6 +297,65 @@ function enrichInsightWithMemory(
   return baseInsight;
 }
 
+/**
+ * Enrich guidance with relevant knowledge snippets.
+ *
+ * Picks the single most relevant snippet and weaves its
+ * core message into the coaching guidance. The snippet
+ * should feel like the coach's own wisdom — not a citation.
+ */
+function enrichGuidanceWithKnowledge(
+  baseGuidance: string,
+  snippets: KnowledgeChunk[],
+  momentum: BriefingMomentum,
+): string {
+  if (snippets.length === 0) return baseGuidance;
+
+  // Pick the top-priority snippet from the most relevant domain
+  const topSnippet = snippets[0];
+
+  // Only enrich when the client needs coaching direction
+  // (building momentum = don't add complexity)
+  if (momentum === "building") return baseGuidance;
+
+  // Extract a coaching-safe takeaway from the snippet
+  // Use the snippet's domain to frame the enrichment naturally
+  switch (topSnippet.domain) {
+    case "nutrition":
+      if (topSnippet.topic.includes("protein")) {
+        return `${baseGuidance} And make sure you're hitting your protein — it's the single highest-leverage habit right now.`;
+      }
+      if (topSnippet.topic.includes("adherence")) {
+        return `${baseGuidance} Remember: a good-enough plan followed consistently beats a perfect plan ignored.`;
+      }
+      if (topSnippet.topic.includes("sleep") || topSnippet.topic.includes("recovery")) {
+        return `${baseGuidance} If sleep has been off, fix that first — everything else works better when you're rested.`;
+      }
+      break;
+    case "habit_formation":
+      if (topSnippet.topic.includes("minimum") || topSnippet.topic.includes("identity")) {
+        return `${baseGuidance} Start small. The goal isn't perfection — it's showing up.`;
+      }
+      if (topSnippet.topic.includes("relapse") || topSnippet.topic.includes("environment")) {
+        return `${baseGuidance} Set your environment up to win — make the right choice the easy choice.`;
+      }
+      break;
+    case "sleep_recovery":
+      return `${baseGuidance} Sleep is the foundation. If that's off, nothing else works at full capacity.`;
+    case "stress_management":
+      return `${baseGuidance} When stress is high, simplify. One habit. One win. That's enough today.`;
+    case "training":
+      if (topSnippet.topic.includes("deload") || topSnippet.topic.includes("deficit")) {
+        return `${baseGuidance} Training in a deficit? Protect intensity, reduce volume. That's how you keep the muscle.`;
+      }
+      break;
+    case "longevity":
+      return `${baseGuidance} Think long-term — the habits you build now pay dividends for decades.`;
+  }
+
+  return baseGuidance;
+}
+
 function buildCoachingMessage(
   ctx: ClientAIContext,
   analysis: ClientAnalysis,
@@ -302,13 +363,15 @@ function buildCoachingMessage(
   coachSummary: CoachSummary,
   momentum: BriefingMomentum,
   memories: AIMemory[],
+  snippets: KnowledgeChunk[],
 ): CoachingMessage {
   const baseInsight = buildInsight(analysis, ctx, clientSummary, coachSummary);
+  const baseGuidance = buildGuidance(analysis, coachSummary, momentum);
 
   return {
     snapshot: buildSnapshot(ctx, analysis, clientSummary, momentum),
     insight:  enrichInsightWithMemory(baseInsight, memories, ctx),
-    guidance: buildGuidance(analysis, coachSummary, momentum),
+    guidance: enrichGuidanceWithKnowledge(baseGuidance, snippets, momentum),
     action:   buildAction(ctx, clientSummary, analysis),
   };
 }
@@ -395,6 +458,7 @@ export function buildDailyBriefing(
   coachSummary: CoachSummary,
   readiness: AIFeatureReadiness,
   memories: AIMemory[] = [],
+  knowledge?: KnowledgeContext,
 ): DailyBriefing {
   if (!readiness.available) {
     return buildGatedBriefing(ctx, readiness);
@@ -402,6 +466,7 @@ export function buildDailyBriefing(
 
   const momentumState = mapMomentum(analysis);
   const riskLevel     = mapRisk(analysis);
+  const snippets      = knowledge?.snippets ?? [];
 
   return {
     id:              `${ctx.client.userId}-${ctx.selectedDate}`,
@@ -409,7 +474,7 @@ export function buildDailyBriefing(
     greeting:        buildGreeting(ctx),
     momentumState,
     riskLevel,
-    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories),
+    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories, snippets),
     metrics:         buildMetrics(ctx),
     sourceSignals:   analysis.allSignals.filter((s) => s.detected).map((s) => s.key),
   };
