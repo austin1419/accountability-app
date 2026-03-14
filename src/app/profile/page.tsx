@@ -17,37 +17,10 @@ import { SignOutButton }              from "@/components/SignOutButton";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }          from "@/lib/supabase-admin";
 import { fetchProfileCompliance }     from "@/lib/server-queries";
-import type { GoalMetrics }           from "@/lib/server-queries";
+import { computeGoalProgress }        from "@/lib/computeGoalProgress";
+import type { GoalMetrics }           from "@/lib/computeGoalProgress";
 
 export const dynamic = "force-dynamic";
-
-// computeGoalProgress is not exported from server-queries — inlined here.
-function computeGoalProgress(g: GoalMetrics): number {
-  const clamp = (v: number) => Math.min(Math.max(Math.round(v), 0), 100);
-
-  if (g.goal_category === "body_composition") {
-    const parts: number[] = [];
-    if (g.starting_body_fat != null && g.current_body_fat != null && g.goal_body_fat != null
-        && g.starting_body_fat - g.goal_body_fat > 0)
-      parts.push(clamp(((g.starting_body_fat - g.current_body_fat) / (g.starting_body_fat - g.goal_body_fat)) * 100));
-    if (g.starting_smm != null && g.current_smm != null && g.goal_smm != null
-        && g.goal_smm - g.starting_smm > 0)
-      parts.push(clamp(((g.current_smm - g.starting_smm) / (g.goal_smm - g.starting_smm)) * 100));
-    return parts.length === 0 ? 0 : Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
-  }
-
-  if (g.goal_category === "performance") {
-    const { performance_direction: dir, starting_performance_value: s,
-            current_performance_value: c, goal_performance_value: goal } = g;
-    if (s == null || c == null || goal == null || dir == null) return 0;
-    if (dir === "increase") return goal - s <= 0 ? 0 : clamp(((c - s) / (goal - s)) * 100);
-    return s - goal <= 0 ? 0 : clamp(((s - c) / (s - goal)) * 100);
-  }
-
-  const { start_weight: s, current_weight: c, goal_weight: goal } = g;
-  if (s == null || c == null || goal == null || s - goal <= 0) return 0;
-  return clamp(((s - c) / (s - goal)) * 100);
-}
 
 
 export default async function ProfilePage() {

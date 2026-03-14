@@ -440,9 +440,6 @@ export default function ProgressPage() {
       if (!profile) return;
       setUserId(profile.id);
 
-      // Fetch status score in parallel with goal data
-      fetch("/api/status-score").then((r) => r.ok ? r.json() : null).then(setStatusData);
-
       const data = await fetchGoalData(profile.id);
       if (data) {
         setGoalData(data as typeof goalData);
@@ -457,6 +454,14 @@ export default function ProgressPage() {
     }
     init();
   }, []);
+
+  // Re-fetch status score whenever selectedDate changes
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/status-score?date=${selectedDate}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then(setStatusData);
+  }, [userId, selectedDate]);
 
   const category = goalData?.goal_category ?? "weight";
 

@@ -12,32 +12,10 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { generateProjection, type ChartPoint } from "@/lib/projection";
+import { computeGoalProgress, type GoalMetrics } from "@/lib/computeGoalProgress";
 
-
-// ── Types ─────────────────────────────────────────────────────────
-
-// Shared goal metrics type used across dashboard, coach detail, and leaderboard
-export type GoalMetrics = {
-  goal_category:              string;
-  // Weight
-  start_weight:               number | null;
-  goal_weight:                number | null;
-  current_weight:             number | null;
-  // Body composition
-  starting_body_fat:          number | null;
-  current_body_fat:           number | null;
-  goal_body_fat:              number | null;
-  starting_smm:               number | null;
-  current_smm:                number | null;
-  goal_smm:                   number | null;
-  // Performance
-  performance_metric_name:    string | null;
-  performance_unit:           string | null;
-  performance_direction:      string | null;
-  starting_performance_value: number | null;
-  current_performance_value:  number | null;
-  goal_performance_value:     number | null;
-};
+// Re-export so existing consumers can still import from here
+export type { GoalMetrics } from "@/lib/computeGoalProgress";
 
 // Columns to SELECT from goals whenever we need full metrics
 // Must be a single string literal (not concatenated) so Supabase's TypeScript
@@ -67,36 +45,7 @@ function daysBetween(start: string, end: string): number {
   return Math.floor((e - s) / 86_400_000) + 1;
 }
 
-// Compute goal progress (0–100) for any goal category
-function computeGoalProgress(g: GoalMetrics): number {
-  const clamp = (v: number) => Math.min(Math.max(Math.round(v), 0), 100);
-
-  if (g.goal_category === "body_composition") {
-    const parts: number[] = [];
-    if (g.starting_body_fat != null && g.current_body_fat != null && g.goal_body_fat != null
-        && g.starting_body_fat - g.goal_body_fat > 0) {
-      parts.push(clamp(((g.starting_body_fat - g.current_body_fat) / (g.starting_body_fat - g.goal_body_fat)) * 100));
-    }
-    if (g.starting_smm != null && g.current_smm != null && g.goal_smm != null
-        && g.goal_smm - g.starting_smm > 0) {
-      parts.push(clamp(((g.current_smm - g.starting_smm) / (g.goal_smm - g.starting_smm)) * 100));
-    }
-    return parts.length === 0 ? 0 : Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
-  }
-
-  if (g.goal_category === "performance") {
-    const { performance_direction: dir, starting_performance_value: s,
-            current_performance_value: c, goal_performance_value: goal } = g;
-    if (s == null || c == null || goal == null || dir == null) return 0;
-    if (dir === "increase") return goal - s <= 0 ? 0 : clamp(((c - s) / (goal - s)) * 100);
-    return s - goal <= 0 ? 0 : clamp(((s - c) / (s - goal)) * 100);
-  }
-
-  // Default: weight
-  const { start_weight: s, current_weight: c, goal_weight: goal } = g;
-  if (s == null || c == null || goal == null || s - goal <= 0) return 0;
-  return clamp(((s - c) / (s - goal)) * 100);
-}
+// computeGoalProgress is imported from @/lib/computeGoalProgress
 
 export type DashboardData = {
   clientName: string;
@@ -258,22 +207,32 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
         .maybeSingle();
       goalSnapshot.current_weight = latestWeight?.weight ?? goal.start_weight;
     } else if (goal.goal_category === "body_composition") {
-      const { data: latestProgress } = await supabase
-        .from("progress_logs")
-        .select("body_fat, smm")
-        .eq("user_id", userId)
-        .eq("goal_id", goal.id)
-        .lte("logged_at", today)
-        .order("logged_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (latestProgress) {
-        if (latestProgress.body_fat != null) goalSnapshot.current_body_fat = latestProgress.body_fat;
-        if (latestProgress.smm != null)      goalSnapshot.current_smm = latestProgress.smm;
-      } else {
-        goalSnapshot.current_body_fat = goal.starting_body_fat;
-        goalSnapshot.current_smm      = goal.starting_smm;
-      }
+      // BF and SMM can be logged independently — query each metric's
+      // latest non-null value separately to avoid stale cross-metric data.
+      const [{ data: latestBf }, { data: latestSmm }] = await Promise.all([
+        supabase
+          .from("progress_logs")
+          .select("body_fat")
+          .eq("user_id", userId)
+          .eq("goal_id", goal.id)
+          .lte("logged_at", today)
+          .not("body_fat", "is", null)
+          .order("logged_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("progress_logs")
+          .select("smm")
+          .eq("user_id", userId)
+          .eq("goal_id", goal.id)
+          .lte("logged_at", today)
+          .not("smm", "is", null)
+          .order("logged_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      goalSnapshot.current_body_fat = latestBf?.body_fat ?? goal.starting_body_fat;
+      goalSnapshot.current_smm      = latestSmm?.smm ?? goal.starting_smm;
     } else if (goal.goal_category === "performance") {
       const { data: latestPerf } = await supabase
         .from("progress_logs")
@@ -353,7 +312,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   const { data: tasks } = await supabase
     .from("tasks")
     .select("id, goal_id")
-    .in("goal_id", goalIds);
+    .in("goal_id", goalIds.length > 0 ? goalIds : [""])
+    .eq("is_active", true);
 
   const taskCountByGoal = new Map<string, number>();
   for (const t of tasks ?? []) {

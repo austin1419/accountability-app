@@ -9,9 +9,12 @@
 //
 // VIEW: any past date can be selected and viewed.
 // EDIT: only today + previous 3 calendar days are editable.
+//
+// todayDate refreshes on visibilitychange so midnight crossings
+// don't leave the edit window and isViewingPast stale.
 // ─────────────────────────────────────────────
 
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 
 type DateContextType = {
   selectedDate: string;           // "YYYY-MM-DD" currently active date
@@ -28,8 +31,27 @@ function chicagoToday(): string {
 const DateContext = createContext<DateContextType | null>(null);
 
 export function DateProvider({ children }: { children: React.ReactNode }) {
-  const [todayDate] = useState(chicagoToday);
+  const [todayDate, setTodayDate] = useState(chicagoToday);
   const [selectedDate, setSelectedDateRaw] = useState(todayDate);
+
+  // Refresh todayDate when the tab regains focus (handles midnight crossings)
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        const now = chicagoToday();
+        setTodayDate((prev) => {
+          if (prev !== now) {
+            // If selectedDate was "today", advance it to the new today
+            setSelectedDateRaw((sel) => sel === prev ? now : sel);
+            return now;
+          }
+          return prev;
+        });
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   // Edit window: today + 3 previous calendar days (4 days total)
   const isEditable = useCallback(
