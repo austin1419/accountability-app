@@ -1217,7 +1217,121 @@ export const SECTION_CONFIGS: SectionConfig[] = [
       },
     ],
   },
-  { sectionKey: "spirit_new_beginnings",     title: "Spirit & New Beginnings",   questions: [] },
+  {
+    sectionKey: "spirit_new_beginnings",
+    title: "Spirit & New Beginnings",
+    questions: [
+      {
+        questionKey: "faith_identity",
+        label: "Do you consider yourself a person of faith?",
+        inputType: "single_select",
+        options: [
+          "Yes — faith is a central part of how I live and think",
+          "Yes — it is important to me but not the center of everything",
+          "I am spiritual but not religious",
+          "I am exploring and open but not committed",
+          "No — I am secular and do not approach life through a faith lens",
+        ],
+        required: true,
+      },
+      {
+        questionKey: "body_frame",
+        label: "How do you think about your body and physical health? Which frame resonates most?",
+        inputType: "single_select",
+        options: [
+          "Stewardship — this body was given to me and I am responsible for it",
+          "Performance — my body is a vehicle for what I want to accomplish",
+          "Identity — how I look and feel is connected to who I am",
+          "Survival — I need to address health because I am worried about the future",
+          "I have never thought about my body this way before",
+        ],
+        required: false,
+      },
+      {
+        questionKey: "discipline_belief",
+        label: "What do you believe about discipline?",
+        inputType: "single_select",
+        options: [
+          "Some people are born with it and I am not sure I have it",
+          "It is mostly built, but it requires the right systems and environment",
+          "It is entirely built — discipline is a skill, not a trait",
+          "I used to have it and lost it — I am trying to rebuild it",
+          "I am not sure — this is something I think about",
+        ],
+        required: false,
+      },
+      {
+        questionKey: "discipline_role_model",
+        label: "Is there a person whose physical discipline or approach to health you admire?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "non_physical_benefit",
+        label: "What is the most important non-physical benefit you hope to gain from getting healthier?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "morning_routine_exists",
+        label: "Do you currently have a morning routine?",
+        inputType: "single_select",
+        options: [
+          "Yes",
+          "No — my mornings are usually chaotic or unstructured",
+        ],
+        required: false,
+      },
+      {
+        questionKey: "morning_routine_details",
+        label: "If yes, what does your morning routine usually include?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "self_care_definition",
+        label: "What does taking care of yourself mean to you?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "past_reference_point",
+        label: "Is there a season of better health or a version of yourself you want to get back to?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "best_self_daily_life",
+        label: "What would your best self look like day to day if you were actually living this out?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "shaping_verse_quote",
+        label: "Is there a verse, quote, or conviction that shapes how you approach challenge or hard seasons?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "fear_if_no_change",
+        label: "What are you most afraid will happen if you do not change?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "new_beginning_intention",
+        label: "This is your new beginning. How do you want to show up for it?",
+        inputType: "textarea",
+        required: false,
+      },
+      {
+        questionKey: "additional_context",
+        label: "Is there anything else you want your coach to know about you that the questions above did not capture?",
+        inputType: "textarea",
+        required: false,
+      },
+    ],
+  },
 ];
 
 /** Look up a section config by its key */
