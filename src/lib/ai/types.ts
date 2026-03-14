@@ -340,35 +340,33 @@ export type AIReadinessMap = Record<AIFeatureKey, AIFeatureReadiness>;
 
 export type BriefingMomentum = "building" | "steady" | "declining" | "at_risk";
 export type BriefingRisk     = "low" | "medium" | "high";
-export type InsightTagType   = "gold" | "red" | "blue" | "gray";
 
-export type InsightBlock = {
-  title:      string;
-  summary:    string;
-  priority:   "high" | "medium" | "low";
-  signalKeys: string[];
-  evidence:   string[];
-  tag:        string;
-  tagType:    InsightTagType;
+/** Coaching message — reads like a short note from a real coach. */
+export type CoachingMessage = {
+  /** Brief summary of how things are going */
+  snapshot: string;
+  /** One meaningful observation based on the data */
+  insight:  string;
+  /** Short coaching statement */
+  guidance: string;
+  /** One clear, actionable suggestion */
+  action:   string;
 };
 
-export type ComplianceBar = {
+/** Supporting metric shown below the coaching message */
+export type BriefingMetric = {
   label:  string;
-  value:  number;
-  status: "gold" | "red";
+  value:  string;
+  status: "gold" | "neutral" | "red";
 };
 
 export type DailyBriefing = {
   id:              string;
   generatedAt:     string;
   greeting:        string;
-  headline:        string;
-  openingMessage:  string;
   momentumState:   BriefingMomentum;
   riskLevel:       BriefingRisk;
-  primaryFocus:    string;
-  complianceBars:  ComplianceBar[];
-  insightBlocks:   InsightBlock[];
-  quickActions:    string[];
+  coachingMessage: CoachingMessage;
+  metrics:         BriefingMetric[];
   sourceSignals:   string[];
 };

@@ -3,16 +3,14 @@
 // ─────────────────────────────────────────────
 // BriefingShell — full-screen Daily Briefing layout
 //
-// Chat-style single-message view.
-// Renders the DailyBriefing payload as the first
-// AI message in a conversation thread.
+// Single coaching message view.
+// Renders the DailyBriefing as a cohesive note
+// from a real coach — greeting, snapshot, insight,
+// guidance, action — with supporting metrics below.
 // ─────────────────────────────────────────────
 
 import { useRouter }       from "next/navigation";
 import type { DailyBriefing, AIFeatureReadiness } from "@/lib/ai/types";
-import { ComplianceBars }  from "./ComplianceBars";
-import { InsightBlockCard } from "./InsightBlockCard";
-import { QuickActionChips } from "./QuickActionChips";
 import { LockedChatInput }  from "./LockedChatInput";
 
 type Props = {
@@ -37,6 +35,12 @@ const momentumLabels: Record<string, string> = {
   steady:    "STEADY",
   declining: "DECLINING",
   at_risk:   "AT RISK",
+};
+
+const metricStatusColors: Record<string, string> = {
+  gold:    "#B8933A",
+  neutral: "#807868",
+  red:     "#7A1E1E",
 };
 
 // ── PULSE logo SVG ─────────────────────────────
@@ -101,8 +105,7 @@ function CriteriaRow({ label, current, required, met }: {
 
 // ── Gated state (not enough data) ──────────────
 
-function GatedBriefing({ briefing, readiness }: Props) {
-  // Count how many of the 3 criteria are met
+function GatedBriefing({ readiness }: { readiness: AIFeatureReadiness }) {
   const metCount = [readiness.memberDaysMet, readiness.taskDaysMet, readiness.metricLogsMet]
     .filter(Boolean).length;
 
@@ -128,7 +131,7 @@ function GatedBriefing({ briefing, readiness }: Props) {
         letterSpacing: "0.12em", color: "#F4EEE4",
         textTransform: "uppercase", margin: 0,
       }}>
-        {briefing.headline}
+        Your AI coach is getting ready
       </h2>
 
       {/* Summary message */}
@@ -242,7 +245,7 @@ export function BriefingShell({ briefing, readiness }: Props) {
 
       {/* ── Body ── */}
       {!readiness.available ? (
-        <GatedBriefing briefing={briefing} readiness={readiness} />
+        <GatedBriefing readiness={readiness} />
       ) : (
         <div style={{
           flex: 1, overflowY: "auto", padding: "0 20px 120px",
@@ -276,12 +279,12 @@ export function BriefingShell({ briefing, readiness }: Props) {
             </div>
           </div>
 
-          {/* Message bubble */}
+          {/* ── Coaching message bubble ── */}
           <div style={{
             background: "#111111", border: "1px solid #252525",
-            borderRadius: "2px 12px 12px 12px", padding: "16px 18px",
+            borderRadius: "2px 12px 12px 12px", padding: "18px 20px",
             marginLeft: 48,
-            display: "flex", flexDirection: "column", gap: 16,
+            display: "flex", flexDirection: "column", gap: 18,
           }}>
             {/* Momentum badge */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -295,37 +298,42 @@ export function BriefingShell({ briefing, readiness }: Props) {
               }}>
                 {momentumLabels[briefing.momentumState] ?? "STEADY"}
               </span>
-              <span style={{
-                fontFamily: cinzel, fontSize: 7, fontWeight: 700,
-                letterSpacing: "0.15em", textTransform: "uppercase",
-                color: "#807868",
-              }}>
-                {briefing.riskLevel !== "low" && `Risk: ${briefing.riskLevel.toUpperCase()}`}
-              </span>
+              {briefing.riskLevel !== "low" && (
+                <span style={{
+                  fontFamily: cinzel, fontSize: 7, fontWeight: 700,
+                  letterSpacing: "0.15em", textTransform: "uppercase",
+                  color: "#807868",
+                }}>
+                  Risk: {briefing.riskLevel.toUpperCase()}
+                </span>
+              )}
             </div>
 
-            {/* Headline */}
-            <h1 style={{
-              fontFamily: garamond, fontSize: 20, fontWeight: 500,
-              color: "#F4EEE4", margin: 0, lineHeight: 1.3,
+            {/* Snapshot */}
+            <p style={{
+              fontFamily: garamond, fontSize: 16, color: "#F4EEE4",
+              margin: 0, lineHeight: 1.5,
             }}>
-              {briefing.headline}
-            </h1>
+              {briefing.coachingMessage.snapshot}
+            </p>
 
-            {/* Opening message */}
+            {/* Insight */}
+            <p style={{
+              fontFamily: garamond, fontSize: 15, color: "#B8B0A0",
+              margin: 0, lineHeight: 1.5, fontStyle: "italic",
+            }}>
+              {briefing.coachingMessage.insight}
+            </p>
+
+            {/* Guidance */}
             <p style={{
               fontFamily: garamond, fontSize: 15, color: "#B8B0A0",
               margin: 0, lineHeight: 1.5,
             }}>
-              {briefing.openingMessage}
+              {briefing.coachingMessage.guidance}
             </p>
 
-            {/* Compliance bars */}
-            {briefing.complianceBars.length > 0 && (
-              <ComplianceBars bars={briefing.complianceBars} />
-            )}
-
-            {/* Primary focus */}
+            {/* Action */}
             <div style={{
               borderTop: "1px solid #1E1E1E", paddingTop: 14,
             }}>
@@ -334,44 +342,47 @@ export function BriefingShell({ briefing, readiness }: Props) {
                 letterSpacing: "0.2em", color: "#4A3F2A",
                 textTransform: "uppercase", marginBottom: 6,
               }}>
-                Focus Today
+                Today&#39;s Focus
               </p>
               <p style={{
                 fontFamily: garamond, fontSize: 15, color: "#D4A84B",
                 margin: 0, fontStyle: "italic",
               }}>
-                {briefing.primaryFocus}
+                {briefing.coachingMessage.action}
               </p>
             </div>
           </div>
 
-          {/* Insight blocks */}
-          {briefing.insightBlocks.length > 0 && (
-            <div style={{ marginTop: 16, marginLeft: 48, display: "flex", flexDirection: "column", gap: 10 }}>
-              <p style={{
-                fontFamily: cinzel, fontSize: 7, fontWeight: 700,
-                letterSpacing: "0.2em", color: "#4A3F2A",
-                textTransform: "uppercase", marginBottom: 2,
-              }}>
-                Insights
-              </p>
-              {briefing.insightBlocks.map((block, i) => (
-                <InsightBlockCard key={i} block={block} />
+          {/* ── Supporting metrics ── */}
+          {briefing.metrics.length > 0 && (
+            <div style={{
+              marginTop: 16, marginLeft: 48,
+              display: "grid",
+              gridTemplateColumns: `repeat(${Math.min(briefing.metrics.length, 4)}, 1fr)`,
+              gap: 8,
+            }}>
+              {briefing.metrics.map((metric, i) => (
+                <div key={i} style={{
+                  background: "#111111", border: "1px solid #1E1E1E",
+                  borderRadius: 8, padding: "10px 12px",
+                  textAlign: "center",
+                }}>
+                  <p style={{
+                    fontFamily: cinzel, fontSize: 7, fontWeight: 700,
+                    letterSpacing: "0.12em", color: "#807868",
+                    textTransform: "uppercase", margin: "0 0 4px",
+                  }}>
+                    {metric.label}
+                  </p>
+                  <p style={{
+                    fontFamily: garamond, fontSize: 16, fontWeight: 500,
+                    color: metricStatusColors[metric.status] ?? "#807868",
+                    margin: 0,
+                  }}>
+                    {metric.value}
+                  </p>
+                </div>
               ))}
-            </div>
-          )}
-
-          {/* Quick actions */}
-          {briefing.quickActions.length > 0 && (
-            <div style={{ marginTop: 16, marginLeft: 48 }}>
-              <p style={{
-                fontFamily: cinzel, fontSize: 7, fontWeight: 700,
-                letterSpacing: "0.2em", color: "#4A3F2A",
-                textTransform: "uppercase", marginBottom: 8,
-              }}>
-                Suggested Actions
-              </p>
-              <QuickActionChips actions={briefing.quickActions} />
             </div>
           )}
         </div>

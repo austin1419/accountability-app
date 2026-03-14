@@ -299,9 +299,7 @@ export default async function ClientDashboard({
                   <p style={{
                     fontFamily: "'EB Garamond', serif", fontSize: 12, fontStyle: "italic", color: "#807868", margin: 0,
                   }}>
-                    {briefingReadiness.available
-                      ? "Your AI coach has something to say"
-                      : briefingReadiness.blockedReason}
+                    Your AI coach has something for you.
                   </p>
                 </div>
               </div>

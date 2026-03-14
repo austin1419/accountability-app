@@ -525,7 +525,7 @@ export default function ProgressPage() {
     if (!isEditable(selectedDate)) { setError("This date is read-only."); return; }
     const w = parseFloat(weightInput);
     if (isNaN(w) || w < 50 || w > 500) { setError("Enter a valid weight between 50 and 500 lbs."); return; }
-    const r1 = await insertWeightLog(userId, w, selectedDate);
+    const r1 = await insertWeightLog(userId, goalId!, w, selectedDate);
     if (r1.error) { setError(r1.error); return; }
     // Re-fetch full log — sorted by logged_at ASC — then use the LATEST entry
     // to update current_weight. This prevents backfilling an older date from

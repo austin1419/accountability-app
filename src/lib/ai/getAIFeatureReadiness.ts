@@ -38,30 +38,32 @@ import type {
 /**
  * Minimum calendar days since account creation.
  *
- * Rationale: prevents the briefing from activating on day 1-2
+ * Rationale: prevents the briefing from activating on day 1
  * even if a power user logs aggressively. The signal engine
  * needs time-spread data to compute meaningful compliance
  * trajectories and streak patterns.
  */
-const MIN_MEMBER_DAYS = 10;
+const MIN_MEMBER_DAYS = 7;
 
 /**
  * Minimum distinct days with at least 1 task log entry.
  *
- * Rationale: 5 task days gives the compliance and adherence
- * signals enough history to compute non-trivial patterns.
+ * Rationale: 3 task days gives the compliance and adherence
+ * signals enough history to compute basic patterns.
  * A task day counts even if only partially completed.
  */
-const MIN_TASK_DAYS = 5;
+const MIN_TASK_DAYS = 3;
 
 /**
  * Minimum distinct dates with a weight OR progress-metric entry.
  *
- * Rationale: 5 metric logs give the trend engine enough data
- * points for velocity estimates and plateau detection.
+ * Rationale: 3 metric logs give the trend engine enough data
+ * points for initial velocity estimates.
  * Weight logs and progress logs both count toward this threshold.
+ * Scoped to the active goal — starting values on the goal row
+ * do NOT count.
  */
-const MIN_METRIC_LOGS = 5;
+const MIN_METRIC_LOGS = 3;
 
 // ═══════════════════════════════════════════════
 // HELPERS

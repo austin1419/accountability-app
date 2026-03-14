@@ -200,12 +200,12 @@ export async function fetchWeightLog(userId: string, goalId: string): Promise<We
 // ── insertWeightLog ────────────────────────────
 // Saves a weight entry for the given date. Upserts so logging twice in a day
 // replaces rather than duplicates (matches the unique index on user_id + logged_at).
-// The caller passes the date from DateContext.
-export async function insertWeightLog(userId: string, weight: number, date: string): Promise<{ error?: string }> {
+// The caller passes the date from DateContext and the active goal_id.
+export async function insertWeightLog(userId: string, goalId: string, weight: number, date: string): Promise<{ error?: string }> {
   const { error } = await supabase
     .from("weight_logs")
     .upsert(
-      { user_id: userId, weight, logged_at: date },
+      { user_id: userId, goal_id: goalId, weight, logged_at: date },
       { onConflict: "user_id,logged_at" },
     );
 
