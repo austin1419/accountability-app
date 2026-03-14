@@ -19,6 +19,7 @@ import { fetchDashboard, fetchStatusScore } from "@/lib/server-queries";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }     from "@/lib/supabase-admin";
 import { COMPLIANCE_TARGET }    from "@/lib/constants/thresholds";
+import { AboutPulseButton }     from "@/components/AboutPulseModal";
 
 // Always render fresh from the server — required so searchParams-driven
 // date navigation actually re-fetches Supabase data on each navigation.
@@ -105,14 +106,16 @@ export default async function ClientDashboard({
               {clientName}
             </h1>
           </div>
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 flex-shrink-0">
-            <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
-            <polyline
-              style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
-              points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
-              stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
-            />
-          </svg>
+          <AboutPulseButton>
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" width={26} height={26}>
+              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
+              <polyline
+                style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
+                points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
+                stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          </AboutPulseButton>
         </div>
         {/* Date navigation — step through days or open calendar */}
         <DateSync date={selectedDate} />
