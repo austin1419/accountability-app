@@ -154,11 +154,11 @@ export function AboutPulseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 { name: "LABOR",   desc: "Training & Activity",     verse: "Prov. 14:23" },
                 { name: "NOURISH", desc: "Nutrition & Fueling",      verse: "1 Tim. 4:6"  },
                 { name: "SABBATH", desc: "Sleep & Recovery",         verse: "Ps. 127:2"   },
-                { name: "TEND",    desc: "Supplements & Daily Care", verse: "Prov. 4:23"  },
+                { name: "TEND",    desc: "Supplements & Care",       verse: "Prov. 4:23"  },
               ].map((p) => (
                 <div key={p.name} style={{ background: "#141414", border: "1px solid #252525", borderRadius: 8, padding: "14px 14px 12px" }}>
                   <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: "#B8933A", display: "block", marginBottom: 3 }}>{p.name}</span>
-                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 13, color: "#807868", display: "block", marginBottom: 6, lineHeight: 1.4 }}>{p.desc}</span>
+                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#807868", display: "block", marginBottom: 6, lineHeight: 1.4, whiteSpace: "nowrap" }}>{p.desc}</span>
                   <span style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: "0.1em", color: "#3A3020", display: "block" }}>{p.verse}</span>
                 </div>
               ))}

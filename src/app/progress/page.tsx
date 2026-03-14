@@ -81,7 +81,7 @@ function MetricChart({
             stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8}
           />
           {goalLabel && (
-            <text x={SVG_W - PAD_R} y={toY(goalValue) - 4} fontSize={9} fill="#C9A44A" textAnchor="end">
+            <text x={SVG_W - PAD_R} y={toY(goalValue) + 12} fontSize={9} fill="#C9A44A" textAnchor="end">
               {goalLabel}
             </text>
           )}
@@ -281,7 +281,7 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
       <line x1={PAD_L} y1={goalY} x2={SVG_W - PAD_R} y2={goalY}
         stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8} />
-      <text x={SVG_W - PAD_R} y={goalY - 4} fontSize={9} fill="#C9A44A" textAnchor="end">
+      <text x={SVG_W - PAD_R} y={goalY + 12} fontSize={9} fill="#C9A44A" textAnchor="end">
         Goal {goalWeight} lbs
       </text>
       <polyline points={points} fill="none" stroke="#B8933A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
@@ -593,9 +593,9 @@ export default function ProgressPage() {
               { label: "Starting", value: startWeight   != null ? `${startWeight} lbs`          : "—", color: "text-[#9A9080]" },
               { label: "Current",  value: currentWeight != null ? `${currentWeight} lbs`         : "—", color: "text-[#DDD5C0]" },
               { label: "Improved", value: improved      != null ? `${improved.toFixed(1)} lbs`   : "—", color: "text-[#B8933A]" },
-              { label: "To Goal",  value: stillToGo     != null ? `${stillToGo.toFixed(1)} lbs`  : "—", color: "text-[#9A9080]" },
+              { label: "Remaining",  value: stillToGo     != null ? `${stillToGo.toFixed(1)} lbs`  : "—", color: "text-[#9A9080]" },
             ].map((s) => (
-              <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+              <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
                 <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
                 <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
               </div>
@@ -726,9 +726,9 @@ export default function ProgressPage() {
                 { label: "Starting", value: fmtBf(startBf),   color: "text-[#9A9080]" },
                 { label: "Current",  value: fmtBf(currBf),    color: "text-[#DDD5C0]" },
                 { label: "Improved", value: bfImproved != null ? `${bfImproved.toFixed(1)}%`  : "—", color: "text-[#B8933A]" },
-                { label: "To Goal",  value: bfToGoal   != null ? `${bfToGoal.toFixed(1)}%`    : "—", color: "text-[#9A9080]" },
+                { label: "Remaining",  value: bfToGoal   != null ? `${bfToGoal.toFixed(1)}%`    : "—", color: "text-[#9A9080]" },
               ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
                   <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
                   <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
                 </div>
@@ -744,9 +744,9 @@ export default function ProgressPage() {
                 { label: "Starting", value: fmtSmm(startSmm),  color: "text-[#9A9080]" },
                 { label: "Current",  value: fmtSmm(currSmm),   color: "text-[#DDD5C0]" },
                 { label: "Improved", value: smmImproved != null ? `${smmImproved.toFixed(1)} lbs` : "—", color: "text-[#B8933A]" },
-                { label: "To Goal",  value: smmToGoal   != null ? `${smmToGoal.toFixed(1)} lbs`   : "—", color: "text-[#9A9080]" },
+                { label: "Remaining",  value: smmToGoal   != null ? `${smmToGoal.toFixed(1)} lbs`   : "—", color: "text-[#9A9080]" },
               ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
                   <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
                   <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
                 </div>
@@ -861,9 +861,9 @@ export default function ProgressPage() {
                 { label: "Starting", value: fmt(start)   },
                 { label: "Current",  value: fmt(current) },
                 { label: "Improved", value: improved != null ? `+${improved}${unitLabel ? ` ${unitLabel}` : ""}` : "—" },
-                { label: "To Goal",  value: fmt(toGoal)  },
+                { label: "Remaining",  value: fmt(toGoal)  },
               ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center">
+                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
                   <p className="text-sm font-bold text-[#DDD5C0] text-center">{s.value}</p>
                   <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
                 </div>
