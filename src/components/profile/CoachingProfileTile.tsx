@@ -5,23 +5,32 @@
 //
 // Renders title + status label with border/text color
 // driven by the tile's current status.
+// Shows "X / Y answered" for in-progress sections.
 // ─────────────────────────────────────────────
 
 export type TileStatus = "not_started" | "in_progress" | "complete";
 
 interface Props {
-  title:   string;
-  status:  TileStatus;
-  onClick: () => void;
+  title:    string;
+  status:   TileStatus;
+  answered: number;
+  total:    number;
+  onClick:  () => void;
 }
 
-const STATUS_CONFIG: Record<TileStatus, { label: string; color: string; border: string }> = {
-  not_started: { label: "Not Started",  color: "#807868", border: "#2A2A2A" },
-  in_progress: { label: "In Progress",  color: "#B8933A", border: "#B8933A" },
-  complete:    { label: "Complete",      color: "#4CAF50", border: "#4CAF50" },
+const STATUS_CONFIG: Record<TileStatus, { color: string; border: string }> = {
+  not_started: { color: "#807868", border: "#2A2A2A" },
+  in_progress: { color: "#B8933A", border: "#B8933A" },
+  complete:    { color: "#4CAF50", border: "#4CAF50" },
 };
 
-export function CoachingProfileTile({ title, status, onClick }: Props) {
+function statusLabel(status: TileStatus, answered: number, total: number): string {
+  if (status === "not_started") return "Not Started";
+  if (status === "complete")    return "Complete";
+  return `${answered} / ${total} answered`;
+}
+
+export function CoachingProfileTile({ title, status, answered, total, onClick }: Props) {
   const cfg = STATUS_CONFIG[status];
 
   return (
@@ -39,7 +48,7 @@ export function CoachingProfileTile({ title, status, onClick }: Props) {
         {title}
       </p>
       <p className="text-xs font-medium" style={{ color: cfg.color }}>
-        {cfg.label}
+        {statusLabel(status, answered, total)}
       </p>
     </button>
   );

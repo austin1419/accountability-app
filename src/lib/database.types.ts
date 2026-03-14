@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      coaching_profile_answers: {
+        Row: {
+          id: string
+          user_id: string
+          section_key: string
+          question_key: string
+          answer_value_json: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          section_key: string
+          question_key: string
+          answer_value_json: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          section_key?: string
+          question_key?: string
+          answer_value_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_profile_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notes: {
         Row: {
           client_id: string

@@ -3,31 +3,83 @@
 // ─────────────────────────────────────────────
 // CoachingProfilePanel — 8-tile coaching intake grid
 //
-// Visual shell only. Tile statuses are hardcoded for
-// design review. Will be driven by DB state in a future pass.
+// Computes tile statuses from saved coaching_profile_answers.
+// Complete = ALL questions in the section answered.
 // ─────────────────────────────────────────────
 
-import { useState } from "react";
-import { CoachingProfileTile, type TileStatus } from "./CoachingProfileTile";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { SECTION_CONFIGS } from "@/lib/coachingProfile/questionConfig";
+import { fetchAllCoachingAnswers } from "@/lib/coachingProfile/queries";
+import type { TileStatus, SavedAnswers } from "@/lib/coachingProfile/types";
+import { CoachingProfileTile } from "./CoachingProfileTile";
 import { CoachingProfileModal } from "./CoachingProfileModal";
 
-type Section = { title: string; status: TileStatus };
+export type TileProgress = {
+  status:   TileStatus;
+  answered: number;
+  total:    number;
+};
 
-const SECTIONS: Section[] = [
-  { title: "Identity & Life Context",   status: "not_started" },
-  { title: "Health History",             status: "not_started" },
-  { title: "Training Background",        status: "not_started" },
-  { title: "Nutrition Habits",           status: "in_progress" },
-  { title: "Lifestyle & Recovery",       status: "in_progress" },
-  { title: "Goals & Vision",             status: "complete" },
-  { title: "Mindset & Accountability",   status: "complete" },
-  { title: "Spirit & New Beginnings",    status: "complete" },
-];
+function isNonEmpty(v: unknown): boolean {
+  if (v === null || v === undefined || v === "") return false;
+  if (Array.isArray(v) && v.length === 0) return false;
+  return true;
+}
+
+export function computeTileProgress(
+  sectionKey: string,
+  sectionAnswers: SavedAnswers | undefined,
+): TileProgress {
+  const config = SECTION_CONFIGS.find((s) => s.sectionKey === sectionKey);
+  if (!config || config.questions.length === 0) {
+    return { status: "not_started", answered: 0, total: 0 };
+  }
+
+  const total = config.questions.length;
+  if (!sectionAnswers) return { status: "not_started", answered: 0, total };
+
+  const answered = config.questions.filter(
+    (q) => isNonEmpty(sectionAnswers[q.questionKey]),
+  ).length;
+
+  if (answered === 0)    return { status: "not_started", answered, total };
+  if (answered >= total) return { status: "complete",    answered, total };
+  return { status: "in_progress", answered, total };
+}
 
 export function CoachingProfilePanel() {
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [allAnswers, setAllAnswers] = useState<Record<string, SavedAnswers>>({});
 
-  const completed = SECTIONS.filter((s) => s.status === "complete").length;
+  // Resolve userId on mount
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+      if (profile) setUserId(profile.id);
+    }
+    init();
+  }, []);
+
+  // Load all answers when userId is available
+  const loadAnswers = useCallback(async () => {
+    if (!userId) return;
+    const data = await fetchAllCoachingAnswers(userId);
+    setAllAnswers(data);
+  }, [userId]);
+
+  useEffect(() => { loadAnswers(); }, [loadAnswers]);
+
+  const completed = SECTION_CONFIGS.filter(
+    (s) => computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]).status === "complete",
+  ).length;
 
   return (
     <>
@@ -40,26 +92,33 @@ export function CoachingProfilePanel() {
             Coaching Profile
           </p>
           <p className="text-xs text-[#9A9080]">
-            <span className="font-semibold text-[#DDD5C0]">{completed}</span> / {SECTIONS.length} complete
+            <span className="font-semibold text-[#DDD5C0]">{completed}</span> / {SECTION_CONFIGS.length} complete
           </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SECTIONS.map((s) => (
-            <CoachingProfileTile
-              key={s.title}
-              title={s.title}
-              status={s.status}
-              onClick={() => setOpenSection(s.title)}
-            />
-          ))}
+          {SECTION_CONFIGS.map((s) => {
+            const progress = computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]);
+            return (
+              <CoachingProfileTile
+                key={s.sectionKey}
+                title={s.title}
+                status={progress.status}
+                answered={progress.answered}
+                total={progress.total}
+                onClick={() => setOpenSection(s.title)}
+              />
+            );
+          })}
         </div>
       </section>
 
-      {openSection && (
+      {openSection && userId && (
         <CoachingProfileModal
           title={openSection}
+          userId={userId}
           onClose={() => setOpenSection(null)}
+          onSaved={loadAnswers}
         />
       )}
     </>

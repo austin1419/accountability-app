@@ -1,44 +1,62 @@
 "use client";
 
 // ─────────────────────────────────────────────
-// CoachingProfileModal — placeholder modal
+// CoachingProfileModal — section form modal
 //
-// Displays the section title with a placeholder message.
-// Will house the intake form in a future pass.
+// If the section has questions defined in the config,
+// renders the dynamic form. Otherwise shows a placeholder.
 // ─────────────────────────────────────────────
 
+import { getSectionByTitle } from "@/lib/coachingProfile/questionConfig";
+import { CoachingProfileForm } from "./CoachingProfileForm";
+
 interface Props {
-  title: string;
+  title:   string;
+  userId:  string;
   onClose: () => void;
+  onSaved: () => void;
 }
 
-export function CoachingProfileModal({ title, onClose }: Props) {
+export function CoachingProfileModal({ title, userId, onClose, onSaved }: Props) {
+  const config = getSectionByTitle(title);
+  const hasQuestions = config && config.questions.length > 0;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
       onClick={onClose}
     >
       <div
-        className="bg-[#1B1B1B] border border-[#2A2A2A] rounded-lg w-full max-w-md p-6 shadow-xl"
+        className="bg-[#1B1B1B] border border-[#2A2A2A] rounded-lg w-full max-w-md max-h-[85vh] overflow-y-auto p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2
-          className="text-lg text-white mb-4"
+          className="text-lg text-white mb-5"
           style={{ fontFamily: "'Cormorant Garamond', serif" }}
         >
           {title}
         </h2>
 
-        <p className="text-sm text-[#807868]">
-          Coaching profile form will appear here.
-        </p>
-
-        <button
-          onClick={onClose}
-          className="mt-6 w-full py-2.5 rounded bg-[#252525] text-sm text-[#DDD5C0] hover:bg-[#2A2A2A] transition-colors"
-        >
-          Close
-        </button>
+        {hasQuestions ? (
+          <CoachingProfileForm
+            userId={userId}
+            config={config}
+            onClose={onClose}
+            onSaved={onSaved}
+          />
+        ) : (
+          <>
+            <p className="text-sm text-[#807868]">
+              Coaching profile form will appear here.
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-6 w-full py-2.5 rounded bg-[#252525] text-sm text-[#DDD5C0] hover:bg-[#2A2A2A] transition-colors"
+            >
+              Close
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
