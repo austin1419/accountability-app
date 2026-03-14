@@ -7,6 +7,7 @@
 // No loading spinners, no useEffect, no useState needed here.
 // ─────────────────────────────────────────────
 
+import React                     from "react";
 import { redirect }              from "next/navigation";
 import { LinkCard }              from "@/components/LinkCard";
 import { BottomNav }             from "@/components/BottomNav";
@@ -131,10 +132,15 @@ export default async function ClientDashboard({
       ];
     }
     if (goal.goal_category === "body_composition") {
+      const currentBF  = goal.current_body_fat  ?? goal.starting_body_fat;
+      const currentSMM = goal.current_smm       ?? goal.starting_smm;
       return [
         { label: "Starting BF", value: goal.starting_body_fat != null ? `${goal.starting_body_fat}%` : "—", gold: false },
-        { label: "Current BF",  value: goal.current_body_fat != null ? `${goal.current_body_fat}%` : "—", gold: false },
+        { label: "Current BF",  value: currentBF != null ? `${currentBF}%` : "—", gold: false },
         { label: "Goal BF",     value: goal.goal_body_fat != null ? `${goal.goal_body_fat}%` : "—", gold: true },
+        { label: "Starting SMM", value: goal.starting_smm != null ? `${goal.starting_smm} lbs` : "—", gold: false },
+        { label: "Current SMM",  value: currentSMM != null ? `${currentSMM} lbs` : "—", gold: false },
+        { label: "Goal SMM",     value: goal.goal_smm != null ? `${goal.goal_smm} lbs` : "—", gold: true },
       ];
     }
     // performance
@@ -363,20 +369,33 @@ export default async function ClientDashboard({
                   {/* Stats column */}
                   <div style={{
                     flex: 1, paddingLeft: 20, borderLeft: "1px solid #252525",
-                    display: "flex", flexDirection: "column", justifyContent: "center", gap: 14,
+                    display: "flex", flexDirection: "column", justifyContent: "center",
+                    gap: progressStats.length > 3 ? 6 : 14,
                   }}>
-                    {progressStats.map((s) => (
-                      <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic", fontSize: 12, color: "#807868" }}>
-                          {s.label}
-                        </span>
-                        <span style={{
-                          fontFamily: "'EB Garamond', serif", fontSize: 20, fontWeight: 600,
-                          color: s.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
-                        }}>
-                          {s.value}
-                        </span>
-                      </div>
+                    {progressStats.map((s, i) => (
+                      <React.Fragment key={s.label}>
+                        {/* Divider between BF and SMM groups */}
+                        {progressStats.length > 3 && i === 3 && (
+                          <div style={{ height: 1, background: "#252525", margin: "4px 0" }} />
+                        )}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                          <span style={{
+                            fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+                            fontSize: progressStats.length > 3 ? 11 : 12,
+                            color: "#807868",
+                          }}>
+                            {s.label}
+                          </span>
+                          <span style={{
+                            fontFamily: "'EB Garamond', serif",
+                            fontSize: progressStats.length > 3 ? 17 : 20,
+                            fontWeight: 600,
+                            color: s.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
+                          }}>
+                            {s.value}
+                          </span>
+                        </div>
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>

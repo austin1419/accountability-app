@@ -82,7 +82,7 @@ export async function upsertTaskLog(
 export async function fetchGoalData(userId: string) {
   const { data, error } = await supabase
     .from("goals")
-    .select("id, goal_name, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
+    .select("id, created_at, goal_name, goal_category, start_weight, goal_weight, current_weight, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value")
     .eq("user_id", userId)
     .eq("is_active", true)
     .maybeSingle();

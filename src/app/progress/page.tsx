@@ -461,6 +461,7 @@ export default function ProgressPage() {
 
   const [goalData, setGoalData] = useState<{
     id:                       string;
+    created_at:               string;
     goal_name:                string | null;
     goal_category:            string;
     start_weight:             number | null;
@@ -500,7 +501,18 @@ export default function ProgressPage() {
         setGoalId(data.id);
 
         if (data.goal_category === "weight") {
-          fetchWeightLog(profile.id, data.id).then(setWeightLog);
+          fetchWeightLog(profile.id, data.id).then((log) => {
+            if (log.length === 0 && data.start_weight != null) {
+              const goalDate = data.created_at.slice(0, 10);
+              setWeightLog([{
+                week: "Starting Weight",
+                weight: data.start_weight,
+                logged_at: goalDate,
+              }]);
+            } else {
+              setWeightLog(log);
+            }
+          });
         } else {
           fetchProgressLog(profile.id, data.id).then(setProgressLog);
         }
