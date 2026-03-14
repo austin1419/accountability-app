@@ -8,8 +8,6 @@
 // ─────────────────────────────────────────────
 
 import { redirect }              from "next/navigation";
-import { ProgressRing }          from "@/components/ProgressRing";
-import { ProgressTowardGoal }    from "@/components/ProgressTowardGoal";
 import { LinkCard }              from "@/components/LinkCard";
 import { BottomNav }             from "@/components/BottomNav";
 import { DateHeader }            from "@/components/DateHeader";
@@ -35,6 +33,19 @@ function validateDate(raw: string | undefined, todayStr: string): string {
   if (raw > todayStr) return todayStr; // clamp future dates to today
   return raw;
 }
+
+// Shared inline styles
+const sectionLabel: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+  letterSpacing: "0.2em", color: "#4A3F2A", textTransform: "uppercase",
+  marginBottom: 8,
+};
+const card: React.CSSProperties = {
+  background: "#141414", border: "1px solid #252525", borderRadius: 10,
+};
+const divider: React.CSSProperties = {
+  height: 1, background: "#1A1A1A", margin: "14px 0",
+};
 
 export default async function ClientDashboard({
   searchParams,
@@ -72,229 +83,425 @@ export default async function ClientDashboard({
   } catch (err) {
     console.error("[ClientDashboard] fetchDashboard failed:", err);
     return (
-      <div className="min-h-screen bg-[#111111] flex flex-col items-center justify-center max-w-md mx-auto px-5">
-        <p className="text-[#9A9080] text-sm">Unable to load your dashboard. Please refresh to try again.</p>
+      <div className="min-h-screen bg-[#0D0D0D] flex flex-col items-center justify-center max-w-md mx-auto px-5">
+        <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868" }}>
+          Unable to load your dashboard. Please refresh to try again.
+        </p>
       </div>
     );
   }
 
   const { clientName, goal, today } = data;
 
-  // Short label for the compliance section header when viewing a past date
-  const isToday = selectedDate === todayStr;
-  const shortDateLabel = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
-    month: "short",
-    day:   "numeric",
-  });
+  // ── Derived display values ───────────────────────────────────────
+  const daysLeft = goal?.goal_date
+    ? Math.ceil(
+        (new Date(goal.goal_date + "T00:00:00").getTime() - new Date(selectedDate + "T00:00:00").getTime()) / (1000 * 60 * 60 * 24)
+      )
+    : null;
+
+  const goalProgress = goal?.goalProgress ?? 0;
+  const progressCircumference = 2 * Math.PI * 62; // r=62 → ~389.6
+  const progressOffset = progressCircumference * (1 - goalProgress / 100);
+
+  const complianceCircumference = 2 * Math.PI * 36; // r=36 → ~226.2
+  const complianceOffset = complianceCircumference * (1 - today.percent / 100);
+
+  // Goal category display label
+  const goalCategoryLabel = goal
+    ? goal.goal_category === "weight"
+      ? "Weight"
+      : goal.goal_category === "body_composition"
+      ? "Body Composition"
+      : (goal.performance_metric_name ?? "Performance")
+    : "";
+
+  // Progress stats — adapt to goal category
+  function getProgressStats() {
+    if (!goal) return [];
+    if (goal.goal_category === "weight") {
+      return [
+        { label: "Starting", value: goal.start_weight != null ? `${goal.start_weight} lbs` : "—", gold: false },
+        { label: "Current",  value: goal.current_weight != null ? `${goal.current_weight} lbs` : "—", gold: false },
+        { label: "Goal",     value: goal.goal_weight != null ? `${goal.goal_weight} lbs` : "—", gold: true },
+      ];
+    }
+    if (goal.goal_category === "body_composition") {
+      return [
+        { label: "Starting BF", value: goal.starting_body_fat != null ? `${goal.starting_body_fat}%` : "—", gold: false },
+        { label: "Current BF",  value: goal.current_body_fat != null ? `${goal.current_body_fat}%` : "—", gold: false },
+        { label: "Goal BF",     value: goal.goal_body_fat != null ? `${goal.goal_body_fat}%` : "—", gold: true },
+      ];
+    }
+    // performance
+    const unit = goal.performance_unit ? ` ${goal.performance_unit}` : "";
+    return [
+      { label: "Starting", value: goal.starting_performance_value != null ? `${goal.starting_performance_value}${unit}` : "—", gold: false },
+      { label: "Current",  value: goal.current_performance_value != null ? `${goal.current_performance_value}${unit}` : "—", gold: false },
+      { label: "Goal",     value: goal.goal_performance_value != null ? `${goal.goal_performance_value}${unit}` : "—", gold: true },
+    ];
+  }
+  const progressStats = getProgressStats();
+
+  // Status badge config
+  const statusCfg: Record<string, { label: string; color: string; border: string }> = {
+    ahead:    { label: "Ahead",    color: "#4CAF50", border: "#4CAF50" },
+    on_track: { label: "On Track", color: "#B8933A", border: "#B8933A" },
+    behind:   { label: "Behind",   color: "#7A1E1E", border: "#7A1E1E" },
+    no_data:  { label: "No Data",  color: "#807868", border: "#807868" },
+  };
+  const statusBadge = statusCfg[statusScore.progressStatus] ?? statusCfg.no_data;
+
+  // Compliance conditional message
+  const complianceMessage =
+    today.percent === 100
+      ? { text: "Well done", color: "#B8933A" }
+      : today.percent >= COMPLIANCE_TARGET
+      ? { text: "On target", color: "#B8933A" }
+      : { text: "Finish what you started.", color: "#807868" };
 
   return (
-    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col max-w-md mx-auto">
 
       <SplashScreen />
 
       {/* ── Header ───────────────────────────────── */}
-      <header className="bg-[#0D0D0D] pt-10 border-b border-[#252525]">
-        <div className="flex items-center justify-between px-5 pb-3">
+      <header style={{ padding: "40px 20px 14px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          {/* Left — welcome + name */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-0.5" style={{ fontFamily: "'Cinzel', serif" }}>
+            <p style={{
+              fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: "0.18em",
+              color: "#B8933A", textTransform: "uppercase", marginBottom: 3,
+            }}>
               Welcome,
             </p>
-            <h1
-              className="text-2xl text-[#F4EEE4] tracking-wide"
-              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-            >
+            <h1 style={{
+              fontFamily: "'EB Garamond', serif", fontSize: 30, fontWeight: 600,
+              color: "#F4EEE4", lineHeight: 1.05, margin: 0,
+            }}>
               {clientName}
             </h1>
           </div>
+          {/* Right — PULSE logo button */}
           <AboutPulseButton>
-            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" width={26} height={26}>
-              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4} />
+            <svg viewBox="0 0 100 100" fill="none" width={24} height={24}>
+              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={2.5} fill="none" opacity={0.5} />
               <polyline
-                style={{ filter: "drop-shadow(0 0 3px rgba(184,147,58,0.8))" }}
-                points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
-                stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+                points="14,50 24,50 28,50 32,36 36,64 40,50 45,50 50,24 55,50 60,50 64,41 68,59 72,50 76,50 86,50"
+                stroke="#B8933A" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round"
               />
+              <circle cx="50" cy="50" r="4" fill="#B8933A" />
             </svg>
           </AboutPulseButton>
         </div>
-        {/* Date navigation — step through days or open calendar */}
-        <DateSync date={selectedDate} />
-        <DateHeader userId={profile.id} />
       </header>
 
-      {/* ── Scrollable content ───────────────────── */}
-      <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+      {/* ── Date navigation ─────────────────────── */}
+      <DateSync date={selectedDate} />
+      <DateHeader userId={profile.id} />
 
-        {/* ── Goal Card ────────────────────────────── */}
-        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-            Your Goal
-          </p>
-          {goal ? (
-            <div className="flex items-stretch justify-between gap-4">
-              <div className="flex flex-col justify-center min-w-0">
-                <p className="text-[10px] uppercase tracking-widest text-[#B8933A] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                  {goal.goal_category === "weight"
-                    ? "Weight"
-                    : goal.goal_category === "body_composition"
-                    ? "Body Composition"
-                    : (goal.performance_metric_name ?? "Performance")}
+      {/* ── Scrollable content ───────────────────── */}
+      <main style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
+
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── GOAL CARD ── */}
+        <p style={sectionLabel}>Your Goal</p>
+        {goal ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ ...card, padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Left */}
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{
+                  fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: "0.18em",
+                  color: "#807868", textTransform: "uppercase", marginBottom: 4,
+                }}>
+                  Your Goal
                 </p>
-                <p className="text-base font-semibold text-[#DDD5C0] leading-snug">{goal.goal_name}</p>
+                <p style={{
+                  fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: "0.15em",
+                  color: "#B8933A", textTransform: "uppercase", marginBottom: 4,
+                }}>
+                  {goalCategoryLabel}
+                </p>
+                <p style={{
+                  fontFamily: "'EB Garamond', serif", fontSize: 22, fontWeight: 600,
+                  color: "#F4EEE4", marginBottom: 3, lineHeight: 1.15,
+                }}>
+                  {goal.goal_name}
+                </p>
                 {goal.goal_date && (
-                  <p className="text-xs text-[#9A9080] mt-1">
+                  <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 13, color: "#807868" }}>
                     {new Date(goal.goal_date + "T00:00:00").toLocaleDateString("en-US", {
                       month: "short", day: "numeric", year: "numeric",
                     })}
                   </p>
                 )}
               </div>
-              {goal.goal_date && (() => {
-                const daysLeft = Math.ceil(
-                  (new Date(goal.goal_date + "T00:00:00").getTime() - new Date(selectedDate + "T00:00:00").getTime()) / (1000 * 60 * 60 * 24)
-                );
-                if (daysLeft < 0) return null;
-                return (
-                  <div
-                    className="flex flex-col items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 72,
-                      minHeight: 72,
-                      borderRadius: 8,
-                      border: "1.5px solid #3A3020",
-                      background: "rgba(184,147,58,0.03)",
-                    }}
-                  >
-                    <span
-                      className="text-[#D4A84B] leading-none"
-                      style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 24 }}
-                    >
-                      {daysLeft}
-                    </span>
-                    <span
-                      className="text-[#807868] uppercase mt-1"
-                      style={{ fontFamily: "'EB Garamond', serif", fontSize: 10, letterSpacing: "0.08em" }}
-                    >
-                      days left
-                    </span>
-                  </div>
-                );
-              })()}
+              {/* Right — days left badge */}
+              {daysLeft != null && daysLeft >= 0 && (
+                <div style={{
+                  minWidth: 70, height: 70, borderRadius: 8,
+                  border: "1.5px solid #3A3020", background: "rgba(184,147,58,0.03)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <span style={{
+                    fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 26,
+                    color: "#D4A84B", lineHeight: 1,
+                  }}>
+                    {daysLeft}
+                  </span>
+                  <span style={{
+                    fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: "0.12em",
+                    color: "#807868", textTransform: "uppercase", marginTop: 3,
+                  }}>
+                    Days Left
+                  </span>
+                </div>
+              )}
             </div>
-          ) : (
-            <p className="text-sm text-[#9A9080]">No goal set yet.</p>
-          )}
-        </section>
 
-        {/* ── Progress Toward Goal ─────────────────── */}
-        {goal && (
-          <LinkCard href="/progress">
-            <ProgressTowardGoal goal={goal} />
-          </LinkCard>
+            {/* ── DAILY BRIEFING TILE ── */}
+            <div
+              style={{
+                background: "#111111", border: "1px solid #2A2A1A", borderRadius: 10,
+                padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}
+            >
+              {/* Left */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: "rgba(184,147,58,0.08)", border: "1px solid #3A3020",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg viewBox="0 0 100 100" fill="none" width={20} height={20}>
+                    <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={3} fill="none" opacity={0.5} />
+                    <polyline points="14,50 24,50 28,50 32,36 36,64 40,50 45,50 50,24 55,50 60,50 64,41 68,59 72,50 76,50 86,50" stroke="#B8933A" strokeWidth={4} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="50" cy="50" r="5" fill="#B8933A" />
+                  </svg>
+                </div>
+                <div>
+                  <p style={{
+                    fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 10,
+                    letterSpacing: "0.15em", color: "#F4EEE4", textTransform: "uppercase", marginBottom: 3,
+                  }}>
+                    Daily Briefing
+                  </p>
+                  <p style={{
+                    fontFamily: "'EB Garamond', serif", fontSize: 12, fontStyle: "italic", color: "#807868", margin: 0,
+                  }}>
+                    Your AI coach has something to say
+                  </p>
+                </div>
+              </div>
+              {/* Right — coming soon badge */}
+              <span style={{
+                fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700,
+                letterSpacing: "0.15em", color: "#B8933A", textTransform: "uppercase",
+                background: "rgba(184,147,58,0.08)", border: "1px solid #3A3020",
+                borderRadius: 3, padding: "3px 8px", whiteSpace: "nowrap",
+              }}>
+                Coming Soon
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div style={{ ...card, padding: 16 }}>
+            <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868" }}>
+              No goal set yet.
+            </p>
+          </div>
         )}
 
-        {/* ── Today's Compliance ───────────────────── */}
-        <LinkCard href="/tasks">
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-              {isToday ? "Today\u2019s Compliance" : `${shortDateLabel} Compliance`}
-            </p>
-            {today.total === 0 ? (
-              <p className="text-sm text-[#807868] italic">Add habits to begin tracking</p>
-            ) : (
-              <div className="flex items-center gap-5">
-                <div className="relative flex items-center justify-center flex-shrink-0">
-                  <ProgressRing
-                    percent={today.percent}
-                    color={today.percent >= COMPLIANCE_TARGET ? "#B8933A" : "#7A1E1E"}
-                  />
-                  <div className="absolute flex flex-col items-center">
-                    <span className="text-2xl font-bold text-[#DDD5C0]">{today.percent}%</span>
-                    <span className="text-xs text-[#9A9080]">done</span>
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── PROGRESS TOWARD GOAL ── */}
+        {goal && (
+          <>
+            <p style={sectionLabel}>Progress Toward Goal</p>
+            <LinkCard href="/progress">
+              <section style={{ ...card, overflow: "hidden" }}>
+                {/* Body */}
+                <div style={{ display: "flex", alignItems: "center", padding: 16 }}>
+                  {/* Ring column */}
+                  <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+                    <div style={{ position: "relative", width: 148, height: 148 }}>
+                      <svg width={148} height={148} viewBox="0 0 148 148">
+                        <circle cx={74} cy={74} r={62} stroke="#252525" strokeWidth={9} fill="none" />
+                        <circle
+                          cx={74} cy={74} r={62}
+                          stroke="#B8933A" strokeWidth={9} fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={progressCircumference}
+                          strokeDashoffset={progressOffset}
+                          transform="rotate(-90 74 74)"
+                          style={{ transition: "stroke-dashoffset 0.5s ease" }}
+                        />
+                      </svg>
+                      <div style={{
+                        position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+                        alignItems: "center", justifyContent: "center",
+                      }}>
+                        <span style={{
+                          fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 30,
+                          color: "#F4EEE4", lineHeight: 1,
+                        }}>
+                          {goalProgress}%
+                        </span>
+                        <span style={{
+                          fontFamily: "'EB Garamond', serif", fontStyle: "italic", fontSize: 13,
+                          color: "#807868", marginTop: 3,
+                        }}>
+                          complete
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Stats column */}
+                  <div style={{
+                    flex: 1, paddingLeft: 20, borderLeft: "1px solid #252525",
+                    display: "flex", flexDirection: "column", justifyContent: "center", gap: 14,
+                  }}>
+                    {progressStats.map((s) => (
+                      <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <span style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic", fontSize: 12, color: "#807868" }}>
+                          {s.label}
+                        </span>
+                        <span style={{
+                          fontFamily: "'EB Garamond', serif", fontSize: 20, fontWeight: 600,
+                          color: s.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
+                        }}>
+                          {s.value}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm text-[#9A9080]">
-                    <strong className="text-[#DDD5C0]">{today.completed}</strong> of{" "}
-                    <strong className="text-[#DDD5C0]">{today.total}</strong> tasks complete
+              </section>
+            </LinkCard>
+
+            <div style={divider} />
+          </>
+        )}
+
+        {/* ── TODAY'S COMPLIANCE ── */}
+        <p style={sectionLabel}>Today&apos;s Compliance</p>
+        <LinkCard href="/tasks">
+          <section style={{ ...card, padding: 16, display: "flex", alignItems: "center" }}>
+            {/* Left */}
+            <div style={{ flex: 1, paddingRight: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+              <p style={{
+                fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 10,
+                letterSpacing: "0.15em", color: "#F4EEE4", textTransform: "uppercase", margin: 0,
+              }}>
+                Today&apos;s Compliance
+              </p>
+              {today.total === 0 ? (
+                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868", fontStyle: "italic" }}>
+                  Add habits to begin tracking
+                </p>
+              ) : (
+                <>
+                  <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868", margin: 0 }}>
+                    {today.completed} of {today.total} tasks complete
                   </p>
-                  <p className="text-xs text-[#807868] mt-1">Target: 70% or better</p>
-                  <p className={`text-xs font-semibold mt-2 ${
-                    today.percent === 100
-                      ? "text-[#4CAF50]"
-                      : today.percent >= COMPLIANCE_TARGET
-                      ? "text-[#B8933A]"
-                      : "text-[#7A1E1E]"
-                  }`} style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                    {today.percent === 100
-                      ? "Well done"
-                      : today.percent >= COMPLIANCE_TARGET
-                      ? "Keep working"
-                      : "Needs attention"}
+                  <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, fontStyle: "italic", color: "#4A3F2A", margin: 0 }}>
+                    Target: 70% or better
                   </p>
+                  <p style={{
+                    fontFamily: "'EB Garamond', serif", fontSize: 13, fontStyle: "italic",
+                    color: complianceMessage.color, margin: 0,
+                  }}>
+                    {complianceMessage.text}
+                  </p>
+                </>
+              )}
+            </div>
+            {/* Right — compliance ring */}
+            {today.total > 0 && (
+              <div style={{ flexShrink: 0, position: "relative" }}>
+                <svg width={90} height={90} viewBox="0 0 90 90">
+                  <circle cx={45} cy={45} r={36} stroke="#252525" strokeWidth={7} fill="none" />
+                  <circle
+                    cx={45} cy={45} r={36}
+                    stroke={today.percent >= COMPLIANCE_TARGET ? "#B8933A" : "#7A1E1E"}
+                    strokeWidth={7} fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={complianceCircumference}
+                    strokeDashoffset={complianceOffset}
+                    transform="rotate(-90 45 45)"
+                    style={{ transition: "stroke-dashoffset 0.5s ease" }}
+                  />
+                </svg>
+                <div style={{
+                  position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <span style={{
+                    fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 20,
+                    color: "#B8933A", lineHeight: 1,
+                  }}>
+                    {today.percent}%
+                  </span>
                 </div>
               </div>
             )}
           </section>
         </LinkCard>
 
-        {/* ── Status (powered by status engine) ──── */}
-        <section className="bg-[#141414] rounded p-5 border border-[#252525]" id="status-section">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
-              Status
-            </p>
-            {(() => {
-              const s = statusScore.progressStatus;
-              const cfg: Record<string, { label: string; cls: string }> = {
-                ahead:    { label: "Ahead",    cls: "text-[#4CAF50] border-[#4CAF50]" },
-                on_track: { label: "On Track", cls: "text-[#B8933A] border-[#B8933A]" },
-                behind:   { label: "Behind",   cls: "text-[#7A1E1E] border-[#7A1E1E]" },
-                no_data:  { label: "No Data",  cls: "text-[#807868] border-[#807868]" },
-              };
-              const c = cfg[s] ?? cfg.no_data;
-              return (
-                <span
-                  className={`text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded border ${c.cls}`}
-                  style={{ fontFamily: "'Cinzel', serif" }}
-                >
-                  {c.label}
-                </span>
-              );
-            })()}
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── STATUS ── */}
+        <p style={sectionLabel}>Status</p>
+        <div style={{ ...card, padding: 16 }}>
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{
+              fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+            }}>
+              Overall Standing
+            </span>
+            <span style={{
+              fontFamily: "'Cinzel', serif", fontSize: 8, fontWeight: 700,
+              letterSpacing: "0.15em", color: statusBadge.color, textTransform: "uppercase",
+              border: `1.5px solid ${statusBadge.border}`, borderRadius: 4, padding: "4px 10px",
+            }}>
+              {statusBadge.label}
+            </span>
           </div>
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          {/* Three metrics */}
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
             {[
-              { label: "Compliance", value: today.total === 0 ? "—" : statusScore.complianceScore },
-              { label: "Progress",   value: statusScore.progressScore },
-              { label: "Overall",    value: today.total === 0 ? "—" : statusScore.overallScore },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center">
-                <p className="text-sm font-bold text-[#DDD5C0]">{item.value}</p>
-                <p className="text-[10px] text-[#9A9080] mt-0.5">{item.label}</p>
+              { label: "Compliance", value: today.total === 0 ? "—" : statusScore.complianceScore, gold: false },
+              { label: "Progress",   value: statusScore.progressScore, gold: false },
+              { label: "Overall",    value: today.total === 0 ? "—" : statusScore.overallScore, gold: true },
+            ].map((item, i) => (
+              <div
+                key={item.label}
+                style={{
+                  flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  borderLeft: i > 0 ? "1px solid #1E1E1E" : "none",
+                }}
+              >
+                <span style={{
+                  fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 22, lineHeight: 1,
+                  color: item.gold ? "#B8933A" : "#F4EEE4",
+                }}>
+                  {item.value}
+                </span>
+                <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 11, color: "#807868" }}>
+                  {item.label}
+                </span>
               </div>
             ))}
           </div>
-          <div className="pt-3 border-t border-[#252525]">
-            <p className="text-[10px] uppercase tracking-widest text-[#9A9080] mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
-              Coach Eval
-            </p>
-            <p className="text-sm text-[#807868] italic">Coming Soon</p>
-          </div>
-        </section>
-
-        {/* ── Daily Coaching Note (placeholder) ───── */}
-        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p
-            className="text-xs uppercase tracking-widest text-[#9A9080] mb-3"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
-            Coaching Note
-          </p>
-          <p className="text-sm text-[#807868] italic leading-relaxed">
-            Your coach hasn&apos;t left a note yet.
-          </p>
-        </section>
+        </div>
 
       </main>
 
