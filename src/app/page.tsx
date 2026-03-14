@@ -14,10 +14,12 @@ import { DateHeader }            from "@/components/DateHeader";
 import { DateSync }              from "@/components/DateSync";
 import { SplashScreen }          from "@/components/SplashScreen";
 import { fetchDashboard, fetchStatusScore } from "@/lib/server-queries";
+import { fetchDailyBriefingReadiness } from "@/lib/ai/getAIFeatureReadiness";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }     from "@/lib/supabase-admin";
 import { COMPLIANCE_TARGET }    from "@/lib/constants/thresholds";
 import { AboutPulseButton }     from "@/components/AboutPulseModal";
+import { BriefingButton }      from "@/components/briefing/BriefingButton";
 
 // Always render fresh from the server — required so searchParams-driven
 // date navigation actually re-fetches Supabase data on each navigation.
@@ -75,10 +77,12 @@ export default async function ClientDashboard({
   // ── Fetch dashboard data ─────────────────────────────────────────
   let data: Awaited<ReturnType<typeof fetchDashboard>>;
   let statusScore: Awaited<ReturnType<typeof fetchStatusScore>>;
+  let briefingReadiness: Awaited<ReturnType<typeof fetchDailyBriefingReadiness>>;
   try {
-    [data, statusScore] = await Promise.all([
+    [data, statusScore, briefingReadiness] = await Promise.all([
       fetchDashboard(profile.id, selectedDate),
       fetchStatusScore(profile.id, selectedDate),
+      fetchDailyBriefingReadiness(profile.id),
     ]);
   } catch (err) {
     console.error("[ClientDashboard] fetchDashboard failed:", err);
@@ -269,6 +273,7 @@ export default async function ClientDashboard({
               style={{
                 background: "#111111", border: "1px solid #2A2A1A", borderRadius: 10,
                 padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                opacity: briefingReadiness.available ? 1 : 0.6,
               }}
             >
               {/* Left */}
@@ -294,19 +299,14 @@ export default async function ClientDashboard({
                   <p style={{
                     fontFamily: "'EB Garamond', serif", fontSize: 12, fontStyle: "italic", color: "#807868", margin: 0,
                   }}>
-                    Your AI coach has something to say
+                    {briefingReadiness.available
+                      ? "Your AI coach has something to say"
+                      : briefingReadiness.blockedReason}
                   </p>
                 </div>
               </div>
-              {/* Right — coming soon badge */}
-              <span style={{
-                fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700,
-                letterSpacing: "0.15em", color: "#B8933A", textTransform: "uppercase",
-                background: "rgba(184,147,58,0.08)", border: "1px solid #3A3020",
-                borderRadius: 3, padding: "3px 8px", whiteSpace: "nowrap",
-              }}>
-                Coming Soon
-              </span>
+              {/* Right — action button */}
+              <BriefingButton available={briefingReadiness.available} />
             </div>
           </div>
         ) : (
