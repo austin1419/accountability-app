@@ -500,7 +500,7 @@ export default function ProgressPage() {
         setGoalId(data.id);
 
         if (data.goal_category === "weight") {
-          fetchWeightLog(profile.id).then(setWeightLog);
+          fetchWeightLog(profile.id, data.id).then(setWeightLog);
         } else {
           fetchProgressLog(profile.id, data.id).then(setProgressLog);
         }
@@ -530,7 +530,7 @@ export default function ProgressPage() {
     // Re-fetch full log — sorted by logged_at ASC — then use the LATEST entry
     // to update current_weight. This prevents backfilling an older date from
     // overwriting a newer measurement.
-    const freshLog = await fetchWeightLog(userId);
+    const freshLog = await fetchWeightLog(userId, goalId!);
     setWeightLog(freshLog);
     const latestWeight = freshLog.length > 0 ? freshLog[freshLog.length - 1].weight : w;
     const r2 = await updateCurrentWeight(userId, latestWeight);

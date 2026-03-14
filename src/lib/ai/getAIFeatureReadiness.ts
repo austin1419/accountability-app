@@ -285,16 +285,26 @@ export async function fetchDailyBriefingReadiness(
     timeZone: "America/Chicago",
   }).format(new Date());
 
-  // Run all queries in parallel
-  const [userResult, taskLogResult, weightLogResult, progressLogResult] = await Promise.all([
-    // User creation date
+  // Phase 1: user + active goal (needed to scope metric queries)
+  const [userResult, goalResult] = await Promise.all([
     supabase
       .from("users")
       .select("created_at")
       .eq("id", userId)
       .maybeSingle(),
+    supabase
+      .from("goals")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
 
-    // Distinct task_log dates
+  const goalId = goalResult.data?.id ?? null;
+
+  // Phase 2: count queries — metric logs scoped to active goal
+  const [taskLogResult, weightLogResult, progressLogResult] = await Promise.all([
+    // Distinct task_log dates (user-wide, not goal-scoped)
     supabase
       .from("task_logs")
       .select("date")
@@ -305,27 +315,33 @@ export async function fetchDailyBriefingReadiness(
         return dates;
       }),
 
-    // Distinct weight_log dates
-    supabase
-      .from("weight_logs")
-      .select("logged_at")
-      .eq("user_id", userId)
-      .then((r) => {
-        const dates = new Set<string>();
-        for (const row of r.data ?? []) dates.add(row.logged_at);
-        return dates;
-      }),
+    // Distinct weight_log dates — scoped to active goal
+    goalId
+      ? supabase
+          .from("weight_logs")
+          .select("logged_at")
+          .eq("user_id", userId)
+          .eq("goal_id", goalId)
+          .then((r) => {
+            const dates = new Set<string>();
+            for (const row of r.data ?? []) dates.add(row.logged_at);
+            return dates;
+          })
+      : Promise.resolve(new Set<string>()),
 
-    // Distinct progress_log dates
-    supabase
-      .from("progress_logs")
-      .select("logged_at")
-      .eq("user_id", userId)
-      .then((r) => {
-        const dates = new Set<string>();
-        for (const row of r.data ?? []) dates.add(row.logged_at);
-        return dates;
-      }),
+    // Distinct progress_log dates — scoped to active goal
+    goalId
+      ? supabase
+          .from("progress_logs")
+          .select("logged_at")
+          .eq("user_id", userId)
+          .eq("goal_id", goalId)
+          .then((r) => {
+            const dates = new Set<string>();
+            for (const row of r.data ?? []) dates.add(row.logged_at);
+            return dates;
+          })
+      : Promise.resolve(new Set<string>()),
   ]);
 
   // Membership days
@@ -335,7 +351,7 @@ export async function fetchDailyBriefingReadiness(
   // Task days — exact count from DB
   const taskDays = taskLogResult.size;
 
-  // Metric logs — union of weight + progress log dates
+  // Metric logs — union of weight + progress log dates (both goal-scoped)
   const metricDates = new Set<string>();
   for (const d of weightLogResult)   metricDates.add(d);
   for (const d of progressLogResult) metricDates.add(d);

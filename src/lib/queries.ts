@@ -174,12 +174,14 @@ export async function updateCurrentWeight(userId: string, weight: number): Promi
 
 
 // ── fetchWeightLog ─────────────────────────────
-// Loads all weight entries for a user, oldest first, for the chart + log list.
-export async function fetchWeightLog(userId: string): Promise<WeightEntry[]> {
+// Loads weight entries for a user's active goal, oldest first, for the chart + log list.
+// Scoped to goal_id so only entries belonging to the current goal are returned.
+export async function fetchWeightLog(userId: string, goalId: string): Promise<WeightEntry[]> {
   const { data, error } = await supabase
     .from("weight_logs")
     .select("weight, logged_at")
     .eq("user_id", userId)
+    .eq("goal_id", goalId)
     .order("logged_at", { ascending: true });
 
   if (error) console.error("[fetchWeightLog] failed:", error);
