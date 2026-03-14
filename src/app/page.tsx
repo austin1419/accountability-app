@@ -182,15 +182,19 @@ export default async function ClientDashboard({
                     <strong className="text-[#DDD5C0]">{today.total}</strong> tasks complete
                   </p>
                   <p className="text-xs text-[#807868] mt-1">Target: 70% or better</p>
-                  {today.percent >= 70 ? (
-                    <span className="mt-2 inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                      On track
-                    </span>
-                  ) : (
-                    <span className="mt-2 inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] rounded px-3 py-1" style={{ fontFamily: "'Cinzel', serif" }}>
-                      Needs attention
-                    </span>
-                  )}
+                  <p className={`text-xs font-semibold mt-2 ${
+                    today.percent === 100
+                      ? "text-[#4CAF50]"
+                      : today.percent >= 70
+                      ? "text-[#B8933A]"
+                      : "text-[#7A1E1E]"
+                  }`} style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                    {today.percent === 100
+                      ? "Well done"
+                      : today.percent >= 70
+                      ? "Keep working"
+                      : "Needs attention"}
+                  </p>
                 </div>
               </div>
             )}
@@ -199,9 +203,29 @@ export default async function ClientDashboard({
 
         {/* ── Status (powered by status engine) ──── */}
         <section className="bg-[#141414] rounded p-5 border border-[#252525]" id="status-section">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-            Status
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
+              Status
+            </p>
+            {(() => {
+              const s = statusScore.progressStatus;
+              const cfg: Record<string, { label: string; cls: string }> = {
+                ahead:    { label: "Ahead",    cls: "text-[#4CAF50] border-[#4CAF50]" },
+                on_track: { label: "On Track", cls: "text-[#B8933A] border-[#B8933A]" },
+                behind:   { label: "Behind",   cls: "text-[#7A1E1E] border-[#7A1E1E]" },
+                no_data:  { label: "No Data",  cls: "text-[#807868] border-[#807868]" },
+              };
+              const c = cfg[s] ?? cfg.no_data;
+              return (
+                <span
+                  className={`text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded border ${c.cls}`}
+                  style={{ fontFamily: "'Cinzel', serif" }}
+                >
+                  {c.label}
+                </span>
+              );
+            })()}
+          </div>
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
               { label: "Compliance", value: today.total === 0 ? "—" : statusScore.complianceScore },
