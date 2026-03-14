@@ -1105,7 +1105,7 @@ export const SECTION_CONFIGS: SectionConfig[] = [
         required: false,
       },
       {
-        questionKey: "accountability_style",
+        questionKey: "accountability_support_style",
         label: "What actually helps you follow through?",
         inputType: "multi_select",
         options: [

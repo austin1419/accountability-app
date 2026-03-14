@@ -6,11 +6,14 @@ interface Props {
   onChange:    (v: string) => void;
   multiline?:  boolean;
   helperText?: string;
+  error?:      boolean;
 }
 
-export function TextField({ label, value, onChange, multiline, helperText }: Props) {
+export function TextField({ label, value, onChange, multiline, helperText, error }: Props) {
   const base =
-    "w-full bg-[#141414] border border-[#2A2A2A] rounded px-3 py-2 text-sm text-[#DDD5C0] placeholder-[#555] focus:border-[#B8933A] focus:outline-none transition-colors";
+    `w-full bg-[#141414] border rounded px-3 py-2 text-sm text-[#DDD5C0] placeholder-[#555] focus:border-[#B8933A] focus:outline-none transition-colors ${
+      error ? "border-[#C0392B]" : "border-[#2A2A2A]"
+    }`;
 
   return (
     <label className="block">
@@ -30,6 +33,7 @@ export function TextField({ label, value, onChange, multiline, helperText }: Pro
           onChange={(e) => onChange(e.target.value)}
         />
       )}
+      {error && <span className="block text-xs text-[#C0392B] mt-1">Required</span>}
     </label>
   );
 }

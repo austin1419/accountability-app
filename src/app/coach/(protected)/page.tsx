@@ -11,6 +11,7 @@
 import Link from "next/link";
 import { fetchAllClientsForCoach } from "@/lib/server-queries";
 import type { CoachClientRow } from "@/lib/server-queries";
+import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 
 // Always re-fetch — compliance data changes throughout the day.
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 // ── Helpers ────────────────────────────────────────────────────────
 
 function complianceClass(pct: number): string {
-  if (pct >= 70) return "text-[#B8933A] border border-[#B8933A]";
+  if (pct >= COMPLIANCE_TARGET) return "text-[#B8933A] border border-[#B8933A]";
   if (pct >= 50) return "text-[#C9A44A] border border-[#C9A44A]";
   return "text-[#7A1E1E] border border-[#7A1E1E]";
 }
@@ -151,7 +152,7 @@ export default async function CoachDashboard() {
           <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
             Today&apos;s Avg
           </p>
-          <p className={`text-3xl font-bold ${avgToday >= 70 ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
+          <p className={`text-3xl font-bold ${avgToday >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
             {avgToday}<span className="text-xl font-medium text-[#9A9080]">%</span>
           </p>
         </div>
@@ -161,7 +162,7 @@ export default async function CoachDashboard() {
           <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
             7-Day Avg
           </p>
-          <p className={`text-3xl font-bold ${avgWeek >= 70 ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
+          <p className={`text-3xl font-bold ${avgWeek >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
             {avgWeek}<span className="text-xl font-medium text-[#9A9080]">%</span>
           </p>
         </div>
@@ -171,7 +172,7 @@ export default async function CoachDashboard() {
           <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
             30-Day Avg
           </p>
-          <p className={`text-3xl font-bold ${avgMonth >= 70 ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
+          <p className={`text-3xl font-bold ${avgMonth >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
             {avgMonth}<span className="text-xl font-medium text-[#9A9080]">%</span>
           </p>
         </div>

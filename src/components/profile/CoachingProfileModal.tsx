@@ -3,23 +3,25 @@
 // ─────────────────────────────────────────────
 // CoachingProfileModal — section form modal
 //
+// Uses sectionKey (not display title) for routing.
 // If the section has questions defined in the config,
 // renders the dynamic form. Otherwise shows a placeholder.
 // ─────────────────────────────────────────────
 
-import { getSectionByTitle } from "@/lib/coachingProfile/questionConfig";
+import { getSectionConfig } from "@/lib/coachingProfile/questionConfig";
 import { CoachingProfileForm } from "./CoachingProfileForm";
 
 interface Props {
-  title:   string;
-  userId:  string;
-  onClose: () => void;
-  onSaved: () => void;
+  sectionKey: string;
+  userId:     string;
+  onClose:    () => void;
+  onSaved:    () => void;
 }
 
-export function CoachingProfileModal({ title, userId, onClose, onSaved }: Props) {
-  const config = getSectionByTitle(title);
+export function CoachingProfileModal({ sectionKey, userId, onClose, onSaved }: Props) {
+  const config = getSectionConfig(sectionKey);
   const hasQuestions = config && config.questions.length > 0;
+  const displayTitle = config?.title ?? sectionKey;
 
   return (
     <div
@@ -34,7 +36,7 @@ export function CoachingProfileModal({ title, userId, onClose, onSaved }: Props)
           className="text-lg text-white mb-5"
           style={{ fontFamily: "'Cormorant Garamond', serif" }}
         >
-          {title}
+          {displayTitle}
         </h2>
 
         {hasQuestions ? (

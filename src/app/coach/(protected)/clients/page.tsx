@@ -10,6 +10,7 @@
 
 import Link from "next/link";
 import { fetchAllClientsForCoach, fetchArchivedClientsForCoach } from "@/lib/server-queries";
+import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 import { AddClientModal } from "./AddClientModal";
 import { ArchivedClientList } from "./ArchivedClientList";
 
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 function ComplianceBadge({ pct }: { pct: number }) {
   const cls =
-    pct >= 70 ? "text-[#B8933A] border border-[#B8933A]" :
+    pct >= COMPLIANCE_TARGET ? "text-[#B8933A] border border-[#B8933A]" :
     pct >= 50 ? "text-[#C9A44A] border border-[#C9A44A]" :
                 "text-[#7A1E1E] border border-[#7A1E1E]";
   return (

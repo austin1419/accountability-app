@@ -11,6 +11,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchClientDetail } from "@/lib/server-queries";
+import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
@@ -22,11 +23,11 @@ export const dynamic = "force-dynamic";
 
 function ComplianceBar({ label, pct }: { label: string; pct: number }) {
   const color =
-    pct >= 70 ? "bg-[#B8933A]" :
+    pct >= COMPLIANCE_TARGET ? "bg-[#B8933A]" :
     pct >= 50 ? "bg-[#C9A44A]" :
                 "bg-[#7A1E1E]";
   const text =
-    pct >= 70 ? "text-[#B8933A]" :
+    pct >= COMPLIANCE_TARGET ? "text-[#B8933A]" :
     pct >= 50 ? "text-[#C9A44A]" :
                 "text-[#7A1E1E]";
   return (
@@ -53,9 +54,9 @@ export default async function ClientDetailPage({
   if (!client) notFound();
 
   const isOnTrack =
-    client.todayPercent >= 70 &&
-    client.weekPercent  >= 70 &&
-    client.monthPercent >= 70;
+    client.todayPercent >= COMPLIANCE_TARGET &&
+    client.weekPercent  >= COMPLIANCE_TARGET &&
+    client.monthPercent >= COMPLIANCE_TARGET;
 
   const goalDateLabel = client.goal?.goal_date
     ? new Date(client.goal.goal_date + "T00:00:00").toLocaleDateString("en-US", {

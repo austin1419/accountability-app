@@ -8,7 +8,7 @@
 // Shows "X / Y answered" for in-progress sections.
 // ─────────────────────────────────────────────
 
-export type TileStatus = "not_started" | "in_progress" | "complete";
+import type { TileStatus } from "@/lib/coachingProfile/types";
 
 interface Props {
   title:    string;

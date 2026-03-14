@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { SECTION_CONFIGS } from "@/lib/coachingProfile/questionConfig";
 import { fetchAllCoachingAnswers } from "@/lib/coachingProfile/queries";
 import type { TileStatus, SavedAnswers } from "@/lib/coachingProfile/types";
+import { isAnswered } from "@/lib/utils/isAnswered";
 import { CoachingProfileTile } from "./CoachingProfileTile";
 import { CoachingProfileModal } from "./CoachingProfileModal";
 
@@ -34,12 +35,7 @@ const TILE_LABELS: Record<string, string> = {
   spirit_new_beginnings:  "Spirit",
 };
 
-function isNonEmpty(v: unknown): boolean {
-  if (v === null || v === undefined || v === "") return false;
-  if (typeof v === "string" && v.trim() === "") return false;
-  if (Array.isArray(v) && v.length === 0) return false;
-  return true;
-}
+// Uses shared isAnswered() — imported above
 
 export function computeTileProgress(
   sectionKey: string,
@@ -54,7 +50,7 @@ export function computeTileProgress(
   if (!sectionAnswers) return { status: "not_started", answered: 0, total };
 
   const answered = config.questions.filter(
-    (q) => isNonEmpty(sectionAnswers[q.questionKey]),
+    (q) => isAnswered(sectionAnswers[q.questionKey], q.inputType),
   ).length;
 
   if (answered === 0)    return { status: "not_started", answered, total };
@@ -142,7 +138,7 @@ export function CoachingProfilePanel() {
               status={progress.status}
               answered={progress.answered}
               total={progress.total}
-              onClick={() => setOpenSection(s.title)}
+              onClick={() => setOpenSection(s.sectionKey)}
             />
           ))}
         </div>
@@ -150,7 +146,7 @@ export function CoachingProfilePanel() {
 
       {openSection && userId && (
         <CoachingProfileModal
-          title={openSection}
+          sectionKey={openSection}
           userId={userId}
           onClose={() => setOpenSection(null)}
           onSaved={loadAnswers}

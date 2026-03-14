@@ -8,6 +8,7 @@ import { EditingBanner } from "@/components/EditingBanner";
 import { DateHeader }    from "@/components/DateHeader";
 import { useTasks }      from "@/context/TasksContext";
 import { useDate }       from "@/context/DateContext";
+import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Activity:         "Labor",
@@ -51,7 +52,7 @@ export default function TasksPage() {
           {" · "}
           <span
             className={`font-semibold ${
-              compliancePercent >= 70 ? "text-[#B8933A]" : "text-[#7A1E1E]"
+              compliancePercent >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"
             }`}
           >
             {compliancePercent}%
@@ -62,7 +63,7 @@ export default function TasksPage() {
         <div className="mt-3 h-1.5 bg-[#252525] rounded overflow-hidden">
           <div
             className={`h-full rounded transition-all duration-500 ${
-              compliancePercent >= 70 ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
+              compliancePercent >= COMPLIANCE_TARGET ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
             }`}
             style={{ width: `${compliancePercent}%` }}
           />

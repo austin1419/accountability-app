@@ -8,6 +8,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Json } from "@/lib/database.types";
 import type { SavedAnswers } from "./types";
+import { isAnswered } from "@/lib/utils/isAnswered";
 
 /**
  * Load all saved answers for a user + section.
@@ -51,8 +52,7 @@ export async function upsertCoachingAnswers(
     answer_value_json: Json;
     updated_at: string;
   }[] = Object.entries(answers)
-    .filter(([, v]) => v !== "" && v !== null && v !== undefined &&
-      !(Array.isArray(v) && v.length === 0))
+    .filter(([, v]) => isAnswered(v))
     .map(([questionKey, value]) => ({
       user_id: userId,
       section_key: sectionKey,

@@ -2,20 +2,22 @@
 
 interface Props {
   label:       string;
-  value:       number | "";
+  value:       number | null;
   onChange:    (v: number) => void;
   min:         number;
   max:         number;
   helperText?: string;
+  error?:      boolean;
 }
 
-export function ScaleField({ label, value, onChange, min, max, helperText }: Props) {
+export function ScaleField({ label, value, onChange, min, max, helperText, error }: Props) {
   const points = Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
   return (
     <fieldset className="block">
       <legend className="block text-sm text-[#C0B9A8] mb-1.5">{label}</legend>
       {helperText && <span className="block text-xs text-[#807868] mb-2">{helperText}</span>}
+      {error && <span className="block text-xs text-[#C0392B] mb-1.5">Required</span>}
       <div className="flex gap-1.5 flex-wrap">
         {points.map((n) => (
           <button

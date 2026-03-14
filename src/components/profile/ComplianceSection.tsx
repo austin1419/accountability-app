@@ -4,6 +4,8 @@
 // Three horizontal progress bars with percentage labels.
 // ─────────────────────────────────────────────
 
+import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
+
 type Props = {
   weekPercent:    number;
   monthPercent:   number;
@@ -11,7 +13,7 @@ type Props = {
 };
 
 function Bar({ label, percent }: { label: string; percent: number }) {
-  const color = percent >= 70 ? "#B8933A" : "#7A1E1E";
+  const color = percent >= COMPLIANCE_TARGET ? "#B8933A" : "#7A1E1E";
 
   return (
     <div>

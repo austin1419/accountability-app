@@ -18,6 +18,7 @@ import { SplashScreen }          from "@/components/SplashScreen";
 import { fetchDashboard, fetchStatusScore } from "@/lib/server-queries";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }     from "@/lib/supabase-admin";
+import { COMPLIANCE_TARGET }    from "@/lib/constants/thresholds";
 
 // Always render fresh from the server — required so searchParams-driven
 // date navigation actually re-fetches Supabase data on each navigation.
@@ -147,7 +148,7 @@ export default async function ClientDashboard({
               </div>
               {goal.goal_date && (() => {
                 const daysLeft = Math.ceil(
-                  (new Date(goal.goal_date + "T00:00:00").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                  (new Date(goal.goal_date + "T00:00:00").getTime() - new Date(selectedDate + "T00:00:00").getTime()) / (1000 * 60 * 60 * 24)
                 );
                 if (daysLeft < 0) return null;
                 return (
@@ -202,7 +203,7 @@ export default async function ClientDashboard({
                 <div className="relative flex items-center justify-center flex-shrink-0">
                   <ProgressRing
                     percent={today.percent}
-                    color={today.percent >= 70 ? "#B8933A" : "#7A1E1E"}
+                    color={today.percent >= COMPLIANCE_TARGET ? "#B8933A" : "#7A1E1E"}
                   />
                   <div className="absolute flex flex-col items-center">
                     <span className="text-2xl font-bold text-[#DDD5C0]">{today.percent}%</span>
@@ -218,13 +219,13 @@ export default async function ClientDashboard({
                   <p className={`text-xs font-semibold mt-2 ${
                     today.percent === 100
                       ? "text-[#4CAF50]"
-                      : today.percent >= 70
+                      : today.percent >= COMPLIANCE_TARGET
                       ? "text-[#B8933A]"
                       : "text-[#7A1E1E]"
                   }`} style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                     {today.percent === 100
                       ? "Well done"
-                      : today.percent >= 70
+                      : today.percent >= COMPLIANCE_TARGET
                       ? "Keep working"
                       : "Needs attention"}
                   </p>

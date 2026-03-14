@@ -12,6 +12,7 @@ import { BottomNav }             from "@/components/BottomNav";
 import { fetchLeaderboard }      from "@/lib/server-queries";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient }     from "@/lib/supabase-admin";
+import { COMPLIANCE_TARGET }     from "@/lib/constants/thresholds";
 
 // ── Medal colors for top 3 ─────────────────────
 const rankStyles: Record<number, { border: string; badge: string; label: string }> = {
@@ -45,7 +46,7 @@ export default async function AccountabilityPage() {
         )
       : 0;
 
-  const groupOnTrack = leaderboard.filter((e) => e.weekPercent >= 70).length;
+  const groupOnTrack = leaderboard.filter((e) => e.weekPercent >= COMPLIANCE_TARGET).length;
 
   return (
     <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
@@ -88,7 +89,7 @@ export default async function AccountabilityPage() {
           <div className="mt-4 h-2 bg-[#252525] rounded overflow-hidden">
             <div
               className={`h-full rounded transition-all duration-500 ${
-                groupAvg >= 70 ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
+                groupAvg >= COMPLIANCE_TARGET ? "bg-[#B8933A]" : "bg-[#7A1E1E]"
               }`}
               style={{ width: `${groupAvg}%` }}
             />
@@ -112,7 +113,7 @@ export default async function AccountabilityPage() {
                 const rank    = index + 1;
                 const isYou   = entry.id === profile.id;
                 const style   = rankStyles[rank];
-                const onTrack = entry.weekPercent >= 70;
+                const onTrack = entry.weekPercent >= COMPLIANCE_TARGET;
 
                 return (
                   <li
@@ -188,7 +189,7 @@ export default async function AccountabilityPage() {
                       <div className="flex items-center gap-1.5">
                         <span
                           className={`text-xs font-semibold px-2.5 py-1 rounded border ${
-                            entry.todayPercent >= 70
+                            entry.todayPercent >= COMPLIANCE_TARGET
                               ? "text-[#B8933A] border-[#B8933A]"
                               : entry.todayPercent > 0
                               ? "text-[#7A1E1E] border-[#7A1E1E]"
@@ -196,7 +197,7 @@ export default async function AccountabilityPage() {
                           }`}
                           style={{ fontFamily: "'Cinzel', serif" }}
                         >
-                          {entry.todayPercent >= 70
+                          {entry.todayPercent >= COMPLIANCE_TARGET
                             ? "On track today"
                             : entry.todayPercent > 0
                             ? `${entry.todayPercent}% today`

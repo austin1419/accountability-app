@@ -5,11 +5,13 @@
 //
 // Reads question config for a section, renders fields,
 // loads saved answers on mount, and saves on submit.
+// Validates required fields before saving.
 // ─────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from "react";
 import type { SectionConfig, SavedAnswers } from "@/lib/coachingProfile/types";
 import { fetchCoachingAnswers, upsertCoachingAnswers } from "@/lib/coachingProfile/queries";
+import { isAnswered } from "@/lib/utils/isAnswered";
 import { TextField }       from "./fields/TextField";
 import { NumberField }      from "./fields/NumberField";
 import { SelectField }      from "./fields/SelectField";
@@ -27,6 +29,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
   const [answers, setAnswers] = useState<SavedAnswers>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
+  const [missingKeys, setMissingKeys] = useState<Set<string>>(new Set());
 
   // Load saved answers on mount
   useEffect(() => {
@@ -38,9 +41,28 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
 
   const update = useCallback((key: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
+    // Clear error state for this field on change
+    setMissingKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
   }, []);
 
   const handleSave = async () => {
+    // Validate required fields
+    const missing = new Set<string>();
+    for (const q of config.questions) {
+      if (q.required && !isAnswered(answers[q.questionKey], q.inputType)) {
+        missing.add(q.questionKey);
+      }
+    }
+    if (missing.size > 0) {
+      setMissingKeys(missing);
+      return;
+    }
+
     setSaving(true);
     await upsertCoachingAnswers(userId, config.sectionKey, answers);
     setSaving(false);
@@ -60,6 +82,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
     <div className="space-y-5">
       {config.questions.map((q) => {
         const key = q.questionKey;
+        const hasError = missingKeys.has(key);
 
         switch (q.inputType) {
           case "text":
@@ -70,6 +93,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
                 value={(answers[key] as string) ?? ""}
                 onChange={(v) => update(key, v)}
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -82,6 +106,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
                 onChange={(v) => update(key, v)}
                 multiline
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -90,9 +115,10 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
               <NumberField
                 key={key}
                 label={q.label}
-                value={(answers[key] as number) ?? ""}
+                value={typeof answers[key] === "number" ? answers[key] : null}
                 onChange={(v) => update(key, v)}
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -105,6 +131,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
                 onChange={(v) => update(key, v)}
                 options={q.options ?? []}
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -117,6 +144,7 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
                 onChange={(v) => update(key, v)}
                 options={q.options ?? []}
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -125,11 +153,12 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
               <ScaleField
                 key={key}
                 label={q.label}
-                value={(answers[key] as number) ?? ""}
+                value={typeof answers[key] === "number" ? answers[key] : null}
                 onChange={(v) => update(key, v)}
                 min={q.scaleMin ?? 1}
                 max={q.scaleMax ?? 10}
                 helperText={q.helperText}
+                error={hasError}
               />
             );
 
@@ -137,6 +166,10 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
             return null;
         }
       })}
+
+      {missingKeys.size > 0 && (
+        <p className="text-xs text-[#C0392B]">Please complete all required fields before saving.</p>
+      )}
 
       <div className="flex gap-3 pt-2">
         <button

@@ -13,6 +13,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { generateProjection, type ChartPoint } from "@/lib/projection";
 import { computeGoalProgress, type GoalMetrics } from "@/lib/computeGoalProgress";
+import { computeCompliance } from "@/lib/utils/computeCompliance";
+import { COMPLIANCE_TARGET, COMPLIANCE_WEIGHT, PROGRESS_WEIGHT } from "@/lib/constants/thresholds";
 
 // Re-export so existing consumers can still import from here
 export type { GoalMetrics } from "@/lib/computeGoalProgress";
@@ -185,8 +187,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
 
   const weekCompleted  = (weekLogs ?? []).filter((l) => l.completed).length;
   const weekExpected   = totalTasks * daysBetween(weekEffective, today);
-  const weekPercent    = weekExpected > 0
-    ? Math.round((weekCompleted / weekExpected) * 100) : 0;
+  const weekPercent    = computeCompliance(weekCompleted, weekExpected);
 
   // Build a date-aware snapshot of the goal metrics for progress calculation.
   // Uses the latest log entry at or before `date` instead of the live goal row,
@@ -201,6 +202,7 @@ export async function fetchDashboard(userId: string, date: string): Promise<Dash
         .from("weight_logs")
         .select("weight")
         .eq("user_id", userId)
+        .eq("goal_id", goal.id)
         .lte("logged_at", today)
         .order("logged_at", { ascending: false })
         .limit(1)
@@ -342,8 +344,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     const todayDone     = todayLogs.filter((l) => l.completed).length;
     const weekExpected  = taskCount * daysBetween(weekEff, today);
 
-    const weekPercent  = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
-    const todayPercent = taskCount > 0 ? Math.round((todayDone / taskCount)  * 100) : 0;
+    const weekPercent  = computeCompliance(weekDone, weekExpected);
+    const todayPercent = computeCompliance(todayDone, taskCount);
     const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
     return { id: client.id, name: client.name, weekPercent, todayPercent, goalProgress, goalName: goal?.goal_name ?? null };
@@ -420,18 +422,18 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
 
     const todayLogs    = allLogs.filter((l) => l.date === today);
     const todayDone    = todayLogs.filter((l) => l.completed).length;
-    const todayPercent = taskCount > 0 ? Math.round((todayDone / taskCount) * 100) : 0;
+    const todayPercent = computeCompliance(todayDone, taskCount);
 
     const weekEff       = effectiveStart(weekStart, createdDate);
     const monthEff      = effectiveStart(monthStart, createdDate);
 
     const weekDone      = allLogs.filter((l) => l.date >= weekEff && l.completed).length;
     const weekExpected  = taskCount * daysBetween(weekEff, today);
-    const weekPercent   = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
+    const weekPercent   = computeCompliance(weekDone, weekExpected);
 
     const monthDone     = allLogs.filter((l) => l.date >= monthEff && l.completed).length;
     const monthExpected = taskCount * daysBetween(monthEff, today);
-    const monthPercent  = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
+    const monthPercent  = computeCompliance(monthDone, monthExpected);
 
     const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
@@ -445,7 +447,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
       todayPercent,
       weekPercent,
       monthPercent,
-      isFlagged:     taskCount > 0 && (todayPercent < 70 || weekPercent < 70 || monthPercent < 70),
+      isFlagged:     taskCount > 0 && (todayPercent < COMPLIANCE_TARGET || weekPercent < COMPLIANCE_TARGET || monthPercent < COMPLIANCE_TARGET),
     };
   });
 }
@@ -568,16 +570,16 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
 
   const weekDone       = logs.filter((l) => l.date >= weekEffectiveStart && l.completed).length;
   const weekExpected   = taskCount * daysBetween(weekEffectiveStart, asOfDate);
-  const weekPercent    = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
+  const weekPercent    = computeCompliance(weekDone, weekExpected);
 
   const monthDone      = logs.filter((l) => l.date >= monthEffectiveStart && l.completed).length;
   const monthExpected  = taskCount * daysBetween(monthEffectiveStart, asOfDate);
-  const monthPercent   = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
+  const monthPercent   = computeCompliance(monthDone, monthExpected);
 
   // Overall: from compliance start to asOfDate
   const overallDone     = logs.filter((l) => l.date >= complianceStart && l.completed).length;
   const overallExpected = taskCount * daysBetween(complianceStart, asOfDate);
-  const overallPercent  = overallExpected > 0 ? Math.round((overallDone / overallExpected) * 100) : 0;
+  const overallPercent  = computeCompliance(overallDone, overallExpected);
 
   return { weekPercent, monthPercent, overallPercent };
 }
@@ -656,11 +658,11 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
 
   const weekDone       = allLogs.filter((l) => l.date >= weekEffStart && l.completed).length;
   const weekExpected   = totalTasks * daysBetween(weekEffStart, today);
-  const weekPercent    = weekExpected > 0 ? Math.round((weekDone / weekExpected) * 100) : 0;
+  const weekPercent    = computeCompliance(weekDone, weekExpected);
 
   const monthDone      = allLogs.filter((l) => l.date >= monthEffStart && l.completed).length;
   const monthExpected  = totalTasks * daysBetween(monthEffStart, today);
-  const monthPercent   = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
+  const monthPercent   = computeCompliance(monthDone, monthExpected);
 
   const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
@@ -803,6 +805,7 @@ export async function fetchProgressTrends(userId: string): Promise<ProgressTrend
       .from("weight_logs")
       .select("logged_at, weight")
       .eq("user_id", userId)
+      .eq("goal_id", goal.id)
       .order("logged_at", { ascending: true });
 
     for (const row of wLogs ?? []) {
@@ -943,6 +946,14 @@ export async function fetchProgressSummary(userId: string): Promise<ProgressSumm
   const supabase = createAdminClient();
   const today = cstDate();
 
+  // Fetch active goal to scope weight_logs
+  const { data: activeGoal } = await supabase
+    .from("goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
   const sevenAgo  = new Date(today + "T00:00:00");
   sevenAgo.setDate(sevenAgo.getDate() - 7);
   const weekTarget = cstDate(sevenAgo);
@@ -981,14 +992,16 @@ export async function fetchProgressSummary(userId: string): Promise<ProgressSumm
     return { current: current.value, prior: prior.value, change: +(current.value - prior.value).toFixed(2) };
   }
 
-  // ── Fetch weight logs ──────────────────────────────────────────
+  // ── Fetch weight logs (scoped to active goal) ────────────────
   let weight: ProgressSummary["weight"] = null;
 
-  const { data: wLogs } = await supabase
+  const wLogsQuery = supabase
     .from("weight_logs")
     .select("logged_at, weight")
     .eq("user_id", userId)
     .order("logged_at", { ascending: true });
+  if (activeGoal) wLogsQuery.eq("goal_id", activeGoal.id);
+  const { data: wLogs } = await wLogsQuery;
 
   const weightPoints: Point[] = [];
   for (const row of wLogs ?? []) {
@@ -1149,7 +1162,7 @@ export async function fetchStatusScore(userId: string, date?: string): Promise<S
     // No goal set — use compliance only
     overallScore = complianceScore;
   } else {
-    overallScore = Math.round(0.60 * complianceScore + 0.40 * progressScore);
+    overallScore = Math.round(COMPLIANCE_WEIGHT * complianceScore + PROGRESS_WEIGHT * progressScore);
   }
 
   return {
