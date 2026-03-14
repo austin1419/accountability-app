@@ -541,10 +541,21 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
 
   const logs = allLogs ?? [];
 
+  // Use the earliest task_log date as the compliance start bound.
+  // This is more reliable than goal.created_at, which is the DB row
+  // insertion timestamp and may not match when tracking actually began
+  // (e.g. coach creates client today but backdates task logs).
+  const earliestLogDate = logs.length > 0
+    ? logs.reduce((min, l) => l.date < min ? l.date : min, logs[0].date)
+    : null;
+  const complianceStart = earliestLogDate
+    ? (earliestLogDate < createdDate ? earliestLogDate : createdDate)
+    : createdDate;
+
   const taskCount = taskIds.length;
 
-  const weekEffectiveStart  = effectiveStart(weekStart, createdDate);
-  const monthEffectiveStart = effectiveStart(monthStart, createdDate);
+  const weekEffectiveStart  = effectiveStart(weekStart, complianceStart);
+  const monthEffectiveStart = effectiveStart(monthStart, complianceStart);
 
   const weekDone       = logs.filter((l) => l.date >= weekEffectiveStart && l.completed).length;
   const weekExpected   = taskCount * daysBetween(weekEffectiveStart, asOfDate);
@@ -554,9 +565,9 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
   const monthExpected  = taskCount * daysBetween(monthEffectiveStart, asOfDate);
   const monthPercent   = monthExpected > 0 ? Math.round((monthDone / monthExpected) * 100) : 0;
 
-  // Overall: from user creation date to asOfDate
-  const overallDone     = logs.filter((l) => l.date >= createdDate && l.completed).length;
-  const overallExpected = taskCount * daysBetween(createdDate, asOfDate);
+  // Overall: from compliance start to asOfDate
+  const overallDone     = logs.filter((l) => l.date >= complianceStart && l.completed).length;
+  const overallExpected = taskCount * daysBetween(complianceStart, asOfDate);
   const overallPercent  = overallExpected > 0 ? Math.round((overallDone / overallExpected) * 100) : 0;
 
   return { weekPercent, monthPercent, overallPercent };
