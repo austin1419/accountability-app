@@ -18,6 +18,19 @@ import {
 } from "@/lib/queries";
 import { projectFromData } from "@/lib/projection";
 
+// ── Shared inline styles ─────────────────────
+const sectionLabel: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+  letterSpacing: "0.2em", color: "#4A3F2A", textTransform: "uppercase",
+  marginBottom: 8,
+};
+const card: React.CSSProperties = {
+  background: "#141414", border: "1px solid #252525", borderRadius: 10,
+};
+const dividerStyle: React.CSSProperties = {
+  height: 1, background: "#1A1A1A", margin: "14px 0",
+};
+
 // ─────────────────────────────────────────────
 // Generic SVG line chart — works for any numeric series
 // Optional projectedData renders as a white dashed line
@@ -72,31 +85,34 @@ function MetricChart({
     : null;
 
   return (
-    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: "100%" }}>
+      {/* Grid line at goal */}
       {goalValue != null && (
         <>
           <line
             x1={PAD_L} y1={toY(goalValue)}
             x2={SVG_W - PAD_R} y2={toY(goalValue)}
-            stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8}
+            stroke="#B8933A" strokeWidth={1} strokeDasharray="5 4" opacity={0.5}
           />
           {goalLabel && (
-            <text x={SVG_W - PAD_R} y={toY(goalValue) + 12} fontSize={9} fill="#C9A44A" textAnchor="end">
+            <text x={SVG_W - PAD_R} y={toY(goalValue) + 12} fontSize={9} fill="#B8933A" textAnchor="end" opacity={0.6}
+              style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
               {goalLabel}
             </text>
           )}
         </>
       )}
-      <polyline points={actualPoints} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={actualPoints} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {data.map((d, i) => (
-        <circle key={i} cx={toX(i)} cy={toY(d.value)} r={3} fill={color} />
+        <circle key={i} cx={toX(i)} cy={toY(d.value)} r={4} fill={color} />
       ))}
       {projPoints && (
-        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.25} />
       )}
       {data.map((d, i) =>
         i % 2 === 0 ? (
-          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
+          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={11} fill="#4A3F2A" textAnchor="middle"
+            style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
             {shortDate(d.date)}
           </text>
         ) : null
@@ -166,18 +182,20 @@ function DualMetricChart({
     new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   return (
-    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: "100%" }}>
       {/* Legend */}
       <circle cx={PAD_L}      cy={8} r={3} fill={BF_COLOR}  />
-      <text   x={PAD_L + 7}   y={12} fontSize={9} fill={BF_COLOR}>Body Fat</text>
+      <text   x={PAD_L + 7}   y={12} fontSize={9} fill={BF_COLOR}
+        style={{ fontFamily: "'EB Garamond', serif" }}>Body Fat</text>
       <circle cx={PAD_L + 58} cy={8} r={3} fill={SMM_COLOR} />
-      <text   x={PAD_L + 65}  y={12} fontSize={9} fill={SMM_COLOR}>SMM</text>
+      <text   x={PAD_L + 65}  y={12} fontSize={9} fill={SMM_COLOR}
+        style={{ fontFamily: "'EB Garamond', serif" }}>SMM</text>
 
       {/* BF goal dashed line */}
       {hasBf && goalBf != null && (
         <line
           x1={PAD_L} y1={toYBf(goalBf)} x2={SVG_W - PAD_R} y2={toYBf(goalBf)}
-          stroke={BF_COLOR} strokeWidth={1} strokeDasharray="4 3" opacity={0.4}
+          stroke={BF_COLOR} strokeWidth={1} strokeDasharray="5 4" opacity={0.4}
         />
       )}
 
@@ -185,7 +203,7 @@ function DualMetricChart({
       {hasSmm && goalSmm != null && (
         <line
           x1={PAD_L} y1={toYSmm(goalSmm)} x2={SVG_W - PAD_R} y2={toYSmm(goalSmm)}
-          stroke={SMM_COLOR} strokeWidth={1} strokeDasharray="4 3" opacity={0.4}
+          stroke={SMM_COLOR} strokeWidth={1} strokeDasharray="5 4" opacity={0.4}
         />
       )}
 
@@ -194,10 +212,10 @@ function DualMetricChart({
         <>
           <polyline
             points={bfData.map((d) => `${toX(d.date)},${toYBf(d.value)}`).join(" ")}
-            fill="none" stroke={BF_COLOR} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+            fill="none" stroke={BF_COLOR} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
           />
           {bfData.map((d, i) => (
-            <circle key={`bf-${i}`} cx={toX(d.date)} cy={toYBf(d.value)} r={3} fill={BF_COLOR} />
+            <circle key={`bf-${i}`} cx={toX(d.date)} cy={toYBf(d.value)} r={4} fill={BF_COLOR} />
           ))}
         </>
       )}
@@ -207,10 +225,10 @@ function DualMetricChart({
         <>
           <polyline
             points={smmData.map((d) => `${toX(d.date)},${toYSmm(d.value)}`).join(" ")}
-            fill="none" stroke={SMM_COLOR} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+            fill="none" stroke={SMM_COLOR} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
           />
           {smmData.map((d, i) => (
-            <circle key={`smm-${i}`} cx={toX(d.date)} cy={toYSmm(d.value)} r={3} fill={SMM_COLOR} />
+            <circle key={`smm-${i}`} cx={toX(d.date)} cy={toYSmm(d.value)} r={4} fill={SMM_COLOR} />
           ))}
         </>
       )}
@@ -218,23 +236,28 @@ function DualMetricChart({
       {/* Left Y axis labels (BF%) */}
       {hasBf && (
         <>
-          <text x={PAD_L - 2} y={PAD_T + 4}        fontSize={8} fill={BF_COLOR}  textAnchor="end">{bfMax.toFixed(1)}%</text>
-          <text x={PAD_L - 2} y={PAD_T + chartH}   fontSize={8} fill={BF_COLOR}  textAnchor="end">{bfMin.toFixed(1)}%</text>
+          <text x={PAD_L - 2} y={PAD_T + 4}        fontSize={8} fill={BF_COLOR}  textAnchor="end"
+            style={{ fontFamily: "'EB Garamond', serif" }}>{bfMax.toFixed(1)}%</text>
+          <text x={PAD_L - 2} y={PAD_T + chartH}   fontSize={8} fill={BF_COLOR}  textAnchor="end"
+            style={{ fontFamily: "'EB Garamond', serif" }}>{bfMin.toFixed(1)}%</text>
         </>
       )}
 
       {/* Right Y axis labels (SMM lbs) */}
       {hasSmm && (
         <>
-          <text x={SVG_W - PAD_R + 2} y={PAD_T + 4}      fontSize={8} fill={SMM_COLOR} textAnchor="start">{smmMax.toFixed(0)}</text>
-          <text x={SVG_W - PAD_R + 2} y={PAD_T + chartH} fontSize={8} fill={SMM_COLOR} textAnchor="start">{smmMin.toFixed(0)}</text>
+          <text x={SVG_W - PAD_R + 2} y={PAD_T + 4}      fontSize={8} fill={SMM_COLOR} textAnchor="start"
+            style={{ fontFamily: "'EB Garamond', serif" }}>{smmMax.toFixed(0)}</text>
+          <text x={SVG_W - PAD_R + 2} y={PAD_T + chartH} fontSize={8} fill={SMM_COLOR} textAnchor="start"
+            style={{ fontFamily: "'EB Garamond', serif" }}>{smmMin.toFixed(0)}</text>
         </>
       )}
 
       {/* X axis date labels */}
       {allDates.map((date, i) =>
         i % 2 === 0 ? (
-          <text key={date} x={toX(date)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
+          <text key={date} x={toX(date)} y={SVG_H - 6} fontSize={11} fill="#4A3F2A" textAnchor="middle"
+            style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
             {shortDate(date)}
           </text>
         ) : null
@@ -278,22 +301,24 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
     : null;
 
   return (
-    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: "100%" }}>
       <line x1={PAD_L} y1={goalY} x2={SVG_W - PAD_R} y2={goalY}
-        stroke="#C9A44A" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.8} />
-      <text x={SVG_W - PAD_R} y={goalY + 12} fontSize={9} fill="#C9A44A" textAnchor="end">
+        stroke="#B8933A" strokeWidth={1} strokeDasharray="5 4" opacity={0.5} />
+      <text x={SVG_W - PAD_R} y={goalY + 12} fontSize={9} fill="#B8933A" textAnchor="end" opacity={0.6}
+        style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
         Goal {goalWeight} lbs
       </text>
-      <polyline points={points} fill="none" stroke="#B8933A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke="#B8933A" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {data.map((d, i) => (
-        <circle key={i} cx={toX(i)} cy={toY(d.weight)} r={3} fill="#B8933A" />
+        <circle key={i} cx={toX(i)} cy={toY(d.weight)} r={4} fill="#B8933A" />
       ))}
       {projPoints && (
-        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+        <polyline points={projPoints} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity={0.25} />
       )}
       {data.map((d, i) =>
         i % 2 === 0 ? (
-          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={9} fill="#807868" textAnchor="middle">
+          <text key={i} x={toX(i)} y={SVG_H - 6} fontSize={11} fill="#4A3F2A" textAnchor="middle"
+            style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
             {d.week}
           </text>
         ) : null
@@ -305,26 +330,27 @@ function WeightChart({ data, goalWeight, projectedData }: { data: WeightEntry[];
 // Projection math is in @/lib/projection.ts (single source of truth)
 
 // ─────────────────────────────────────────────
-// Status Pill — small indicator that links to dashboard
+// Status badge config — inline styled
 // ─────────────────────────────────────────────
-const STATUS_PILL: Record<string, { label: string; text: string; border: string }> = {
-  ahead:    { label: "Ahead",    text: "text-[#4CAF50]", border: "border-[#4CAF50]" },
-  on_track: { label: "On Track", text: "text-[#B8933A]", border: "border-[#B8933A]" },
-  behind:   { label: "Behind",   text: "text-[#7A1E1E]", border: "border-[#7A1E1E]" },
-  no_data:  { label: "No Data",  text: "text-[#807868]", border: "border-[#807868]" },
+const STATUS_CFG: Record<string, { label: string; color: string }> = {
+  ahead:    { label: "Ahead",    color: "#4CAF50" },
+  on_track: { label: "On Track", color: "#B8933A" },
+  behind:   { label: "Behind",   color: "#7A1E1E" },
+  no_data:  { label: "No Data",  color: "#807868" },
 };
 
-function StatusPill({ status }: { status: string | null }) {
+function StatusBadge({ status }: { status: string | null }) {
   if (!status) return null;
-  const cfg = STATUS_PILL[status] ?? STATUS_PILL.no_data;
+  const cfg = STATUS_CFG[status] ?? STATUS_CFG.no_data;
   return (
-    <a
-      href="/?#status-section"
-      className={`text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded border ${cfg.text} ${cfg.border} bg-transparent`}
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <span style={{
+      fontFamily: "'Cinzel', serif", fontSize: 8, fontWeight: 700,
+      letterSpacing: "0.15em", color: cfg.color, textTransform: "uppercase",
+      border: `1.5px solid ${cfg.color}`, borderRadius: 4,
+      padding: "5px 11px", whiteSpace: "nowrap", marginTop: 4,
+    }}>
       {cfg.label}
-    </a>
+    </span>
   );
 }
 
@@ -349,20 +375,48 @@ function filterByDateRange<T>(
 
 function RangeTabs({ value, onChange }: { value: ChartRange; onChange: (r: ChartRange) => void }) {
   return (
-    <div className="flex gap-2 mb-3">
-      {(["7d", "30d", "all"] as const).map((r) => (
-        <button
-          key={r}
-          onClick={() => onChange(r)}
-          className={`text-[10px] uppercase tracking-widest px-3 py-1 rounded border transition-colors ${
-            value === r
-              ? "border-[#B8933A] text-[#B8933A] bg-[#1A1A1A]"
-              : "border-[#252525] text-[#807868] bg-transparent hover:text-[#9A9080]"
-          }`}
-        >
-          {r === "all" ? "Since Start" : r.toUpperCase()}
-        </button>
-      ))}
+    <div style={{ display: "flex", gap: 5, marginBottom: 14 }}>
+      {(["7d", "30d", "all"] as const).map((r) => {
+        const isActive = value === r;
+        return (
+          <button
+            key={r}
+            onClick={() => onChange(r)}
+            style={{
+              fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700,
+              letterSpacing: "0.12em", textTransform: "uppercase",
+              padding: "4px 9px", borderRadius: 3, cursor: "pointer",
+              border: isActive ? "1px solid #B8933A" : "1px solid #252525",
+              background: isActive ? "rgba(184,147,58,0.1)" : "transparent",
+              color: isActive ? "#B8933A" : "#4A3F2A",
+            }}
+          >
+            {r === "all" ? "Since Start" : r.toUpperCase()}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Stat tile helper
+// ─────────────────────────────────────────────
+function StatTile({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ ...card, padding: "14px 14px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+      <span style={{
+        fontFamily: "'EB Garamond', serif", fontSize: 22, fontWeight: 600,
+        color, lineHeight: 1.1,
+      }}>
+        {value}
+      </span>
+      <span style={{
+        fontFamily: "'Cinzel', serif", fontSize: 8, fontWeight: 700,
+        letterSpacing: "0.15em", color: "#807868", textTransform: "uppercase",
+      }}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -555,8 +609,65 @@ export default function ProgressPage() {
     setShowForm(false);
   }
 
-  const inputCls = "flex-1 border border-[#252525] rounded px-4 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]";
-  const saveBtnCls = "w-full bg-[#B8933A] hover:bg-[#C9A44A] text-[#0D0D0D] text-xs font-semibold rounded py-2.5 transition-colors uppercase tracking-widest";
+  const inputStyle: React.CSSProperties = {
+    flex: 1, border: "1px solid #252525", borderRadius: 6,
+    padding: "8px 14px", fontSize: 14, color: "#DDD5C0",
+    background: "#1A1A1A", outline: "none",
+    fontFamily: "'EB Garamond', serif",
+  };
+  const saveBtnStyle: React.CSSProperties = {
+    width: "100%", background: "#B8933A", color: "#0D0D0D",
+    fontSize: 10, fontWeight: 700, fontFamily: "'Cinzel', serif",
+    letterSpacing: "0.15em", textTransform: "uppercase",
+    borderRadius: 6, padding: "10px 0", border: "none", cursor: "pointer",
+  };
+
+  // ── Tracking subtitle per category ──
+  const trackingSubtitle =
+    category === "weight" ? "Weekly weight tracking"
+    : category === "body_composition" ? "Body composition tracking"
+    : `${goalData?.performance_metric_name ?? "Performance"} tracking`;
+
+  // ─────────────────────────────────────────────
+  // SHARED PAGE SHELL
+  // ─────────────────────────────────────────────
+  function PageShell({ children }: { children: React.ReactNode }) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] flex flex-col max-w-md mx-auto">
+
+        {/* ── Header ── */}
+        <header style={{ padding: "40px 20px 14px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+            <div>
+              <h1 style={{
+                fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 22,
+                letterSpacing: "0.05em", color: "#F4EEE4", margin: 0, marginBottom: 3,
+              }}>
+                Progress
+              </h1>
+              <p style={{
+                fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+                fontSize: 14, color: "#807868", margin: 0,
+              }}>
+                {trackingSubtitle}
+              </p>
+            </div>
+            <StatusBadge status={statusData?.progressStatus ?? null} />
+          </div>
+        </header>
+
+        <DateHeader variant="compact" />
+        <EditingBanner />
+
+        {/* ── Scrollable content ── */}
+        <main style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
+          {children}
+        </main>
+
+        <BottomNav />
+      </div>
+    );
+  }
 
   // ─────────────────────────────────────────────
   // WEIGHT VIEW
@@ -574,101 +685,147 @@ export default function ProgressPage() {
     const stillToGo = currentWeight != null ? currentWeight - goalWeight : null;
 
     return (
-      <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
-        <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-          <div className="flex items-center justify-between">
-            <h1
-              className="text-2xl text-[#F4EEE4] tracking-wide"
-              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-            >Progress</h1>
-            <StatusPill status={statusData?.progressStatus ?? null} />
+      <PageShell>
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
+
+        {/* ── Snapshot ── */}
+        <p style={sectionLabel}>Snapshot</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <StatTile label="Starting"  value={startWeight   != null ? `${startWeight} lbs`        : "—"} color="#F4EEE4" />
+          <StatTile label="Current"   value={currentWeight != null ? `${currentWeight} lbs`       : "—"} color="#F4EEE4" />
+          <StatTile label="Improved"  value={improved      != null ? `${improved.toFixed(1)} lbs` : "—"} color="#B8933A" />
+          <StatTile label="Remaining" value={stillToGo     != null ? `${stillToGo.toFixed(1)} lbs` : "—"} color="#F4EEE4" />
+        </div>
+
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
+
+        {/* ── Weight Trend ── */}
+        <p style={sectionLabel}>Weight Trend</p>
+        <div style={{ ...card, padding: 16 }}>
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{
+              fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+            }}>
+              Trend Chart
+            </span>
+            <span style={{
+              fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+              fontSize: 13, color: "#4A3F2A",
+            }}>
+              Goal: {goalWeight} lbs
+            </span>
           </div>
-          <p className="text-sm text-[#9A9080] mt-1">Weekly weight tracking</p>
-        </header>
-        <DateHeader variant="compact" />
-        <EditingBanner />
-        <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-          <section className="grid grid-cols-4 gap-2">
-            {[
-              { label: "Starting", value: startWeight   != null ? `${startWeight} lbs`          : "—", color: "text-[#9A9080]" },
-              { label: "Current",  value: currentWeight != null ? `${currentWeight} lbs`         : "—", color: "text-[#DDD5C0]" },
-              { label: "Improved", value: improved      != null ? `${improved.toFixed(1)} lbs`   : "—", color: "text-[#B8933A]" },
-              { label: "Remaining",  value: stillToGo     != null ? `${stillToGo.toFixed(1)} lbs`  : "—", color: "text-[#9A9080]" },
-            ].map((s) => (
-              <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
-                <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
-                <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
-              </div>
-            ))}
-          </section>
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Trend</p>
-              <span className="text-xs text-[#9A9080]">Goal: {goalWeight} lbs</span>
+          <RangeTabs value={chartRange} onChange={setChartRange} />
+          {(() => {
+            const filtered = filterByDateRange(weightLog, chartRange, (e) => e.logged_at);
+            return (
+              <WeightChart
+                data={filtered}
+                goalWeight={goalWeight}
+                projectedData={
+                  projectFromData({
+                    data: filtered.map((e) => ({ date: e.logged_at, value: e.weight })),
+                    goalValue: goalWeight,
+                    direction: goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
+                  }).map((p) => ({ value: p.value }))
+                }
+              />
+            );
+          })()}
+        </div>
+
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
+
+        {/* ── Log Weight Tile ── */}
+        <div style={{
+          ...card, padding: "14px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{
+            fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+          }}>
+            Log Weight
+          </span>
+          <button
+            onClick={() => { setShowForm((v) => !v); setError(""); }}
+            style={{
+              fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.12em", color: "#B8933A", textTransform: "uppercase",
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+            }}
+          >
+            {showForm ? "Cancel" : "+ Add Entry"}
+          </button>
+        </div>
+
+        {/* Log Weight Form (expands below tile) */}
+        {showForm && (
+          <div style={{ ...card, padding: 16, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="number" inputMode="decimal" placeholder="e.g. 215"
+                value={weightInput} onChange={(e) => setWeightInput(e.target.value)}
+                style={inputStyle}
+              />
+              <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868" }}>lbs</span>
             </div>
-            <RangeTabs value={chartRange} onChange={setChartRange} />
-            {(() => {
-              const filtered = filterByDateRange(weightLog, chartRange, (e) => e.logged_at);
-              return (
-                <WeightChart
-                  data={filtered}
-                  goalWeight={goalWeight}
-                  projectedData={
-                    projectFromData({
-                      data: filtered.map((e) => ({ date: e.logged_at, value: e.weight })),
-                      goalValue: goalWeight,
-                      direction: goalWeight < (startWeight ?? Infinity) ? "decrease" : "increase",
-                    }).map((p) => ({ value: p.value }))
-                  }
-                />
-              );
-            })()}
-          </section>
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log Weight</p>
-              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
-                {showForm ? "Cancel" : "+ Add entry"}
-              </button>
-            </div>
-            {showForm && (
-              <div className="mt-4 space-y-3">
-                <div className="flex gap-2">
-                  <input type="number" inputMode="decimal" placeholder="e.g. 215" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} className={inputCls} />
-                  <span className="flex items-center text-sm text-[#9A9080] pr-1">lbs</span>
+            {error && <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#7A1E1E", margin: 0 }}>{error}</p>}
+            <button onClick={handleLogWeight} style={saveBtnStyle}>Save</button>
+          </div>
+        )}
+
+        {/* ── Spacer ── */}
+        <div style={{ height: 8 }} />
+
+        {/* ── Weight Log ── */}
+        <p style={sectionLabel}>Weight Log</p>
+        <div style={{ ...card, overflow: "hidden" }}>
+          {[...weightLog].slice(-7).reverse().map((entry, i) => {
+            const sliceOffset = Math.max(0, weightLog.length - 7);
+            const prevIndex   = sliceOffset + (Math.min(weightLog.length, 7) - 1 - i) - 1;
+            const prev        = weightLog[prevIndex];
+            const change      = prev ? entry.weight - prev.weight : null;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderTop: i > 0 ? "1px solid #1A1A1A" : "none",
+                }}
+              >
+                <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 15, color: "#807868" }}>
+                  {entry.week}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {change !== null && (
+                    <span style={{
+                      fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+                      letterSpacing: "0.1em", color: "#B8933A",
+                      background: "rgba(184,147,58,0.08)", border: "1px solid #3A3020",
+                      borderRadius: 3, padding: "2px 7px",
+                    }}>
+                      {change > 0 ? "+" : ""}{change} lbs
+                    </span>
+                  )}
+                  <span style={{
+                    fontFamily: "'EB Garamond', serif", fontSize: 17, fontWeight: 600,
+                    color: change === null ? "#807868" : "#F4EEE4",
+                  }}>
+                    {entry.weight} lbs
+                  </span>
                 </div>
-                {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
-                <button onClick={handleLogWeight} className={saveBtnCls}>Save</button>
               </div>
-            )}
-          </section>
-          <section className="bg-[#141414] rounded px-5 border border-[#252525]">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>Weight Log</p>
-            <ul>
-              {[...weightLog].slice(-7).reverse().map((entry, i) => {
-                const sliceOffset = Math.max(0, weightLog.length - 7);
-                const prevIndex   = sliceOffset + (Math.min(weightLog.length, 7) - 1 - i) - 1;
-                const prev        = weightLog[prevIndex];
-                const change    = prev ? entry.weight - prev.weight : null;
-                return (
-                  <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
-                    <span className="text-sm text-[#9A9080]">{entry.week}</span>
-                    <div className="flex items-center gap-3">
-                      {change !== null && (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded border border-[#252525] bg-[#141414] ${change < 0 ? "text-[#B8933A]" : change > 0 ? "text-[#7A1E1E]" : "text-[#9A9080]"}`}>
-                          {change > 0 ? "+" : ""}{change} lbs
-                        </span>
-                      )}
-                      <span className="text-sm font-semibold text-[#DDD5C0]">{entry.weight} lbs</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </main>
-        <BottomNav />
-      </div>
+            );
+          })}
+        </div>
+      </PageShell>
     );
   }
 
@@ -703,61 +860,39 @@ export default function ProgressPage() {
     const fmtSmm = (v: number | null) => v != null ? `${v.toFixed(1)} lbs` : "—";
 
     return (
-      <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
-        <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-          <div className="flex items-center justify-between">
-            <h1
-              className="text-2xl text-[#F4EEE4] tracking-wide"
-              style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-            >Progress</h1>
-            <StatusPill status={statusData?.progressStatus ?? null} />
-          </div>
-          <p className="text-sm text-[#9A9080] mt-1">Body composition tracking</p>
-        </header>
-        <DateHeader variant="compact" />
-        <EditingBanner />
-        <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+      <PageShell>
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
 
-          {/* Body Fat row */}
-          <section>
-            <p className="text-[10px] uppercase tracking-widest text-[#C04040] mb-2 px-0.5" style={{ fontFamily: "'Cinzel', serif" }}>Body Fat</p>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Starting", value: fmtBf(startBf),   color: "text-[#9A9080]" },
-                { label: "Current",  value: fmtBf(currBf),    color: "text-[#DDD5C0]" },
-                { label: "Improved", value: bfImproved != null ? `${bfImproved.toFixed(1)}%`  : "—", color: "text-[#B8933A]" },
-                { label: "Remaining",  value: bfToGoal   != null ? `${bfToGoal.toFixed(1)}%`    : "—", color: "text-[#9A9080]" },
-              ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
-                  <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
-                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* ── Body Fat Snapshot ── */}
+        <p style={{ ...sectionLabel, color: BF_COLOR }}>Body Fat</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <StatTile label="Starting"  value={fmtBf(startBf)} color="#F4EEE4" />
+          <StatTile label="Current"   value={fmtBf(currBf)}  color="#F4EEE4" />
+          <StatTile label="Improved"  value={bfImproved != null ? `${bfImproved.toFixed(1)}%` : "—"} color="#B8933A" />
+          <StatTile label="Remaining" value={bfToGoal   != null ? `${bfToGoal.toFixed(1)}%`   : "—"} color="#F4EEE4" />
+        </div>
 
-          {/* Muscle (SMM) row */}
-          <section>
-            <p className="text-[10px] uppercase tracking-widest text-[#B89B3A] mb-2 px-0.5" style={{ fontFamily: "'Cinzel', serif" }}>Muscle (SMM)</p>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Starting", value: fmtSmm(startSmm),  color: "text-[#9A9080]" },
-                { label: "Current",  value: fmtSmm(currSmm),   color: "text-[#DDD5C0]" },
-                { label: "Improved", value: smmImproved != null ? `${smmImproved.toFixed(1)} lbs` : "—", color: "text-[#B8933A]" },
-                { label: "Remaining",  value: smmToGoal   != null ? `${smmToGoal.toFixed(1)} lbs`   : "—", color: "text-[#9A9080]" },
-              ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
-                  <p className={`text-sm font-bold ${s.color} text-center`}>{s.value}</p>
-                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
 
-          {/* Recomposition chart — BF and SMM on same graph */}
-          {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
-            <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Recomposition Trend</p>
+        {/* ── Muscle (SMM) Snapshot ── */}
+        <p style={{ ...sectionLabel, color: SMM_COLOR }}>Muscle (SMM)</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <StatTile label="Starting"  value={fmtSmm(startSmm)} color="#F4EEE4" />
+          <StatTile label="Current"   value={fmtSmm(currSmm)}  color="#F4EEE4" />
+          <StatTile label="Improved"  value={smmImproved != null ? `${smmImproved.toFixed(1)} lbs` : "—"} color="#B8933A" />
+          <StatTile label="Remaining" value={smmToGoal   != null ? `${smmToGoal.toFixed(1)} lbs`   : "—"} color="#F4EEE4" />
+        </div>
+
+        {/* ── Divider ── */}
+        <div style={dividerStyle} />
+
+        {/* ── Recomposition Chart ── */}
+        {(bfSeries.length >= 2 || smmSeries.length >= 2) && (
+          <>
+            <p style={sectionLabel}>Recomposition Trend</p>
+            <div style={{ ...card, padding: 16 }}>
               <RangeTabs value={chartRange} onChange={setChartRange} />
               <DualMetricChart
                 bfData={filterByDateRange(bfSeries, chartRange, (e) => e.date)}
@@ -765,53 +900,88 @@ export default function ProgressPage() {
                 goalBf={goalBf}
                 goalSmm={goalSmm}
               />
-            </section>
-          )}
-
-          {/* Log entry */}
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log Measurements</p>
-              <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
-                {showForm ? "Cancel" : "+ Add entry"}
-              </button>
             </div>
-            {showForm && (
-              <div className="mt-4 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-[#9A9080] mb-1">Body Fat %</label>
-                    <input type="number" inputMode="decimal" placeholder="25.0" value={bfInput} onChange={(e) => setBfInput(e.target.value)} className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#9A9080] mb-1">SMM (lbs)</label>
-                    <input type="number" inputMode="decimal" placeholder="78.0" value={smmInput} onChange={(e) => setSmmInput(e.target.value)} className="w-full border border-[#252525] rounded px-3 py-2 text-sm text-[#DDD5C0] bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#B8933A] focus:border-[#B8933A] placeholder:text-[#807868]" />
-                  </div>
-                </div>
-                {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
-                <button onClick={handleLogBodyComp} className={saveBtnCls}>Save</button>
-              </div>
-            )}
-          </section>
+            <div style={dividerStyle} />
+          </>
+        )}
 
-          {/* History log */}
-          <section className="bg-[#141414] rounded px-5 border border-[#252525]">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>History</p>
-            <ul>
-              {[...progressLog].reverse().map((entry, i) => (
-                <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
-                  <span className="text-sm text-[#9A9080]">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                  <div className="flex items-center gap-3 text-sm font-semibold text-[#DDD5C0]">
-                    {entry.body_fat != null && <span style={{ color: BF_COLOR }}>{entry.body_fat}%</span>}
-                    {entry.smm      != null && <span style={{ color: SMM_COLOR }}>{entry.smm} lbs SMM</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </main>
-        <BottomNav />
-      </div>
+        {/* ── Log Measurements Tile ── */}
+        <div style={{
+          ...card, padding: "14px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{
+            fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+          }}>
+            Log Measurements
+          </span>
+          <button
+            onClick={() => { setShowForm((v) => !v); setError(""); }}
+            style={{
+              fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.12em", color: "#B8933A", textTransform: "uppercase",
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+            }}
+          >
+            {showForm ? "Cancel" : "+ Add Entry"}
+          </button>
+        </div>
+
+        {/* Log Form */}
+        {showForm && (
+          <div style={{ ...card, padding: 16, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#807868", display: "block", marginBottom: 4 }}>Body Fat %</label>
+                <input type="number" inputMode="decimal" placeholder="25.0" value={bfInput} onChange={(e) => setBfInput(e.target.value)}
+                  style={{ ...inputStyle, width: "100%", flex: "unset" }} />
+              </div>
+              <div>
+                <label style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#807868", display: "block", marginBottom: 4 }}>SMM (lbs)</label>
+                <input type="number" inputMode="decimal" placeholder="78.0" value={smmInput} onChange={(e) => setSmmInput(e.target.value)}
+                  style={{ ...inputStyle, width: "100%", flex: "unset" }} />
+              </div>
+            </div>
+            {error && <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#7A1E1E", margin: 0 }}>{error}</p>}
+            <button onClick={handleLogBodyComp} style={saveBtnStyle}>Save</button>
+          </div>
+        )}
+
+        {/* ── Spacer ── */}
+        <div style={{ height: 8 }} />
+
+        {/* ── History Log ── */}
+        <p style={sectionLabel}>History</p>
+        <div style={{ ...card, overflow: "hidden" }}>
+          {[...progressLog].reverse().map((entry, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "12px 16px",
+                borderTop: i > 0 ? "1px solid #1A1A1A" : "none",
+              }}
+            >
+              <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 15, color: "#807868" }}>
+                {new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {entry.body_fat != null && (
+                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 15, fontWeight: 600, color: BF_COLOR }}>
+                    {entry.body_fat}%
+                  </span>
+                )}
+                {entry.smm != null && (
+                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 15, fontWeight: 600, color: SMM_COLOR }}>
+                    {entry.smm} lbs SMM
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </PageShell>
     );
   }
 
@@ -823,61 +993,60 @@ export default function ProgressPage() {
   const unitLabel  = goalData?.performance_unit ?? "";
 
   return (
-    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
-      <header className="bg-[#0D0D0D] px-5 pt-10 pb-5 border-b border-[#252525]">
-        <div className="flex items-center justify-between">
-          <h1
-            className="text-2xl text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-          >Progress</h1>
-          <StatusPill status={statusData?.progressStatus ?? null} />
-        </div>
-        <p className="text-sm text-[#9A9080] mt-1">{metricName} tracking</p>
-      </header>
-      <EditingBanner />
-      <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-        {/* Stats */}
-        {(() => {
-          const dir   = goalData?.performance_direction ?? "increase";
-          const start = goalData?.starting_performance_value ?? null;
-          const goal  = goalData?.goal_performance_value     ?? null;
-          // Derive "current" from the latest log entry on or before selectedDate
-          const asOfPerf = progressLog.filter((e) => e.logged_at <= selectedDate);
-          let current: number | null = null;
-          for (let i = asOfPerf.length - 1; i >= 0; i--) {
-            if (asOfPerf[i].performance_value != null) { current = asOfPerf[i].performance_value; break; }
-          }
-          const improved = (start != null && current != null)
-            ? (dir === "increase" ? current - start : start - current)
-            : null;
-          const toGoal = (goal != null && current != null)
-            ? (dir === "increase" ? goal - current : current - goal)
-            : null;
-          const fmt = (v: number | null) =>
-            v != null ? `${v}${unitLabel ? ` ${unitLabel}` : ""}` : "—";
-          return (
-            <section className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Starting", value: fmt(start)   },
-                { label: "Current",  value: fmt(current) },
-                { label: "Improved", value: improved != null ? `+${improved}${unitLabel ? ` ${unitLabel}` : ""}` : "—" },
-                { label: "Remaining",  value: fmt(toGoal)  },
-              ].map((s) => (
-                <div key={s.label} className="bg-[#141414] rounded p-3 border border-[#252525] flex flex-col items-center justify-center min-h-[60px]">
-                  <p className="text-sm font-bold text-[#DDD5C0] text-center">{s.value}</p>
-                  <p className="text-[10px] text-[#9A9080] mt-0.5 text-center">{s.label}</p>
-                </div>
-              ))}
-            </section>
-          );
-        })()}
+    <PageShell>
+      {/* ── Divider ── */}
+      <div style={dividerStyle} />
 
-        {/* Chart */}
-        {perfSeries.length >= 2 && (
-          <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>{metricName} Trend</p>
-              {unitLabel && <span className="text-xs text-[#9A9080]">{unitLabel}</span>}
+      {/* ── Snapshot ── */}
+      <p style={sectionLabel}>Snapshot</p>
+      {(() => {
+        const dir   = goalData?.performance_direction ?? "increase";
+        const start = goalData?.starting_performance_value ?? null;
+        const goal  = goalData?.goal_performance_value     ?? null;
+        // Derive "current" from the latest log entry on or before selectedDate
+        const asOfPerf = progressLog.filter((e) => e.logged_at <= selectedDate);
+        let current: number | null = null;
+        for (let i = asOfPerf.length - 1; i >= 0; i--) {
+          if (asOfPerf[i].performance_value != null) { current = asOfPerf[i].performance_value; break; }
+        }
+        const improved = (start != null && current != null)
+          ? (dir === "increase" ? current - start : start - current)
+          : null;
+        const toGoal = (goal != null && current != null)
+          ? (dir === "increase" ? goal - current : current - goal)
+          : null;
+        const fmt = (v: number | null) =>
+          v != null ? `${v}${unitLabel ? ` ${unitLabel}` : ""}` : "—";
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <StatTile label="Starting"  value={fmt(start)}   color="#F4EEE4" />
+            <StatTile label="Current"   value={fmt(current)} color="#F4EEE4" />
+            <StatTile label="Improved"  value={improved != null ? `+${improved}${unitLabel ? ` ${unitLabel}` : ""}` : "—"} color="#B8933A" />
+            <StatTile label="Remaining" value={fmt(toGoal)}  color="#F4EEE4" />
+          </div>
+        );
+      })()}
+
+      {/* ── Divider ── */}
+      <div style={dividerStyle} />
+
+      {/* ── Chart ── */}
+      {perfSeries.length >= 2 && (
+        <>
+          <p style={sectionLabel}>{metricName} Trend</p>
+          <div style={{ ...card, padding: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{
+                fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+                letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+              }}>
+                Trend Chart
+              </span>
+              {unitLabel && (
+                <span style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic", fontSize: 13, color: "#4A3F2A" }}>
+                  {unitLabel}
+                </span>
+              )}
             </div>
             <RangeTabs value={chartRange} onChange={setChartRange} />
             {(() => {
@@ -895,48 +1064,79 @@ export default function ProgressPage() {
                   })}
                 />
               ) : (
-                <p className="text-xs text-[#807868] text-center py-4">Not enough data for this range</p>
+                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 13, color: "#807868", textAlign: "center", padding: "16px 0" }}>
+                  Not enough data for this range
+                </p>
               );
             })()}
-          </section>
-        )}
-
-        {/* Log entry */}
-        <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>Log {metricName}</p>
-            <button onClick={() => { setShowForm((v) => !v); setError(""); }} className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A]">
-              {showForm ? "Cancel" : "+ Add entry"}
-            </button>
           </div>
-          {showForm && (
-            <div className="mt-4 space-y-3">
-              <div className="flex gap-2">
-                <input type="number" inputMode="decimal" placeholder="e.g. 185" value={perfInput} onChange={(e) => setPerfInput(e.target.value)} className={inputCls} />
-                {unitLabel && <span className="flex items-center text-sm text-[#9A9080] pr-1">{unitLabel}</span>}
-              </div>
-              {error && <p className="text-xs text-[#7A1E1E]">{error}</p>}
-              <button onClick={handleLogPerformance} className={saveBtnCls}>Save</button>
-            </div>
-          )}
-        </section>
+          <div style={dividerStyle} />
+        </>
+      )}
 
-        {/* History log */}
-        <section className="bg-[#141414] rounded px-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] py-4 border-b border-[#252525]" style={{ fontFamily: "'Cinzel', serif" }}>History</p>
-          <ul>
-            {[...progressLog].reverse().map((entry, i) => (
-              <li key={i} className="flex items-center justify-between py-3 border-b border-[#252525] last:border-0">
-                <span className="text-sm text-[#9A9080]">{new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                <span className="text-sm font-semibold text-[#DDD5C0]">
-                  {entry.performance_value}{unitLabel ? ` ${unitLabel}` : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </main>
-      <BottomNav />
-    </div>
+      {/* ── Log Entry Tile ── */}
+      <div style={{
+        ...card, padding: "14px 16px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <span style={{
+          fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+          letterSpacing: "0.2em", color: "#807868", textTransform: "uppercase",
+        }}>
+          Log {metricName}
+        </span>
+        <button
+          onClick={() => { setShowForm((v) => !v); setError(""); }}
+          style={{
+            fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: "0.12em", color: "#B8933A", textTransform: "uppercase",
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+          }}
+        >
+          {showForm ? "Cancel" : "+ Add Entry"}
+        </button>
+      </div>
+
+      {/* Log Form */}
+      {showForm && (
+        <div style={{ ...card, padding: 16, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="number" inputMode="decimal" placeholder="e.g. 185"
+              value={perfInput} onChange={(e) => setPerfInput(e.target.value)}
+              style={inputStyle}
+            />
+            {unitLabel && <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#807868" }}>{unitLabel}</span>}
+          </div>
+          {error && <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#7A1E1E", margin: 0 }}>{error}</p>}
+          <button onClick={handleLogPerformance} style={saveBtnStyle}>Save</button>
+        </div>
+      )}
+
+      {/* ── Spacer ── */}
+      <div style={{ height: 8 }} />
+
+      {/* ── History Log ── */}
+      <p style={sectionLabel}>History</p>
+      <div style={{ ...card, overflow: "hidden" }}>
+        {[...progressLog].reverse().map((entry, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "12px 16px",
+              borderTop: i > 0 ? "1px solid #1A1A1A" : "none",
+            }}
+          >
+            <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 15, color: "#807868" }}>
+              {new Date(entry.logged_at + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
+            <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 17, fontWeight: 600, color: "#F4EEE4" }}>
+              {entry.performance_value}{unitLabel ? ` ${unitLabel}` : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+    </PageShell>
   );
 }
