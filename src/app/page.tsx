@@ -65,7 +65,7 @@ export default async function ClientDashboard({
   try {
     [data, statusScore] = await Promise.all([
       fetchDashboard(profile.id, selectedDate),
-      fetchStatusScore(profile.id),
+      fetchStatusScore(profile.id, selectedDate),
     ]);
   } catch (err) {
     console.error("[ClientDashboard] fetchDashboard failed:", err);

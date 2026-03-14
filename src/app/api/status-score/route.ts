@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { fetchStatusScore } from "@/lib/server-queries";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -17,6 +17,7 @@ export async function GET() {
 
   if (!profile) return NextResponse.json({ error: "No profile" }, { status: 404 });
 
-  const score = await fetchStatusScore(profile.id);
+  const date = request.nextUrl.searchParams.get("date") ?? undefined;
+  const score = await fetchStatusScore(profile.id, date);
   return NextResponse.json(score);
 }

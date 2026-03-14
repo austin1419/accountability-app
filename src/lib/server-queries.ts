@@ -1103,12 +1103,12 @@ export type StatusScore = {
   overallScore:    number;
 };
 
-export async function fetchStatusScore(userId: string): Promise<StatusScore> {
+export async function fetchStatusScore(userId: string, date?: string): Promise<StatusScore> {
   const supabase = createAdminClient();
 
   const [trends, compliance, goalRow] = await Promise.all([
     fetchProgressTrends(userId),
-    fetchProfileCompliance(userId),
+    fetchProfileCompliance(userId, date),
     supabase
       .from("goals")
       .select(GOAL_METRICS_SELECT)
