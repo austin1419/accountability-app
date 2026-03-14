@@ -40,11 +40,12 @@ function toDateStr(timestamp: string): string {
   return cstDate(new Date(timestamp));
 }
 
-// Count calendar days between two YYYY-MM-DD strings (inclusive)
+// Count calendar days between two YYYY-MM-DD strings (inclusive).
+// Uses T12:00:00 (noon) to avoid DST-transition off-by-one errors.
 function daysBetween(start: string, end: string): number {
-  const s = new Date(start + "T00:00:00").getTime();
-  const e = new Date(end   + "T00:00:00").getTime();
-  return Math.floor((e - s) / 86_400_000) + 1;
+  const s = new Date(start + "T12:00:00").getTime();
+  const e = new Date(end   + "T12:00:00").getTime();
+  return Math.round((e - s) / 86_400_000) + 1;
 }
 
 // computeGoalProgress is imported from @/lib/computeGoalProgress
@@ -504,8 +505,8 @@ export async function fetchProfileCompliance(userId: string, date?: string): Pro
   // Use provided date or default to today (CST)
   const asOfDate = date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
 
-  // Sunday-anchored week
-  const anchor = new Date(asOfDate + "T00:00:00");
+  // Sunday-anchored week (use T12:00:00 to avoid DST edge cases)
+  const anchor = new Date(asOfDate + "T12:00:00");
   const sundayOffset = anchor.getDay();
   const sunday = new Date(anchor);
   sunday.setDate(anchor.getDate() - sundayOffset);
@@ -737,9 +738,9 @@ export type ProgressTrends = {
   status:          "ahead" | "on_track" | "behind" | "no_data";
 };
 
-export async function fetchProgressTrends(userId: string): Promise<ProgressTrends | null> {
+export async function fetchProgressTrends(userId: string, date?: string): Promise<ProgressTrends | null> {
   const supabase = createAdminClient();
-  const today = cstDate();
+  const today = date ?? cstDate();
 
   // ── Fetch active goal ──────────────────────────────────────────
   const { data: goal } = await supabase
@@ -840,7 +841,7 @@ export async function fetchProgressTrends(userId: string): Promise<ProgressTrend
   // ── Compute velocities ────────────────────────────────────────
   // velocity = (last value - first value in window) / days between them
   function velocityForWindow(windowDays: number): number | null {
-    const cutoff = new Date(today + "T00:00:00");
+    const cutoff = new Date(today + "T12:00:00");
     cutoff.setDate(cutoff.getDate() - windowDays);
     const cutoffStr = cstDate(cutoff);
 
@@ -942,9 +943,9 @@ export type ProgressSummary = {
   smm:     { week: MetricDelta | null; month: MetricDelta | null } | null;
 };
 
-export async function fetchProgressSummary(userId: string): Promise<ProgressSummary> {
+export async function fetchProgressSummary(userId: string, date?: string): Promise<ProgressSummary> {
   const supabase = createAdminClient();
-  const today = cstDate();
+  const today = date ?? cstDate();
 
   // Fetch active goal to scope weight_logs
   const { data: activeGoal } = await supabase
@@ -954,11 +955,11 @@ export async function fetchProgressSummary(userId: string): Promise<ProgressSumm
     .eq("is_active", true)
     .maybeSingle();
 
-  const sevenAgo  = new Date(today + "T00:00:00");
+  const sevenAgo  = new Date(today + "T12:00:00");
   sevenAgo.setDate(sevenAgo.getDate() - 7);
   const weekTarget = cstDate(sevenAgo);
 
-  const thirtyAgo = new Date(today + "T00:00:00");
+  const thirtyAgo = new Date(today + "T12:00:00");
   thirtyAgo.setDate(thirtyAgo.getDate() - 30);
   const monthTarget = cstDate(thirtyAgo);
 
@@ -1140,7 +1141,7 @@ export async function fetchStatusScore(userId: string, date?: string): Promise<S
   const supabase = createAdminClient();
 
   const [trends, compliance, goalRow] = await Promise.all([
-    fetchProgressTrends(userId),
+    fetchProgressTrends(userId, date),
     fetchProfileCompliance(userId, date),
     supabase
       .from("goals")

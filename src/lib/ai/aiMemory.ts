@@ -164,7 +164,7 @@ export async function detectAndStoreMemories(
     (s) => s.key === "plateau" && s.detected && s.confidence !== "low",
   );
   if (plateau) {
-    const monthStr = new Date().toLocaleDateString("en-US", { month: "long", timeZone: "America/Chicago" });
+    const monthStr = new Date(ctx.selectedDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", timeZone: "America/Chicago" });
     promises.push(createMemory(
       userId, "pattern",
       `Weight plateau detected in ${monthStr}`,
@@ -193,7 +193,8 @@ export async function detectAndStoreMemories(
   }
 
   // ── Weekend pattern ───────────────────────────
-  const dayOfWeek = new Date().getDay(); // 0=Sun, 6=Sat
+  // Use selectedDate (not current time) to determine day of week
+  const dayOfWeek = new Date(ctx.selectedDate + "T12:00:00").getDay(); // 0=Sun, 6=Sat
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   if (isWeekend && ctx.compliance.today.total > 0 && ctx.compliance.today.percent < 30) {
     promises.push(createMemory(

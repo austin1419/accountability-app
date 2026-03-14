@@ -1,0 +1,317 @@
+[
+  {
+    "id": "trn_001",
+    "domain": "training",
+    "topic": "hypertrophy_mechanisms",
+    "tags": ["hypertrophy", "muscle_growth", "schoenfeld", "mechanical_tension"],
+    "priority": 1,
+    "expert": "Dr. Brad Schoenfeld",
+    "text": "Three mechanisms drive muscle growth: mechanical tension (primary — heavy load through full range of motion, the reason progressive overload is the central law), metabolic stress (the pump — high-rep moderate-load work), and muscle damage (microtrauma from novel or eccentric movements). All three work together. Programming should address all three, not optimize for one."
+  },
+  {
+    "id": "trn_002",
+    "domain": "training",
+    "topic": "weekly_volume_targets",
+    "tags": ["volume", "sets", "hypertrophy", "frequency", "schoenfeld"],
+    "priority": 1,
+    "expert": "Dr. Brad Schoenfeld",
+    "text": "Weekly volume by experience: beginners need 6–10 sets per muscle group (more is not better — recovery and technique are priority); intermediate 10–15 sets with progressive increase across mesocycles; advanced 15–20+ sets where individual variation becomes significant. Training each muscle group 2x per week outperforms 1x per week at equal volume. The rep range 6–30 all produce hypertrophy if taken to near failure."
+  },
+  {
+    "id": "trn_003",
+    "domain": "training",
+    "topic": "progressive_overload",
+    "tags": ["progressive_overload", "adaptation", "strength", "hypertrophy"],
+    "priority": 1,
+    "expert": "Dr. Brad Schoenfeld",
+    "text": "Progressive overload is not a preference — it is the mechanism by which adaptation occurs. A muscle never asked to do more than it has done before will not grow. Overload can be applied through load progression (add weight), volume progression (add sets), technique progression (fuller ROM, slower eccentric), density progression (same work in less time), or increased proximity to failure. When progress stalls, audit progressive overload first."
+  },
+  {
+    "id": "trn_004",
+    "domain": "training",
+    "topic": "deload_protocol",
+    "tags": ["deload", "recovery", "periodization", "israetel"],
+    "priority": 1,
+    "expert": "Dr. Mike Israetel",
+    "text": "A deload is a planned reduction in volume and/or intensity to allow accumulated fatigue to dissipate, revealing fitness built underneath it. For most intermediate clients: every 4–8 weeks. For advanced: every 3–4 weeks. Options include reducing volume by 40–50% or reducing load by 10–20%. The PR that follows a deload is the proof. The client who resists deloads usually needs them most."
+  },
+  {
+    "id": "trn_005",
+    "domain": "training",
+    "topic": "mev_mav_mrv",
+    "tags": ["volume", "MEV", "MRV", "periodization", "israetel"],
+    "priority": 2,
+    "expert": "Dr. Mike Israetel",
+    "text": "Israetel's volume framework: MEV (Minimum Effective Volume) is the least work that produces results and is the starting point of a mesocycle; MAV (Maximum Adaptive Volume) is the sweet spot of most growth per unit of recovery; MRV (Maximum Recoverable Volume) is the ceiling — training beyond it produces more fatigue than adaptation. A client who is perpetually fatigued and plateauing is likely above their MRV."
+  },
+  {
+    "id": "trn_006",
+    "domain": "training",
+    "topic": "rpe_proximity_to_failure",
+    "tags": ["RPE", "failure", "intensity", "helms"],
+    "priority": 1,
+    "expert": "Dr. Eric Helms",
+    "text": "Rate of Perceived Exertion (RPE) on a 1–10 scale measures proximity to failure. RPE 8 means 2 reps left in the tank. Most productive hypertrophy work occurs at RPE 7–9. Training to failure on every set accumulates fatigue without proportional additional stimulus. Beginners typically underestimate their RPE — they stop well before a real RPE 8. 'How many reps did you have left?' is a better question than 'How many did you do?'"
+  },
+  {
+    "id": "trn_007",
+    "domain": "training",
+    "topic": "training_in_deficit",
+    "tags": ["fat_loss", "deficit", "muscle_preservation", "training", "helms"],
+    "priority": 1,
+    "expert": "Dr. Eric Helms",
+    "text": "When a client is in a caloric deficit, maintain training volume and intensity — do not reduce the workout as the first response to lower calories. The stimulus must be maintained to signal muscle retention. Protein becomes more critical during a deficit (1.0g/lb or higher). Strength may decrease modestly — this is not muscle loss if protein is adequate and training is maintained."
+  },
+  {
+    "id": "trn_008",
+    "domain": "training",
+    "topic": "individual_variability",
+    "tags": ["individual_variability", "anatomy", "genetics", "nuckols"],
+    "priority": 2,
+    "expert": "Greg Nuckols",
+    "text": "Response to identical programs varies enormously between individuals. Some are high responders to volume, some to intensity. Hip socket depth determines squat stance. Limb proportions affect which exercises are biomechanically appropriate. Standard deviations in hypertrophy studies are large — non-responders, average responders, and high responders all exist within the same protocol. Never tell a client their results are wrong — ask questions about the variables."
+  },
+  {
+    "id": "trn_009",
+    "domain": "training",
+    "topic": "resistance_training_imperative",
+    "tags": ["resistance_training", "muscle", "longevity", "lyon", "metabolism"],
+    "priority": 1,
+    "expert": "Dr. Gabrielle Lyon",
+    "text": "Resistance training is the single most important exercise intervention for virtually every adult regardless of age, goal, or fitness level. Lyon's clinical floor is 2x per week full-body resistance training. Optimal is 3–4x per week with progressive overload. There is no age at which resistance training stops being beneficial — muscle protein synthesis is possible at 90+. The cardio-only client loses both fat and muscle; their body composition often barely improves."
+  },
+  {
+    "id": "slp_001",
+    "domain": "sleep_recovery",
+    "topic": "sleep_body_composition",
+    "tags": ["sleep", "fat_loss", "muscle_loss", "deficit", "walker"],
+    "priority": 1,
+    "expert": "Dr. Matthew Walker",
+    "text": "Sleep deprivation directly undermines body composition change. Sleep-deprived dieters lost 55% less fat and 60% more muscle than adequately sleeping dieters on the same caloric deficit (Nedeltcheva et al., Annals of Internal Medicine). A single night of poor sleep elevates ghrelin (hunger) and suppresses leptin (satiety). Nutrition advice without sleep advice is incomplete."
+  },
+  {
+    "id": "slp_002",
+    "domain": "sleep_recovery",
+    "topic": "sleep_hormones",
+    "tags": ["testosterone", "growth_hormone", "sleep", "recovery", "walker"],
+    "priority": 1,
+    "expert": "Dr. Matthew Walker",
+    "text": "Testosterone and growth hormone are secreted primarily during sleep. Chronic sleep restriction reduces testosterone in men by 10–15% within one week — equivalent to aging 10–15 years. GH pulses are disrupted by insufficient deep sleep, impairing the muscle repair that training was designed to produce. The client who trains hard and sleeps poorly is leaving training results on the table."
+  },
+  {
+    "id": "slp_003",
+    "domain": "sleep_recovery",
+    "topic": "sleep_optimization_order",
+    "tags": ["sleep_hygiene", "circadian", "wake_time", "morning_light", "huberman"],
+    "priority": 1,
+    "expert": "Dr. Andrew Huberman",
+    "text": "Sleep optimization hierarchy in order of impact: (1) consistent wake time 7 days a week — the anchor for the entire circadian system, (2) morning light exposure within 30–60 minutes of waking — sets the clock and determines melatonin timing 12–16 hours later, (3) evening light reduction after 9pm — blue light suppresses melatonin by up to 50%, (4) cool bedroom 65–68°F, (5) caffeine curfew by 12–1pm (caffeine quarter-life is 10–12 hours), (6) alcohol elimination — even 1–2 drinks reduce REM by 20–25%."
+  },
+  {
+    "id": "slp_004",
+    "domain": "sleep_recovery",
+    "topic": "rem_architecture",
+    "tags": ["REM", "sleep_architecture", "emotional_processing", "walker"],
+    "priority": 2,
+    "expert": "Dr. Matthew Walker",
+    "text": "REM sleep dominates the second half of the night — the last 2 hours of an 8-hour window contain most of the night's REM. Cutting sleep from 8 to 6 hours eliminates most REM, not just 25% of it. REM handles emotional processing, memory integration, and problem-solving. The client who cuts sleep short is not losing proportional amounts of each stage — they're losing disproportionately more REM."
+  },
+  {
+    "id": "slp_005",
+    "domain": "sleep_recovery",
+    "topic": "hrv_recovery_metric",
+    "tags": ["HRV", "recovery", "training_readiness", "wearable"],
+    "priority": 2,
+    "expert": "Dr. Andrew Huberman",
+    "text": "HRV measures autonomic nervous system balance. Higher HRV indicates better recovery and training readiness. Individual trends matter more than absolute values — a 20% drop below a client's personal baseline is meaningful. What lowers HRV: alcohol, illness, overtraining, poor sleep, psychological stress. When a client's wearable shows low HRV, the coaching question is: 'What does your body seem to be telling you? What happened in the last 48 hours?'"
+  },
+  {
+    "id": "hab_001",
+    "domain": "habit_formation",
+    "topic": "habit_loop",
+    "tags": ["habit_loop", "cue", "routine", "reward", "duhigg"],
+    "priority": 1,
+    "expert": "Charles Duhigg",
+    "text": "All habits consist of three elements: the cue (trigger that initiates the routine), the routine (the automatic behavior), and the reward (neurological signal that reinforces the loop). Changing the behavior alone without addressing the cue and reward rarely creates lasting change. To build a new habit, stack it onto an existing cue and create a clear reward signal. To break a bad habit, identify the cue and substitute a different routine that delivers the same reward."
+  },
+  {
+    "id": "hab_002",
+    "domain": "habit_formation",
+    "topic": "habit_stacking",
+    "tags": ["habit_stacking", "anchoring", "implementation", "clear"],
+    "priority": 1,
+    "expert": "James Clear",
+    "text": "Habit stacking: attach a new habit to an existing reliable behavior. 'After I [CURRENT HABIT], I will [NEW HABIT].' Examples: 'After I pour my morning coffee, I will take my creatine.' 'After I sit down to eat, I will take one breath before the first bite.' When assigning a new practice, ask: 'What do you already do reliably at that time of day?' Habits floating in isolation rarely stick — they need anchors."
+  },
+  {
+    "id": "hab_003",
+    "domain": "habit_formation",
+    "topic": "minimum_viable_behavior",
+    "tags": ["tiny_habits", "minimum_viable", "consistency", "fogg"],
+    "priority": 1,
+    "expert": "BJ Fogg",
+    "text": "When motivation is low or the client is overwhelmed, shrink the behavior until it requires almost no effort. The goal is to keep the habit loop alive — not to optimize performance. A workout on a hard day can be 5 minutes of movement. 'Just log something' beats 'track every macro perfectly' when compliance is dropping. The smallest action that keeps identity intact is always better than the optimal action that gets skipped."
+  },
+  {
+    "id": "hab_004",
+    "domain": "habit_formation",
+    "topic": "identity_based_habits",
+    "tags": ["identity", "behavior_change", "motivation", "clear"],
+    "priority": 1,
+    "expert": "James Clear",
+    "text": "The most durable habits align with who the client believes they are, not just what they want. 'I want to lose weight' is an outcome-based goal. 'I am someone who takes care of my body' is identity-based. Every workout completed, every logged meal, every good night of sleep — these are votes cast for the identity the client is building. When a client is struggling with motivation, shift the frame: 'Who do you want to be in 5 years? What does that person do on a Tuesday when they don't feel like it?'"
+  },
+  {
+    "id": "hab_005",
+    "domain": "habit_formation",
+    "topic": "implementation_intentions",
+    "tags": ["implementation_intentions", "planning", "specificity", "follow_through"],
+    "priority": 1,
+    "expert": "Research / PN",
+    "text": "Specifying WHEN, WHERE, and HOW a behavior will occur dramatically increases follow-through compared to general intentions. Wrong: 'I'm going to eat better this week.' Right: 'On Monday, Wednesday, and Friday, I will prepare a high-protein breakfast before I leave the house at 7am.' When assigning any practice, always ask the client to specify their implementation intention — the more specific the plan, the higher the follow-through."
+  },
+  {
+    "id": "hab_006",
+    "domain": "habit_formation",
+    "topic": "environmental_design",
+    "tags": ["environment", "friction", "behavior_change", "willpower"],
+    "priority": 1,
+    "expert": "James Clear / BJ Fogg",
+    "text": "The client with the best intentions will fail if their environment makes the wrong behavior easy and the right behavior hard. Environment is more reliable than willpower. Put the gym bag by the door. Prep protein sources on Sunday. Remove misaligned foods from the most visible locations. Before concluding a client lacks motivation, ask about their environment. Environmental friction is often the variable — not character."
+  },
+  {
+    "id": "hab_007",
+    "domain": "habit_formation",
+    "topic": "relapse_prevention",
+    "tags": ["relapse", "streak", "perfectionism", "recovery"],
+    "priority": 1,
+    "expert": "Research / MI",
+    "text": "The highest relapse risk occurs in the first 12 weeks of behavior change. The most common relapse trigger is perfectionism — the belief that one miss invalidates all prior progress. One bad day is a data point. A week of bad days is a pattern. When a client breaks a streak, respond to the event — not their entire history. 'One miss doesn't break the pattern you've built. What happened? What does tomorrow look like?'"
+  },
+  {
+    "id": "hab_008",
+    "domain": "habit_formation",
+    "topic": "motivational_interviewing",
+    "tags": ["MI", "ambivalence", "Socratic", "autonomy", "behavior_change"],
+    "priority": 1,
+    "expert": "Motivational Interviewing",
+    "text": "MI is designed to elicit behavior change from the inside out — not through prescription, but through guided reflection. Core techniques: open questions that invite the client to explore their own experience, reflective listening that repeats back with slight reframing, and exploring ambivalence rather than arguing against resistance. The client who articulates their own motivation for change is dramatically more likely to act on it than the client who was convinced by their coach."
+  },
+  {
+    "id": "wmn_001",
+    "domain": "women_health",
+    "topic": "perimenopause_cluster",
+    "tags": ["perimenopause", "hormones", "female_40s", "sims", "haver"],
+    "priority": 1,
+    "expert": "Dr. Stacy Sims / Dr. Mary Claire Haver",
+    "text": "Perimenopause begins 7–10 years before menopause (average age 51) — meaning a 42-year-old may already be in transition. The symptom cluster to flag: irregular periods, sleep disruption (especially waking 2–4am), new-onset anxiety or mood changes, hot flashes, abdominal fat redistribution despite no diet changes, joint pain, and cognitive symptoms (brain fog, word-finding). When multiple symptoms appear together in a female client over 40, name perimenopause directly and point toward a menopause-certified provider."
+  },
+  {
+    "id": "wmn_002",
+    "domain": "women_health",
+    "topic": "heavy_lifting_menopause",
+    "tags": ["perimenopause", "lifting", "muscle", "bone", "estrogen"],
+    "priority": 1,
+    "expert": "Dr. Stacy Sims / Dr. Mary Claire Haver",
+    "text": "Heavy lifting becomes MORE important at perimenopause and menopause — not less. Estrogen decline accelerates muscle loss (sarcopenia) and bone loss. The only effective countermeasure is progressive, heavy resistance training. Long steady-state cardio in declining estrogen can elevate cortisol and accelerate muscle loss. HIIT (2–3 sessions/week) combined with heavy lifting produces better outcomes for body composition and hormonal health."
+  },
+  {
+    "id": "wmn_003",
+    "domain": "women_health",
+    "topic": "menstrual_cycle_training",
+    "tags": ["menstrual_cycle", "follicular", "luteal", "performance", "sims"],
+    "priority": 2,
+    "expert": "Dr. Stacy Sims",
+    "text": "The menstrual cycle creates meaningful variation in performance across the month. Follicular phase (Day 1–14): rising estrogen, anabolic environment — best for high-intensity training and PRs. Ovulation (~Day 14): performance peak, but ligament laxity peaks too — warm-up quality is non-negotiable. Luteal phase (Day 15–28): progesterone rises, core temperature elevates, recovery slows — not the time to test maxes. Frame this as optimization, not limitation."
+  },
+  {
+    "id": "wmn_004",
+    "domain": "women_health",
+    "topic": "bone_density_protocol",
+    "tags": ["bone_density", "osteoporosis", "wright", "impact", "calcium"],
+    "priority": 2,
+    "expert": "Dr. Vonda Wright",
+    "text": "Women lose up to 20% of bone mass in the 5–7 years immediately following menopause — the critical window. Wright's bone-building protocol includes: load-bearing exercise, brief high-impact activity 3x/week (jump rope is a legitimate bone health intervention), balance training for fall prevention, protein adequacy (1–1.2g/lb for postmenopausal women), and calcium 1,000–1,200mg/day + vitamin D3 2,000–4,000 IU/day + K2 (MK-7) to direct calcium into bone."
+  },
+  {
+    "id": "wmn_005",
+    "domain": "women_health",
+    "topic": "reds_underfueling",
+    "tags": ["RED_S", "underfueling", "energy_availability", "female_athlete", "sims"],
+    "priority": 1,
+    "expert": "Dr. Stacy Sims",
+    "text": "Women are significantly more susceptible to RED-S (Relative Energy Deficiency in Sport) than men. Energy availability below ~30 kcal/kg of fat-free mass suppresses hormonal function, impairs bone health, disrupts the menstrual cycle, and reduces performance. The female client who is training hard but eating very little is at high risk regardless of whether she 'looks' lean. Underfueling is not discipline — it is a clinical risk. Ask directly about energy intake when cycles are irregular or performance is dropping."
+  },
+  {
+    "id": "str_001",
+    "domain": "stress_management",
+    "topic": "cortisol_fat_connection",
+    "tags": ["cortisol", "visceral_fat", "stress", "fat_storage"],
+    "priority": 1,
+    "expert": "Dr. Robert Sapolsky / Dr. Andrew Huberman",
+    "text": "Chronic cortisol activates lipoprotein lipase in visceral adipose tissue, promoting abdominal fat storage. A client doing 'everything right' but gaining midsection weight may be experiencing cortisol-driven storage, not a caloric surplus. The question is: what is driving the cortisol? Work stress, relationship conflict, financial pressure, insufficient sleep, excessive training volume, or undereating can all be the source."
+  },
+  {
+    "id": "str_002",
+    "domain": "stress_management",
+    "topic": "overtraining_stressed_client",
+    "tags": ["overtraining", "cortisol", "allostatic_load", "recovery"],
+    "priority": 1,
+    "expert": "Dr. Andrew Huberman",
+    "text": "Training is a stressor. For a client already carrying high allostatic load, adding more high-intensity training becomes counterproductive. The stressed-out client who is overtraining does not need more training — they need nervous system recovery. This is one of the most common coaching errors. Zone 2 cardio (low-intensity, conversational pace) actually supports parasympathetic recovery while maintaining fitness."
+  },
+  {
+    "id": "str_003",
+    "domain": "stress_management",
+    "topic": "physiological_sigh",
+    "tags": ["breathing", "acute_stress", "parasympathetic", "huberman"],
+    "priority": 1,
+    "expert": "Dr. Andrew Huberman",
+    "text": "The physiological sigh — a double inhale through the nose followed by a long exhale through the mouth — is the fastest known method to acutely lower heart rate and induce calm. It deflates the alveoli that accumulate CO2 during stress. Teachable in seconds, deployable anywhere, and evidence-based. Teach this to any client dealing with acute stress moments before recommending any other intervention."
+  },
+  {
+    "id": "lng_001",
+    "domain": "longevity",
+    "topic": "marginal_decade",
+    "tags": ["longevity", "aging", "marginal_decade", "attia"],
+    "priority": 1,
+    "expert": "Dr. Peter Attia",
+    "text": "Attia's marginal decade framework: every fitness decision should be made with the question 'What do I want my life to look like at 80?' The marginal decade — the last decade of life — is when mobility, strength, and cardiovascular fitness determine whether someone lives independently. Build toward that decade now. For clients driven primarily by aesthetics, this frame creates a more durable motivation that outlasts appearance goals."
+  },
+  {
+    "id": "lng_002",
+    "domain": "longevity",
+    "topic": "zone_2_cardio",
+    "tags": ["zone_2", "cardio", "mitochondria", "VO2_max", "attia"],
+    "priority": 1,
+    "expert": "Dr. Peter Attia",
+    "text": "Zone 2 cardio — 150–180 minutes per week at a conversational pace where the client can speak in full sentences — is the most powerful longevity intervention in the exercise domain. It builds mitochondrial density, metabolic flexibility, and cardiovascular efficiency. Zone 2 also supports parasympathetic tone and recovery, making it the preferred cardio recommendation for stressed clients who need to exercise without adding to their allostatic load."
+  },
+  {
+    "id": "lng_003",
+    "domain": "longevity",
+    "topic": "daily_steps_neat",
+    "tags": ["steps", "NEAT", "non_exercise_activity", "fat_loss"],
+    "priority": 2,
+    "expert": "Dr. Peter Attia / Dr. Kelly Starrett",
+    "text": "10,000 steps per day is a proxy for non-exercise activity thermogenesis (NEAT) — distinct from formal exercise. A client who exercises one hour and sits the remaining 15 hours has a fundamentally different metabolic profile than one who also accumulates steps throughout the day. When a client's fat loss stalls with consistent training, audit daily steps before adjusting food or programming. A client averaging 3,000 steps/day has a significant lever available that doesn't require more gym time."
+  },
+  {
+    "id": "lng_004",
+    "domain": "longevity",
+    "topic": "squat_troubleshooting",
+    "tags": ["squat", "ankle_mobility", "hip_anatomy", "horschig", "movement"],
+    "priority": 2,
+    "expert": "Dr. Aaron Horschig",
+    "text": "The three most common squat limiters: (1) ankle mobility restriction — most common, causes heel rise and knee cave, test with 5-inch knee-to-wall test, (2) hip socket anatomy — some clients physically cannot squat to full depth due to bone geometry, the solution is stance modification not stretching, (3) thoracic spine limitation — address with thoracic mobility and bracing. Run the ankle mobility test first before prescribing hip stretching."
+  },
+  {
+    "id": "lng_005",
+    "domain": "longevity",
+    "topic": "position_before_load",
+    "tags": ["movement_quality", "injury_prevention", "position", "starrett"],
+    "priority": 1,
+    "expert": "Dr. Kelly Starrett",
+    "text": "Load amplifies whatever movement pattern it is placed on. A squat with compromised positioning loaded to 200lbs is a faster path to injury — not a training stimulus. The rule: establish position before adding load. When a client reports pain during a movement, remove the load first, restore the position, then reintroduce load progressively. 'How does it feel with no weight?' is the first diagnostic question."
+  }
+]

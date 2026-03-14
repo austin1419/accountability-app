@@ -431,3 +431,43 @@ export type KnowledgeContext = {
   /** Priority check guidance from matched scenarios */
   priorityChecks:    string[];
 };
+
+
+// ═══════════════════════════════════════════════
+// COACHING FOCUS (prioritization layer)
+// ═══════════════════════════════════════════════
+
+/** Primary coaching focus areas the engine can select. */
+export type CoachingFocusArea =
+  | "disengagement_risk"
+  | "compliance_crisis"
+  | "plateau"
+  | "consistency"
+  | "adherence"
+  | "progress_pacing"
+  | "momentum"
+  | "recovery"
+  | "nutrition_execution"
+  | "streak_protection";
+
+/** How the coach should frame the message around this focus. */
+export type CoachingFocusMode =
+  | "reinforce"      // things are going well — affirm and protect
+  | "correct"        // something is off — name it and redirect
+  | "caution"        // warning signs — flag without alarm
+  | "simplify"       // overwhelmed/stressed — reduce complexity
+  | "encourage";     // rebuilding — meet them where they are
+
+/** Output of the Focus Engine — drives briefing tone and content. */
+export type CoachingFocus = {
+  /** The single most important coaching priority today */
+  primaryFocus:      CoachingFocusArea;
+  /** How the coach should approach this focus */
+  focusMode:         CoachingFocusMode;
+  /** Human-readable reason for this focus selection */
+  focusReason:       string;
+  /** Optional secondary focus when two things truly matter */
+  secondaryFocus?:   CoachingFocusArea;
+  /** Signal keys that informed this decision */
+  supportingSignals: string[];
+};

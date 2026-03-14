@@ -20,6 +20,7 @@ import type {
   AIMemory,
   KnowledgeContext,
   KnowledgeChunk,
+  CoachingFocus,
   DailyBriefing,
   BriefingMomentum,
   BriefingRisk,
@@ -63,7 +64,14 @@ function mapRisk(analysis: ClientAnalysis): BriefingRisk {
 
 function buildGreeting(ctx: ClientAIContext): string {
   const firstName = ctx.client.name.split(" ")[0];
-  const hour = new Date().getHours();
+  // Use CST-aware hour so greeting matches the user's timezone
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "America/Chicago",
+    }).format(new Date()),
+  );
 
   if (hour < 12)  return `Good morning, ${firstName}`;
   if (hour < 17)  return `Good afternoon, ${firstName}`;
@@ -273,8 +281,8 @@ function enrichInsightWithMemory(
   // Look for a pattern memory that adds context
   const patternMemory = memories.find((m) => m.memoryType === "pattern");
   if (patternMemory) {
-    // Weekend pattern + it's a weekend
-    const dayOfWeek = new Date().getDay();
+    // Weekend pattern + it's a weekend (use selectedDate, not current time)
+    const dayOfWeek = new Date(ctx.selectedDate + "T12:00:00").getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     if (isWeekend && patternMemory.memoryText.toLowerCase().includes("weekend")) {
       return `${baseInsight} Weekends have been tough for you before — staying aware of that is half the battle.`;
@@ -356,6 +364,79 @@ function enrichGuidanceWithKnowledge(
   return baseGuidance;
 }
 
+// ═══════════════════════════════════════════════
+// FOCUS-DRIVEN OVERRIDES
+// ═══════════════════════════════════════════════
+//
+// When the Focus Engine has a strong opinion, these
+// overrides shape the message around that focus.
+// They return null when the focus doesn't warrant
+// overriding the default logic.
+
+function focusSnapshot(focus: CoachingFocus, ctx: ClientAIContext): string | null {
+  switch (focus.primaryFocus) {
+    case "disengagement_risk":
+      return "It's been a while since things were fully on track. Let's talk about that.";
+    case "compliance_crisis":
+      return `This week has been rough — ${ctx.compliance.week.percent}% of tasks done. But today is a new day.`;
+    case "plateau":
+      return "You've been putting in the work, but the numbers have stalled. That's worth talking about.";
+    case "streak_protection": {
+      const streak = ctx.streak;
+      return `You're on a ${streak}-day streak. Today's the day to keep it going.`;
+    }
+    default:
+      return null; // Use default snapshot logic
+  }
+}
+
+function focusGuidance(focus: CoachingFocus): string | null {
+  switch (focus.focusMode) {
+    case "simplify":
+      return "Forget the big picture for today. Pick one task. Do it. That's enough.";
+    case "correct":
+      return focus.focusReason;
+    case "caution":
+      if (focus.primaryFocus === "plateau") {
+        return "This isn't a failure — it's a signal. Stay consistent and let your coach assess whether something needs to change.";
+      }
+      return null;
+    case "encourage":
+      if (focus.primaryFocus === "disengagement_risk") {
+        return "No judgment. Just show up today. One task, one check-in. That's how you come back.";
+      }
+      return null;
+    case "reinforce":
+      return null; // Default guidance is already encouraging
+  }
+}
+
+function focusAction(focus: CoachingFocus, ctx: ClientAIContext): string | null {
+  switch (focus.primaryFocus) {
+    case "disengagement_risk":
+    case "compliance_crisis": {
+      // Find the single easiest incomplete task
+      const incomplete = ctx.tasks.filter((t) => !t.done);
+      if (incomplete.length > 0) {
+        return `Start with one thing: "${incomplete[0].name}". Just that.`;
+      }
+      return "Open the app and check off one task. That's your only job today.";
+    }
+    case "streak_protection": {
+      const remaining = ctx.tasks.filter((t) => !t.done);
+      if (remaining.length === 1) {
+        return `Finish "${remaining[0].name}" to lock in day ${ctx.streak + 1}.`;
+      }
+      if (remaining.length > 0) {
+        return `${remaining.length} tasks left to protect your streak. Knock them out.`;
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 function buildCoachingMessage(
   ctx: ClientAIContext,
   analysis: ClientAnalysis,
@@ -364,15 +445,16 @@ function buildCoachingMessage(
   momentum: BriefingMomentum,
   memories: AIMemory[],
   snippets: KnowledgeChunk[],
+  focus: CoachingFocus,
 ): CoachingMessage {
   const baseInsight = buildInsight(analysis, ctx, clientSummary, coachSummary);
   const baseGuidance = buildGuidance(analysis, coachSummary, momentum);
 
   return {
-    snapshot: buildSnapshot(ctx, analysis, clientSummary, momentum),
+    snapshot: focusSnapshot(focus, ctx) ?? buildSnapshot(ctx, analysis, clientSummary, momentum),
     insight:  enrichInsightWithMemory(baseInsight, memories, ctx),
-    guidance: enrichGuidanceWithKnowledge(baseGuidance, snippets, momentum),
-    action:   buildAction(ctx, clientSummary, analysis),
+    guidance: enrichGuidanceWithKnowledge(focusGuidance(focus) ?? baseGuidance, snippets, momentum),
+    action:   focusAction(focus, ctx) ?? buildAction(ctx, clientSummary, analysis),
   };
 }
 
@@ -459,6 +541,7 @@ export function buildDailyBriefing(
   readiness: AIFeatureReadiness,
   memories: AIMemory[] = [],
   knowledge?: KnowledgeContext,
+  focus?: CoachingFocus,
 ): DailyBriefing {
   if (!readiness.available) {
     return buildGatedBriefing(ctx, readiness);
@@ -468,13 +551,21 @@ export function buildDailyBriefing(
   const riskLevel     = mapRisk(analysis);
   const snippets      = knowledge?.snippets ?? [];
 
+  // Default focus if not provided
+  const resolvedFocus: CoachingFocus = focus ?? {
+    primaryFocus: "momentum",
+    focusMode: "reinforce",
+    focusReason: "Default — no focus engine output provided",
+    supportingSignals: [],
+  };
+
   return {
     id:              `${ctx.client.userId}-${ctx.selectedDate}`,
     generatedAt:     new Date().toISOString(),
     greeting:        buildGreeting(ctx),
     momentumState,
     riskLevel,
-    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories, snippets),
+    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories, snippets, resolvedFocus),
     metrics:         buildMetrics(ctx),
     sourceSignals:   analysis.allSignals.filter((s) => s.detected).map((s) => s.key),
   };

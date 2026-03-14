@@ -39,11 +39,12 @@ function cstDate(d: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d);
 }
 
-/** Inclusive calendar-day count between two YYYY-MM-DD strings */
+/** Inclusive calendar-day count between two YYYY-MM-DD strings.
+ *  Uses T12:00:00 (noon) to avoid DST-transition off-by-one errors. */
 function daysBetween(start: string, end: string): number {
-  const s = new Date(start + "T00:00:00").getTime();
-  const e = new Date(end   + "T00:00:00").getTime();
-  return Math.floor((e - s) / 86_400_000) + 1;
+  const s = new Date(start + "T12:00:00").getTime();
+  const e = new Date(end   + "T12:00:00").getTime();
+  return Math.round((e - s) / 86_400_000) + 1;
 }
 
 /** Clamp a window start so it never precedes createdAt */
@@ -59,15 +60,17 @@ async function fetchStreakServer(
   goalId: string,
   taskIds: string[],
   totalTasks: number,
+  selectedDate: string,
 ): Promise<number> {
   if (totalTasks === 0 || taskIds.length === 0) return 0;
 
   const supabase = createAdminClient();
-  const today = cstDate();
+  const today = selectedDate;
 
-  const lookback = new Date();
-  lookback.setDate(lookback.getDate() - 90);
-  const startStr = cstDate(lookback);
+  // Compute lookback from selectedDate (not current time)
+  const anchorDate = new Date(selectedDate + "T12:00:00");
+  anchorDate.setDate(anchorDate.getDate() - 90);
+  const startStr = cstDate(anchorDate);
 
   const { data: logs } = await supabase
     .from("task_logs")
@@ -145,11 +148,11 @@ export async function buildClientContext(
     // Compliance (reuse existing server function)
     fetchProfileCompliance(userId, selectedDate),
 
-    // Progress trends (reuse existing)
-    fetchProgressTrends(userId),
+    // Progress trends (reuse existing, anchored to selectedDate)
+    fetchProgressTrends(userId, selectedDate),
 
-    // Progress summary (reuse existing)
-    fetchProgressSummary(userId),
+    // Progress summary (reuse existing, anchored to selectedDate)
+    fetchProgressSummary(userId, selectedDate),
 
     // Status score (reuse existing)
     fetchStatusScore(userId, selectedDate),
@@ -237,7 +240,7 @@ export async function buildClientContext(
 
     // Streak
     goalId && taskIds.length > 0
-      ? fetchStreakServer(userId, goalId, taskIds, tasksResult.length)
+      ? fetchStreakServer(userId, goalId, taskIds, tasksResult.length, selectedDate)
       : Promise.resolve(0),
   ]);
 

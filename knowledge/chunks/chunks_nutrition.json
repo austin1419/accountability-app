@@ -1,0 +1,146 @@
+[
+  {
+    "id": "nut_001",
+    "domain": "nutrition",
+    "topic": "energy_balance",
+    "tags": ["fat_loss", "energy_balance", "calories", "norton"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton",
+    "text": "Energy balance is real and non-negotiable. Weight is regulated by total calories in vs. out. Hormones, medications, and stress affect where energy goes in the equation — not whether the equation exists. The coaching job is to find where the client's equation is being disrupted, not to validate the belief that it doesn't apply to them."
+  },
+  {
+    "id": "nut_002",
+    "domain": "nutrition",
+    "topic": "protein_target",
+    "tags": ["protein", "muscle_retention", "fat_loss", "norton"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton",
+    "text": "The practical protein target is 0.7–1.0g per pound of bodyweight daily. Total daily intake matters most. For adults over 40, 30–40g per meal becomes important to clear the leucine threshold for muscle protein synthesis. Protein is the single highest-leverage nutrition intervention for virtually every client regardless of goal."
+  },
+  {
+    "id": "nut_003",
+    "domain": "nutrition",
+    "topic": "protein_breakfast",
+    "tags": ["protein", "breakfast", "habit", "lyon", "norton"],
+    "priority": 1,
+    "expert": "Dr. Gabrielle Lyon",
+    "text": "A high-protein breakfast — 30–50g of protein within the first hour of waking — sets the anabolic tone for the entire day. It clears the leucine threshold early, reduces cravings and appetite dysregulation throughout the day, and is the single most impactful nutritional change for most clients who are skipping or delaying breakfast."
+  },
+  {
+    "id": "nut_004",
+    "domain": "nutrition",
+    "topic": "adherence_over_perfection",
+    "tags": ["adherence", "compliance", "behavior_change", "norton", "PN"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton / Precision Nutrition",
+    "text": "Adherence is the strongest predictor of diet success — not the diet itself. A less-than-optimal diet followed consistently beats perfection inconsistently every time. The most perfect plan that a client doesn't follow produces nothing. The coaching job is to find the most adherent plan, not the most optimal one."
+  },
+  {
+    "id": "nut_005",
+    "domain": "nutrition",
+    "topic": "logging_self_monitoring",
+    "tags": ["logging", "self_monitoring", "adherence", "norton", "PN"],
+    "priority": 1,
+    "expert": "Precision Nutrition",
+    "text": "Self-monitoring — logging food, even imperfectly — is the most consistently supported behavior change tool in nutrition research. A client who logs 5 of 7 days outperforms a client who doesn't log at all, even if some days are inaccurate. The instruction is: log the bad days especially. Not logging Sunday because Saturday was off the rails is what actually derails the week."
+  },
+  {
+    "id": "nut_006",
+    "domain": "nutrition",
+    "topic": "underreporting",
+    "tags": ["logging", "caloric_intake", "audit", "norton"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton",
+    "text": "Self-reported caloric intake is notoriously inaccurate. Studies consistently show underreporting by 20–40%. The gap between what a client believes they eat and what they actually eat is the most important coaching conversation in nutrition. Before investigating metabolism or hormones, investigate the log."
+  },
+  {
+    "id": "nut_007",
+    "domain": "nutrition",
+    "topic": "nutrition_hierarchy",
+    "tags": ["hierarchy", "energy_balance", "protein", "supplements", "norton"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton",
+    "text": "Norton's nutrition hierarchy applies in this order: (1) energy balance, (2) macronutrients with protein first, (3) micronutrients and food quality, (4) meal timing which has minor influence, (5) supplements where only creatine, protein powder, vitamin D, and omega-3 have strong evidence. A client asking about tier 5 who hasn't solved tier 1 is working at the wrong level."
+  },
+  {
+    "id": "nut_008",
+    "domain": "nutrition",
+    "topic": "flexible_dieting",
+    "tags": ["flexible_dieting", "rigid_dieting", "adherence", "elimination"],
+    "priority": 2,
+    "expert": "Dr. Layne Norton",
+    "text": "Rigid elimination rules fail because they create psychological pressure that leads to bingeing. No food is inherently good or evil. Teaching clients to fit foods into targets is more durable than a banned list. When a client wants to eliminate a food group, ask: does removing this make it harder to hit your protein target? That is the real question."
+  },
+  {
+    "id": "nut_009",
+    "domain": "nutrition",
+    "topic": "sleep_as_nutrition_variable",
+    "tags": ["sleep", "hunger", "ghrelin", "leptin", "cortisol"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton / Dr. Matthew Walker",
+    "text": "Sleep and stress are nutritional variables. Chronically elevated cortisol promotes fat storage and impairs recovery. Sleep deprivation increases ghrelin (hunger) and suppresses leptin (satiety). The client who can't control hunger is often responding to a biological signal, not a willpower failure. Fix sleep first, then reassess eating patterns."
+  },
+  {
+    "id": "nut_010",
+    "domain": "nutrition",
+    "topic": "creatine_universal",
+    "tags": ["creatine", "supplements", "women", "muscle", "cognitive"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton / Dr. Stacy Sims",
+    "text": "Creatine monohydrate is the supplement with the strongest evidence base. 5g daily, any timing. Improves lean mass, strength, power output, cognitive performance, and has emerging evidence for bone health and mood. The recommendation applies universally including to women. There is no credible reason not to take it."
+  },
+  {
+    "id": "nut_011",
+    "domain": "nutrition",
+    "topic": "sustainable_deficit",
+    "tags": ["fat_loss", "deficit", "muscle_preservation", "sustainability"],
+    "priority": 1,
+    "expert": "Dr. Layne Norton / Dr. Eric Helms",
+    "text": "A 300–500 calorie daily deficit produces 0.5–1 lb per week of fat loss without significant muscle loss, hormonal disruption, or psychological damage. Sustainable deficits outperform extreme deficits in long-term results. The client who loses 0.5 lbs/week for a year achieves a transformation that feels impossible at week 3."
+  },
+  {
+    "id": "nut_012",
+    "domain": "nutrition",
+    "topic": "diet_break",
+    "tags": ["plateau", "metabolic_adaptation", "diet_break", "leptin"],
+    "priority": 2,
+    "expert": "Dr. Layne Norton",
+    "text": "After 8–12 weeks of consistent caloric deficit, metabolic adaptation is real. A 1–2 week diet break at maintenance calories can restore leptin levels, reduce cortisol, improve psychological relationship with food, and set up a more productive next phase. This is periodization applied to nutrition — not giving up."
+  },
+  {
+    "id": "nut_013",
+    "domain": "nutrition",
+    "topic": "pn_master_practices",
+    "tags": ["eat_slowly", "satiety", "habits", "PN"],
+    "priority": 1,
+    "expert": "Precision Nutrition",
+    "text": "Precision Nutrition's two master practices have the highest leverage on virtually every nutrition outcome: (1) eat slowly — the satiety signal takes 15–20 minutes to register, and speed-eating chronically overrides it, and (2) eat until 80% full — stopping before the plate is clean addresses overconsumption at the neurological level. When a client is overwhelmed, reduce coaching to these two practices only."
+  },
+  {
+    "id": "nut_014",
+    "domain": "nutrition",
+    "topic": "readiness_stages",
+    "tags": ["readiness", "behavior_change", "stages_of_change", "PN"],
+    "priority": 1,
+    "expert": "Precision Nutrition",
+    "text": "Before prescribing any nutrition protocol, assess where the client is on the readiness spectrum: pre-contemplation (not ready), contemplation (knows they should), preparation (ready to start), action (making changes), or maintenance (sustained for 6+ months). A contemplation client doesn't need a macro plan — they need one question: 'What's one small thing you could try this week?' Matching intervention to readiness stage is the difference between transformation and dropout."
+  },
+  {
+    "id": "nut_015",
+    "domain": "nutrition",
+    "topic": "protein_first_strategy",
+    "tags": ["protein", "meal_sequence", "glucose", "insulin", "lyon"],
+    "priority": 2,
+    "expert": "Dr. Gabrielle Lyon",
+    "text": "Lyon's protein-first eating strategy: eat protein before carbohydrates and fats at every meal. This leverages protein's satiety properties to naturally regulate overall intake, ensures the leucine threshold is cleared even when meal size is reduced, and eating protein before starch independently reduces postprandial glucose and insulin spikes. No meal should contain less than 30g of protein."
+  },
+  {
+    "id": "nut_016",
+    "domain": "nutrition",
+    "topic": "scale_vs_body_composition",
+    "tags": ["scale", "body_composition", "InBody", "muscle", "fat", "lyon"],
+    "priority": 1,
+    "expert": "Dr. Gabrielle Lyon",
+    "text": "The scale is the worst single metric for tracking real progress. Weight alone is meaningless without body composition context. A client who loses 10 pounds with 5 pounds of muscle has not improved their metabolic health. The reframe: obesity is under-muscling, not over-fatting. Lead with muscle building — fat loss follows. An InBody scan is the minimum standard for tracking real progress."
+  }
+]

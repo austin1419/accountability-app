@@ -1,0 +1,169 @@
+{
+  "_meta": {
+    "version": "4.0",
+    "description": "PULSE AI Coach scenario-to-domain routing map. Maps client situations to relevant knowledge domains and expert references. Multiple domains may fire simultaneously for complex scenarios.",
+    "usage": "Read client context block → identify matching scenario(s) → inject relevant domain knowledge files into prompt Tier 2."
+  },
+
+  "fat_loss_plateau": {
+    "domains": ["nutrition", "training", "habit_formation"],
+    "experts": ["Norton", "Schoenfeld", "PN"],
+    "priority_check": "Audit caloric accuracy first, then progressive overload stagnation, then logging drift. Check all three before adding complexity.",
+    "first_question": "When did you last log your food for a full week without any gaps?"
+  },
+
+  "low_compliance": {
+    "domains": ["habit_formation", "stress_management"],
+    "experts": ["Clear", "Fogg", "MI"],
+    "priority_check": "Assess life context before prescribing harder protocols. Is this a motivation problem or an environment/stress problem?",
+    "first_question": "Walk me through what a typical day looks like right now."
+  },
+
+  "weight_loss_muscle_loss": {
+    "domains": ["nutrition", "training", "sleep_recovery"],
+    "experts": ["Norton", "Helms", "Walker"],
+    "priority_check": "Check protein intake first, sleep second, training volume third.",
+    "first_question": "How much protein are you actually hitting on most days?"
+  },
+
+  "fatigue_poor_recovery": {
+    "domains": ["sleep_recovery", "stress_management", "training"],
+    "experts": ["Walker", "Huberman", "Israetel"],
+    "priority_check": "Is this physical overtraining or life stress? Sleep hours vs. sleep quality. HRV trend if available.",
+    "first_question": "How has your sleep been this week — hours and quality?"
+  },
+
+  "perimenopause_flags": {
+    "domains": ["women_health", "sleep_recovery", "stress_management"],
+    "experts": ["Sims", "Haver", "Wright"],
+    "priority_check": "URGENT: name the cluster, validate the experience, point toward menopause-certified provider.",
+    "flags": ["new_abdominal_weight_gain", "sleep_disruption", "mood_changes", "joint_pain", "irregular_cycles"],
+    "first_question": "How long have you been experiencing these changes? Have you talked to a provider about perimenopause specifically?"
+  },
+
+  "postpartum_return_to_training": {
+    "domains": ["prenatal_postnatal"],
+    "experts": ["Battles", "Mundell"],
+    "priority_check": "6-week OB clearance is NOT return-to-sport clearance. Assess pelvic floor symptoms, birth type, and current phase.",
+    "first_question": "What type of birth did you have, and are you experiencing any symptoms during movement — leaking, pelvic heaviness, or pain?"
+  },
+
+  "prenatal_training": {
+    "domains": ["prenatal_postnatal"],
+    "experts": ["Battles"],
+    "priority_check": "Identify trimester. Watch for red flag symptoms. Maintain continuity over performance. No modifications needed for most movements in first trimester.",
+    "first_question": "How many weeks are you, and are you experiencing any symptoms during exercise?"
+  },
+
+  "stress_eating": {
+    "domains": ["stress_management", "nutrition", "sleep_recovery", "habit_formation"],
+    "experts": ["Huberman", "PN", "Walker"],
+    "priority_check": "Address the stress first — not just the eating. Cortisol is the upstream cause. Willpower augmentation will not work.",
+    "first_question": "What's going on in your life right now that's driving the stress?"
+  },
+
+  "burnout_low_motivation": {
+    "domains": ["stress_management", "habit_formation"],
+    "experts": ["Sapolsky", "MI", "Clear"],
+    "priority_check": "Distinguish physical burnout (performance decline, chronic soreness) from psychological burnout (motivational). Different interventions.",
+    "first_question": "Is exercise feeling physically hard right now, or does it feel more like a mental block?"
+  },
+
+  "joint_pain_during_training": {
+    "domains": ["longevity"],
+    "experts": ["Starrett", "Horschig"],
+    "priority_check": "Run ankle mobility test for squat pain first. Remove load before diagnosing. Load vs. capacity assessment.",
+    "first_question": "Where exactly does it hurt, and when in the movement does it hurt most?"
+  },
+
+  "body_composition_stall": {
+    "domains": ["nutrition", "training", "sleep_recovery"],
+    "experts": ["Norton", "Lyon", "Walker"],
+    "priority_check": "Use InBody diagnostic table. Weight alone is misleading. Check fat mass vs. muscle mass independently.",
+    "first_question": "When did you last do an InBody or body composition scan?"
+  },
+
+  "scale_obsession": {
+    "domains": ["nutrition"],
+    "experts": ["Lyon", "Norton"],
+    "priority_check": "Reframe from weight to body composition. Lead with muscle. Scale is the worst single metric.",
+    "first_question": "Are you tracking anything other than the scale right now — measurements, how clothes fit, energy levels?"
+  },
+
+  "cardio_only_client": {
+    "domains": ["training", "longevity"],
+    "experts": ["Lyon", "Attia", "Schoenfeld"],
+    "priority_check": "The cardio trap conversation. Add resistance training minimum 2x/week. Protect muscle mass. Reframe around the marginal decade.",
+    "first_question": "What does your resistance training look like right now?"
+  },
+
+  "new_client_goal_unclear": {
+    "domains": ["habit_formation"],
+    "experts": ["PN", "MI"],
+    "priority_check": "Assess readiness stage before prescribing anything. A contemplation client needs a question — not a protocol.",
+    "first_question": "What's prompting you to want to change something right now?"
+  },
+
+  "client_trains_but_nutrition_poor": {
+    "domains": ["nutrition", "habit_formation"],
+    "experts": ["PN", "Norton", "Clear"],
+    "priority_check": "One habit first. Habit stacking onto existing gym routine. Protein at breakfast is the starting point.",
+    "first_question": "What does breakfast look like on a typical training day?"
+  },
+
+  "senior_client_aging_concerns": {
+    "domains": ["longevity", "women_health", "training"],
+    "experts": ["Attia", "Wright", "Lyon"],
+    "priority_check": "Marginal decade frame. Bone density. Sarcopenia prevention. Muscle as medicine.",
+    "first_question": "What does your strength training look like right now, and how long have you been doing it?"
+  },
+
+  "glp1_medication_client": {
+    "domains": ["nutrition", "training"],
+    "experts": ["Lyon", "Norton"],
+    "priority_check": "GLP-1 clients are at highest risk for muscle loss. Protein-first eating + resistance training are non-negotiable. InBody tracking essential.",
+    "first_question": "Are you doing any resistance training alongside the medication?"
+  },
+
+  "sleep_poor_not_recovering": {
+    "domains": ["sleep_recovery", "stress_management"],
+    "experts": ["Walker", "Huberman"],
+    "priority_check": "Work through sleep optimization hierarchy in order. Start with consistent wake time and morning light before recommending any supplements.",
+    "first_question": "What time do you wake up in the morning — and is it consistent, or does it vary?"
+  },
+
+  "female_underfueling_athlete": {
+    "domains": ["women_health", "nutrition"],
+    "experts": ["Sims"],
+    "priority_check": "RED-S risk assessment. Irregular cycles, poor performance, stress fractures are red flags. Underfueling is not discipline.",
+    "first_question": "What does your food intake look like on a training day versus a rest day?"
+  },
+
+  "anxious_self_sabotaging": {
+    "domains": ["habit_formation", "stress_management"],
+    "experts": ["MI", "Huberman"],
+    "priority_check": "Fixed mindset, cognitive reframing. Nervous system regulation tools. Identity vs. compliance framing.",
+    "first_question": "Tell me about a time when things were going really well — what was different then?"
+  },
+
+  "milestone_hit_feeling_empty": {
+    "domains": ["habit_formation"],
+    "experts": ["Clear", "MI"],
+    "priority_check": "The goal was a destination. Identity coaching — who are you becoming, not just what did you achieve?",
+    "first_question": "Now that you've hit this goal — who do you want to be in the next chapter?"
+  },
+
+  "weight_fluctuation_confusion": {
+    "domains": ["nutrition"],
+    "experts": ["Norton", "Lyon"],
+    "priority_check": "Daily weight fluctuation is water, glycogen, food volume. Trend over 2–4 weeks is the signal. Normalize and redirect to trend.",
+    "first_question": "Are you weighing at the same time and under the same conditions each day?"
+  },
+
+  "diet_myth_question": {
+    "domains": ["nutrition"],
+    "experts": ["Norton"],
+    "priority_check": "Evidence hierarchy. Evaluate against energy balance and protein adequacy. Don't validate myths to protect feelings.",
+    "first_question": "What made you curious about that — where did you hear it?"
+  }
+}
