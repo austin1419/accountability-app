@@ -14,6 +14,7 @@ import { TextField }       from "./fields/TextField";
 import { NumberField }      from "./fields/NumberField";
 import { SelectField }      from "./fields/SelectField";
 import { MultiSelectField } from "./fields/MultiSelectField";
+import { ScaleField }       from "./fields/ScaleField";
 
 interface Props {
   userId:  string;
@@ -115,6 +116,19 @@ export function CoachingProfileForm({ userId, config, onClose, onSaved }: Props)
                 value={(answers[key] as string[]) ?? []}
                 onChange={(v) => update(key, v)}
                 options={q.options ?? []}
+                helperText={q.helperText}
+              />
+            );
+
+          case "scale":
+            return (
+              <ScaleField
+                key={key}
+                label={q.label}
+                value={(answers[key] as number) ?? ""}
+                onChange={(v) => update(key, v)}
+                min={q.scaleMin ?? 1}
+                max={q.scaleMax ?? 10}
                 helperText={q.helperText}
               />
             );
