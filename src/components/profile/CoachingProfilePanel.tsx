@@ -5,6 +5,7 @@
 //
 // Computes tile statuses from saved coaching_profile_answers.
 // Complete = ALL questions in the section answered.
+// Overall progress bar = total answered / total questions.
 // ─────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from "react";
@@ -21,8 +22,21 @@ export type TileProgress = {
   total:    number;
 };
 
+/** Short display labels for tiles — keyed by sectionKey */
+const TILE_LABELS: Record<string, string> = {
+  identity_life_context:  "Identity",
+  health_history:         "Health",
+  training_background:    "Training",
+  nutrition_habits:       "Nutrition",
+  lifestyle_recovery:     "Recovery",
+  goals_vision:           "Goals",
+  mindset_accountability: "Mindset",
+  spirit_new_beginnings:  "Spirit",
+};
+
 function isNonEmpty(v: unknown): boolean {
   if (v === null || v === undefined || v === "") return false;
+  if (typeof v === "string" && v.trim() === "") return false;
   if (Array.isArray(v) && v.length === 0) return false;
   return true;
 }
@@ -77,39 +91,60 @@ export function CoachingProfilePanel() {
 
   useEffect(() => { loadAnswers(); }, [loadAnswers]);
 
-  const completed = SECTION_CONFIGS.filter(
-    (s) => computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]).status === "complete",
-  ).length;
+  // Compute per-tile progress
+  const tileProgresses = SECTION_CONFIGS.map((s) => ({
+    config: s,
+    progress: computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]),
+  }));
+
+  // Aggregate overall progress
+  const totalQuestions = tileProgresses.reduce((sum, t) => sum + t.progress.total, 0);
+  const totalAnswered  = tileProgresses.reduce((sum, t) => sum + t.progress.answered, 0);
+  const overallPct     = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0;
 
   return (
     <>
       <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-        <div className="flex items-center justify-between mb-4">
-          <p
-            className="text-xs uppercase tracking-widest text-[#9A9080]"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
-            Coaching Profile
-          </p>
-          <p className="text-xs text-[#9A9080]">
-            <span className="font-semibold text-[#DDD5C0]">{completed}</span> / {SECTION_CONFIGS.length} complete
+        {/* Header */}
+        <p
+          className="text-xs uppercase tracking-widest text-[#9A9080] mb-3"
+          style={{ fontFamily: "'Cinzel', serif" }}
+        >
+          Coaching Profile
+        </p>
+
+        {/* Overall progress bar */}
+        <div className="mb-4">
+          <div className="h-1.5 rounded-full bg-[#252525] overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${overallPct}%`,
+                background: overallPct >= 100
+                  ? "#4CAF50"
+                  : "linear-gradient(90deg, #B8933A, #C9A44B)",
+              }}
+            />
+          </div>
+          <p className="text-xs text-[#807868] mt-1.5">
+            <span className="text-[#DDD5C0] font-semibold">{overallPct}%</span> complete
+            <span className="ml-1.5 text-[#5A5347]">·</span>
+            <span className="ml-1.5">{totalAnswered} / {totalQuestions} answered</span>
           </p>
         </div>
 
+        {/* Tile grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SECTION_CONFIGS.map((s) => {
-            const progress = computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]);
-            return (
-              <CoachingProfileTile
-                key={s.sectionKey}
-                title={s.title}
-                status={progress.status}
-                answered={progress.answered}
-                total={progress.total}
-                onClick={() => setOpenSection(s.title)}
-              />
-            );
-          })}
+          {tileProgresses.map(({ config: s, progress }) => (
+            <CoachingProfileTile
+              key={s.sectionKey}
+              title={TILE_LABELS[s.sectionKey] ?? s.title}
+              status={progress.status}
+              answered={progress.answered}
+              total={progress.total}
+              onClick={() => setOpenSection(s.title)}
+            />
+          ))}
         </div>
       </section>
 
