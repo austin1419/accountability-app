@@ -1,13 +1,5 @@
 "use client";
 
-// ─────────────────────────────────────────────
-// CoachingProfilePanel — 8-tile coaching intake grid
-//
-// Computes tile statuses from saved coaching_profile_answers.
-// Complete = ALL questions in the section answered.
-// Overall progress bar = total answered / total questions.
-// ─────────────────────────────────────────────
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { SECTION_CONFIGS } from "@/lib/coachingProfile/questionConfig";
@@ -23,7 +15,6 @@ export type TileProgress = {
   total:    number;
 };
 
-/** Short display labels for tiles — keyed by sectionKey */
 const TILE_LABELS: Record<string, string> = {
   identity_life_context:  "Identity",
   health_history:         "Health",
@@ -34,8 +25,6 @@ const TILE_LABELS: Record<string, string> = {
   mindset_accountability: "Mindset",
   spirit_new_beginnings:  "Spirit",
 };
-
-// Uses shared isAnswered() — imported above
 
 export function computeTileProgress(
   sectionKey: string,
@@ -58,12 +47,22 @@ export function computeTileProgress(
   return { status: "in_progress", answered, total };
 }
 
+const card: React.CSSProperties = {
+  background: "#141414", border: "1px solid #252525", borderRadius: 10,
+  padding: 16,
+};
+
+const sectionLabelStyle: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+  letterSpacing: "0.2em", color: "#4A3F2A", textTransform: "uppercase",
+  margin: 0,
+};
+
 export function CoachingProfilePanel() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [allAnswers, setAllAnswers] = useState<Record<string, SavedAnswers>>({});
 
-  // Resolve userId on mount
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -78,7 +77,6 @@ export function CoachingProfilePanel() {
     init();
   }, []);
 
-  // Load all answers when userId is available
   const loadAnswers = useCallback(async () => {
     if (!userId) return;
     const data = await fetchAllCoachingAnswers(userId);
@@ -87,50 +85,47 @@ export function CoachingProfilePanel() {
 
   useEffect(() => { loadAnswers(); }, [loadAnswers]);
 
-  // Compute per-tile progress
   const tileProgresses = SECTION_CONFIGS.map((s) => ({
     config: s,
     progress: computeTileProgress(s.sectionKey, allAnswers[s.sectionKey]),
   }));
 
-  // Aggregate overall progress
   const totalQuestions = tileProgresses.reduce((sum, t) => sum + t.progress.total, 0);
   const totalAnswered  = tileProgresses.reduce((sum, t) => sum + t.progress.answered, 0);
   const overallPct     = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0;
 
   return (
     <>
-      <section className="bg-[#141414] rounded p-5 border border-[#252525]">
-        {/* Header */}
-        <p
-          className="text-xs uppercase tracking-widest text-[#9A9080] mb-3"
-          style={{ fontFamily: "'Cinzel', serif" }}
-        >
-          Coaching Profile
-        </p>
-
-        {/* Overall progress bar */}
-        <div className="mb-4">
-          <div className="h-1.5 rounded-full bg-[#252525] overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${overallPct}%`,
-                background: overallPct >= 100
-                  ? "#4CAF50"
-                  : "linear-gradient(90deg, #B8933A, #C9A44B)",
-              }}
-            />
-          </div>
-          <p className="text-xs text-[#807868] mt-1.5">
-            <span className="text-[#DDD5C0] font-semibold">{overallPct}%</span> complete
-            <span className="ml-1.5 text-[#5A5347]">·</span>
-            <span className="ml-1.5">{totalAnswered} / {totalQuestions} answered</span>
-          </p>
+      <section style={card}>
+        {/* Completion row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={sectionLabelStyle}>Completion</span>
+          <span style={{
+            fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.1em", color: "#B8933A",
+          }}>
+            {overallPct}%
+          </span>
         </div>
 
-        {/* Tile grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Completion track */}
+        <div style={{ height: 4, background: "#252525", borderRadius: 2, overflow: "hidden", marginBottom: 6 }}>
+          <div style={{
+            height: 4, background: "#B8933A", borderRadius: 2,
+            width: `${overallPct}%`, transition: "width 0.5s ease",
+          }} />
+        </div>
+
+        {/* Meta line */}
+        <p style={{
+          fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+          fontSize: 12, color: "#4A3F2A", margin: 0, marginBottom: 14,
+        }}>
+          {totalAnswered} / {totalQuestions} answered
+        </p>
+
+        {/* Forms grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {tileProgresses.map(({ config: s, progress }) => (
             <CoachingProfileTile
               key={s.sectionKey}

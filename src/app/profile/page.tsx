@@ -22,6 +22,15 @@ import type { GoalMetrics }           from "@/lib/computeGoalProgress";
 
 export const dynamic = "force-dynamic";
 
+// Shared inline styles
+const sectionLabel: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+  letterSpacing: "0.2em", color: "#4A3F2A", textTransform: "uppercase",
+  marginBottom: 8,
+};
+const divider: React.CSSProperties = {
+  height: 1, background: "#1A1A1A", margin: "14px 0",
+};
 
 export default async function ProfilePage() {
   // ── Auth check ───────────────────────────────────────────────────
@@ -77,39 +86,75 @@ export default async function ProfilePage() {
   const compliance = await fetchProfileCompliance(profile.id);
 
   return (
-    <div className="min-h-screen bg-[#111111] flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col max-w-md mx-auto">
 
       <ProfileHeader
         name={clientName}
         startDate={startDate}
         gender={userData?.gender ?? null}
         age={age}
-        height={userData?.height ?? null}
       />
 
-      <main className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+      <main style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
+
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── Current Goal ── */}
+        <p style={sectionLabel}>Current Goal</p>
         <GoalCard
           goalName={goalData?.goal_name ?? null}
           progress={goalProgress}
         />
 
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── Compliance ── */}
+        <p style={sectionLabel}>Compliance</p>
         <ComplianceSection
           weekPercent={compliance.weekPercent}
           monthPercent={compliance.monthPercent}
           overallPercent={compliance.overallPercent}
         />
 
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── Coaching Profile ── */}
+        <p style={sectionLabel}>Coaching Profile</p>
         <CoachingProfilePanel />
 
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── Achievements ── */}
+        <p style={sectionLabel}>Achievements</p>
         <AchievementsCard />
 
+        {/* ── 8px spacer ── */}
+        <div style={{ height: 8 }} />
+
+        {/* ── Badges ── */}
+        <p style={sectionLabel}>Badges</p>
         <BadgesCard />
 
+        {/* ── Divider ── */}
+        <div style={divider} />
+
+        {/* ── Logout ── */}
         <SignOutButton
-          className="mt-4 w-full py-3 rounded bg-[#7A1E1E] text-sm font-semibold text-[#F4EEE4] hover:bg-[#8B2222] active:bg-[#6A1A1A] transition-colors mb-2"
+          className=""
+          style={{
+            width: "100%", background: "#7A1E1E", border: "none", borderRadius: 10,
+            padding: 16, fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.2em", color: "#F4EEE4", textTransform: "uppercase",
+            cursor: "pointer",
+          }}
         >
           Logout
         </SignOutButton>
+
       </main>
 
       <BottomNav />

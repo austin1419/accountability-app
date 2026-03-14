@@ -1,15 +1,10 @@
-interface Props {
-  name:        string;
-  startDate:   string;
-  gender:      string | null;
-  age:         number | null;
-  height:      number | null;
-}
+import { AboutPulseButton } from "@/components/AboutPulseModal";
 
-function formatHeight(inches: number): string {
-  const ft = Math.floor(inches / 12);
-  const rem = Math.round(inches % 12);
-  return `${ft}'${rem}"`;
+interface Props {
+  name:      string;
+  startDate: string;
+  gender:    string | null;
+  age:       number | null;
 }
 
 function formatGender(g: string): string {
@@ -19,81 +14,70 @@ function formatGender(g: string): string {
   return g;
 }
 
-export function ProfileHeader({ name, startDate, gender, age, height }: Props) {
+const metaLabel: React.CSSProperties = {
+  fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700,
+  letterSpacing: "0.15em", color: "#3A3020", textTransform: "uppercase",
+  minWidth: 52,
+};
+const metaValue: React.CSSProperties = {
+  fontFamily: "'EB Garamond', serif", fontSize: 12, color: "#4A3F2A",
+};
+
+export function ProfileHeader({ name, startDate, gender, age }: Props) {
   return (
-    <header className="bg-[#0D0D0D] pt-10 pb-6 px-5 border-b border-[#252525]">
-      <div className="flex items-center justify-between gap-4">
+    <header style={{ padding: "40px 20px 0" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
 
         {/* Left — identity block */}
-        <div className="flex-1 min-w-0">
-          <p
-            className="text-xs uppercase tracking-widest text-[#B8933A] mb-1"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Eyebrow */}
+          <p style={{
+            fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
+            letterSpacing: "0.2em", color: "#B8933A", textTransform: "uppercase",
+            marginBottom: 4,
+          }}>
             PULSE Profile
           </p>
-          <h1
-            className="text-2xl text-[#F4EEE4] tracking-wide mb-4 truncate"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
-          >
+
+          {/* Name */}
+          <h1 style={{
+            fontFamily: "'EB Garamond', serif", fontSize: 30, fontWeight: 600,
+            color: "#F4EEE4", lineHeight: 1.05, margin: 0, marginBottom: 10,
+          }}>
             {name}
           </h1>
-          <div className="flex flex-col gap-1.5">
+
+          {/* Meta rows */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {gender && (
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Gender</span>
-                <span className="text-sm text-[#DDD5C0]">{formatGender(gender)}</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={metaLabel}>Gender</span>
+                <span style={metaValue}>{formatGender(gender)}</span>
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Age</span>
-              <span className="text-sm text-[#DDD5C0]">{age != null ? age : "—"}</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+              <span style={metaLabel}>Age</span>
+              <span style={metaValue}>{age != null ? age : "—"}</span>
             </div>
-            {height != null && (
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Height</span>
-                <span className="text-sm text-[#DDD5C0]">{formatHeight(height)}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] uppercase tracking-widest text-[#807868] w-24 flex-shrink-0" style={{ fontFamily: "'Cinzel', serif" }}>Member Since</span>
-              <span className="text-sm text-[#DDD5C0]">{startDate}</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+              <span style={metaLabel}>Started</span>
+              <span style={metaValue}>{startDate}</span>
             </div>
           </div>
         </div>
 
-        {/* Right — PULSE logo badge */}
-        <div
-          className="flex-shrink-0 rounded-full flex items-center justify-center"
-          style={{
-            width:     72,
-            height:    72,
-            background: "radial-gradient(circle, rgba(184,147,58,0.08) 0%, transparent 70%)",
-            boxShadow: "0 0 18px rgba(184,147,58,0.12)",
-            opacity:   0.9,
-          }}
-        >
-          <svg
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ width: 52, height: 52 }}
-          >
-            <polygon
-              points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20"
-              stroke="#B8933A" strokeWidth={1} fill="none" opacity={0.4}
-            />
-            <polygon
-              points="50,14 80,28 90,57 76,82 50,90 24,82 10,57 20,28"
-              stroke="#B8933A" strokeWidth={0.5} fill="none" opacity={0.2}
-            />
-            <polyline
-              style={{ filter: "drop-shadow(0 0 4px rgba(184,147,58,0.9))" }}
-              points="10,50 22,50 27,50 31,34 35,66 39,50 44,50 50,22 56,50 61,50 65,40 69,60 73,50 78,50 90,50"
-              stroke="#B8933A" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
-            />
-            <circle cx="50" cy="50" r="3" fill="#B8933A" />
-          </svg>
+        {/* Right — PULSE logo button */}
+        <div style={{ marginTop: 2 }}>
+          <AboutPulseButton>
+            <svg viewBox="0 0 100 100" fill="none" width={24} height={24}>
+              <polygon points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20" stroke="#B8933A" strokeWidth={2.5} fill="none" opacity={0.5} />
+              <polyline
+                points="14,50 24,50 28,50 32,36 36,64 40,50 45,50 50,24 55,50 60,50 64,41 68,59 72,50 76,50 86,50"
+                stroke="#B8933A" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round"
+              />
+              <circle cx="50" cy="50" r="4" fill="#B8933A" />
+            </svg>
+          </AboutPulseButton>
         </div>
 
       </div>

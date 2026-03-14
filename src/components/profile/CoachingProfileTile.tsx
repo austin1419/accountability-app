@@ -1,13 +1,5 @@
 "use client";
 
-// ─────────────────────────────────────────────
-// CoachingProfileTile — single intake section tile
-//
-// Renders title + status label with border/text color
-// driven by the tile's current status.
-// Shows "X / Y answered" for in-progress sections.
-// ─────────────────────────────────────────────
-
 import type { TileStatus } from "@/lib/coachingProfile/types";
 
 interface Props {
@@ -18,38 +10,50 @@ interface Props {
   onClick:  () => void;
 }
 
-const STATUS_CONFIG: Record<TileStatus, { color: string; border: string }> = {
-  not_started: { color: "#807868", border: "#2A2A2A" },
-  in_progress: { color: "#B8933A", border: "#B8933A" },
-  complete:    { color: "#4CAF50", border: "#4CAF50" },
-};
-
-function statusLabel(status: TileStatus, answered: number, total: number): string {
-  if (status === "not_started") return "Not Started";
-  if (status === "complete")    return "Complete";
-  return `${answered} / ${total} answered`;
-}
-
 export function CoachingProfileTile({ title, status, answered, total, onClick }: Props) {
-  const cfg = STATUS_CONFIG[status];
+  const borderColor = status === "complete" ? "#3A3020" : "#252525";
+  const statusColor =
+    status === "complete"    ? "#B8933A"
+    : status === "in_progress" ? "#807868"
+    : "#3A3020";
+  const statusText =
+    status === "complete"    ? "Complete"
+    : status === "in_progress" ? "In Progress"
+    : "Not Started";
 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-[#1B1B1B] rounded-lg p-4 border shadow-sm
-                 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
-                 hover:border-[#444] active:translate-y-0"
-      style={{ borderColor: cfg.border }}
+      style={{
+        width: "100%", textAlign: "left",
+        background: "#0D0D0D", border: `1px solid ${borderColor}`, borderRadius: 8,
+        padding: 12, cursor: "pointer",
+        display: "flex", flexDirection: "column", gap: 4,
+      }}
     >
-      <p
-        className="text-sm text-white leading-snug mb-2"
-        style={{ fontFamily: "'Cormorant Garamond', serif" }}
-      >
+      {/* Form name */}
+      <span style={{
+        fontFamily: "'EB Garamond', serif", fontSize: 14, color: "#DDD5C0",
+      }}>
         {title}
-      </p>
-      <p className="text-xs font-medium" style={{ color: cfg.color }}>
-        {statusLabel(status, answered, total)}
-      </p>
+      </span>
+
+      {/* Status label */}
+      <span style={{
+        fontFamily: "'Cinzel', serif", fontSize: 8, fontWeight: 700,
+        letterSpacing: "0.12em", color: statusColor, textTransform: "uppercase",
+      }}>
+        {statusText}
+      </span>
+
+      {/* Count for in-progress */}
+      {status === "in_progress" && (
+        <span style={{
+          fontFamily: "'EB Garamond', serif", fontSize: 11, color: "#4A3F2A",
+        }}>
+          {answered} / {total} answered
+        </span>
+      )}
     </button>
   );
 }

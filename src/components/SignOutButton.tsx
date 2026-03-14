@@ -13,10 +13,12 @@ import { supabase } from "@/lib/supabase";
 export function SignOutButton({
   redirectTo = "/login",
   className  = "",
+  style,
   children   = "Sign out",
 }: {
   redirectTo?: string;
   className?:  string;
+  style?:      React.CSSProperties;
   children?:   React.ReactNode;
 }) {
   const router = useRouter();
@@ -28,7 +30,7 @@ export function SignOutButton({
   }
 
   return (
-    <button onClick={handleSignOut} className={className}>
+    <button onClick={handleSignOut} className={className} style={style}>
       {children}
     </button>
   );
