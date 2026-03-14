@@ -10,7 +10,7 @@ import { BottomNav }                  from "@/components/BottomNav";
 import { ProfileHeader }              from "@/components/profile/ProfileHeader";
 import { GoalCard }                   from "@/components/profile/GoalCard";
 import { ComplianceSection }          from "@/components/profile/ComplianceSection";
-import { CoachingProfileCard }        from "@/components/profile/CoachingProfileCard";
+import { CoachingProfilePanel }        from "@/components/profile/CoachingProfilePanel";
 import { AchievementsCard }           from "@/components/profile/AchievementsCard";
 import { BadgesCard }                 from "@/components/profile/BadgesCard";
 import { SignOutButton }              from "@/components/SignOutButton";
@@ -99,7 +99,7 @@ export default async function ProfilePage() {
           overallPercent={compliance.overallPercent}
         />
 
-        <CoachingProfileCard />
+        <CoachingProfilePanel />
 
         <AchievementsCard />
 
