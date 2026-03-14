@@ -370,3 +370,26 @@ export type DailyBriefing = {
   metrics:         BriefingMetric[];
   sourceSignals:   string[];
 };
+
+
+// ═══════════════════════════════════════════════
+// AI MEMORY (coaching engine memory layer)
+// ═══════════════════════════════════════════════
+
+export type AIMemoryType =
+  | "pattern"
+  | "milestone"
+  | "preference"
+  | "risk"
+  | "achievement"
+  | "coaching_note";
+
+export type AIMemory = {
+  id:              string;
+  userId:          string;
+  memoryType:      AIMemoryType;
+  memoryText:      string;
+  importanceScore: number;       // 1–10
+  createdAt:       string;       // ISO timestamp
+  lastUsedAt:      string;       // ISO timestamp
+};

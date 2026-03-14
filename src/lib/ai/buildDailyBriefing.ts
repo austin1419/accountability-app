@@ -17,6 +17,7 @@ import type {
   ClientSummary,
   CoachSummary,
   AIFeatureReadiness,
+  AIMemory,
   DailyBriefing,
   BriefingMomentum,
   BriefingRisk,
@@ -255,16 +256,58 @@ function buildAction(
   return "Complete today's tasks to keep building momentum.";
 }
 
+/**
+ * Enrich the insight with relevant memory context.
+ * If a memory adds meaningful depth to the base insight,
+ * append it as a natural follow-up sentence.
+ */
+function enrichInsightWithMemory(
+  baseInsight: string,
+  memories: AIMemory[],
+  ctx: ClientAIContext,
+): string {
+  if (memories.length === 0) return baseInsight;
+
+  // Look for a pattern memory that adds context
+  const patternMemory = memories.find((m) => m.memoryType === "pattern");
+  if (patternMemory) {
+    // Weekend pattern + it's a weekend
+    const dayOfWeek = new Date().getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    if (isWeekend && patternMemory.memoryText.toLowerCase().includes("weekend")) {
+      return `${baseInsight} Weekends have been tough for you before — staying aware of that is half the battle.`;
+    }
+    // Compliance drop pattern
+    if (patternMemory.memoryText.toLowerCase().includes("dropped")) {
+      return `${baseInsight} You've had dips like this before and bounced back.`;
+    }
+  }
+
+  // Recent milestone reinforcement
+  const milestone = memories.find((m) => m.memoryType === "milestone");
+  if (milestone && ctx.streak > 0) {
+    // Only reference if the milestone is relevant to current state
+    if (milestone.memoryText.includes("streak") && ctx.streak >= 3) {
+      return `${baseInsight} You've built streaks before — this one is worth protecting.`;
+    }
+  }
+
+  return baseInsight;
+}
+
 function buildCoachingMessage(
   ctx: ClientAIContext,
   analysis: ClientAnalysis,
   clientSummary: ClientSummary,
   coachSummary: CoachSummary,
   momentum: BriefingMomentum,
+  memories: AIMemory[],
 ): CoachingMessage {
+  const baseInsight = buildInsight(analysis, ctx, clientSummary, coachSummary);
+
   return {
     snapshot: buildSnapshot(ctx, analysis, clientSummary, momentum),
-    insight:  buildInsight(analysis, ctx, clientSummary, coachSummary),
+    insight:  enrichInsightWithMemory(baseInsight, memories, ctx),
     guidance: buildGuidance(analysis, coachSummary, momentum),
     action:   buildAction(ctx, clientSummary, analysis),
   };
@@ -351,6 +394,7 @@ export function buildDailyBriefing(
   clientSummary: ClientSummary,
   coachSummary: CoachSummary,
   readiness: AIFeatureReadiness,
+  memories: AIMemory[] = [],
 ): DailyBriefing {
   if (!readiness.available) {
     return buildGatedBriefing(ctx, readiness);
@@ -365,7 +409,7 @@ export function buildDailyBriefing(
     greeting:        buildGreeting(ctx),
     momentumState,
     riskLevel,
-    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState),
+    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories),
     metrics:         buildMetrics(ctx),
     sourceSignals:   analysis.allSignals.filter((s) => s.detected).map((s) => s.key),
   };

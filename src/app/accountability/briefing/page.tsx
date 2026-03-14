@@ -18,6 +18,7 @@ import { buildClientSummary }    from "@/lib/ai/buildClientSummary";
 import { buildCoachSummary }     from "@/lib/ai/buildCoachSummary";
 import { buildDailyBriefing }    from "@/lib/ai/buildDailyBriefing";
 import { getFeatureReadiness }   from "@/lib/ai/getAIFeatureReadiness";
+import { fetchRelevantMemories, detectAndStoreMemories } from "@/lib/ai/aiMemory";
 import { BriefingShell }         from "@/components/briefing/BriefingShell";
 
 export const dynamic = "force-dynamic";
@@ -43,12 +44,22 @@ export default async function DailyBriefingPage() {
   }).format(new Date());
 
   // ── AI Pipeline ─────────────────────────────
-  const ctx           = await buildClientContext(profile.id, selectedDate);
+  const [ctx, memories] = await Promise.all([
+    buildClientContext(profile.id, selectedDate),
+    fetchRelevantMemories(profile.id),
+  ]);
   const readiness     = getFeatureReadiness(ctx, "dailyBriefing");
   const analysis      = analyzeClientContext(ctx);
   const clientSummary = buildClientSummary(ctx, analysis);
   const coachSummary  = buildCoachSummary(ctx, analysis);
-  const briefing      = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness);
+  const briefing      = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness, memories);
+
+  // Store noteworthy memories from this session (fire-and-forget)
+  if (readiness.available) {
+    detectAndStoreMemories(ctx, analysis).catch((err) =>
+      console.error("[DailyBriefing] memory write failed:", err),
+    );
+  }
 
   // ── Render ──────────────────────────────────
   return <BriefingShell briefing={briefing} readiness={readiness} />;
