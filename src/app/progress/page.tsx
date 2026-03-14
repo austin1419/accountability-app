@@ -676,11 +676,12 @@ export default function ProgressPage() {
     const startWeight = goalData?.start_weight ?? null;
     const goalWeight  = goalData?.goal_weight  ?? 190;
     // Derive "current" from the latest weight log on or before selectedDate.
-    // Never fall forward to a future metric. Show "—" if no data exists yet.
+    // If no weight logs exist yet, fall back to starting weight so new users
+    // see their starting value instead of "—".
     const asOfEntries   = weightLog.filter((e) => e.logged_at <= selectedDate);
     const currentWeight = asOfEntries.length > 0
       ? asOfEntries[asOfEntries.length - 1].weight
-      : null;
+      : startWeight;
     const improved = (startWeight != null && currentWeight != null) ? startWeight - currentWeight : null;
     const stillToGo = currentWeight != null ? currentWeight - goalWeight : null;
 

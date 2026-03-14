@@ -126,7 +126,8 @@ export function BottomNav() {
         </nav>
 
         {/* PULSE AI circle button */}
-        <span
+        <Link
+          href="/pulse-chat"
           style={{
             position: "relative",
             width: 56,
@@ -140,8 +141,9 @@ export function BottomNav() {
             cursor: "pointer",
             flexShrink: 0,
             padding: 0,
+            textDecoration: "none",
           }}
-          aria-label="PulseAI — coming soon"
+          aria-label="Pulse AI Chat"
         >
           {/* Decorative outer ring */}
           <div
@@ -182,7 +184,7 @@ export function BottomNav() {
           >
             AI
           </span>
-        </span>
+        </Link>
       </div>
     </>
   );
