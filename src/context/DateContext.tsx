@@ -5,7 +5,10 @@
 //
 // Single source of truth for which date the app is viewing/editing.
 // All pages read selectedDate from here instead of computing "today"
-// independently. Editable window: today + 2 previous calendar days.
+// independently.
+//
+// VIEW: any past date can be selected and viewed.
+// EDIT: only today + previous 3 calendar days are editable.
 // ─────────────────────────────────────────────
 
 import { createContext, useContext, useState, useCallback, useMemo } from "react";
@@ -28,24 +31,25 @@ export function DateProvider({ children }: { children: React.ReactNode }) {
   const [todayDate] = useState(chicagoToday);
   const [selectedDate, setSelectedDateRaw] = useState(todayDate);
 
-  // Calendar-day comparison (not timestamp-based)
+  // Edit window: today + 3 previous calendar days (4 days total)
   const isEditable = useCallback(
     (date: string): boolean => {
       const todayMs = new Date(todayDate + "T00:00:00").getTime();
       const dateMs  = new Date(date + "T00:00:00").getTime();
       const diffDays = Math.floor((todayMs - dateMs) / 86_400_000);
-      return diffDays >= 0 && diffDays <= 2;
+      return diffDays >= 0 && diffDays <= 3;
     },
     [todayDate],
   );
 
+  // Navigation: allow any past date (not future)
   const setSelectedDate = useCallback(
     (date: string) => {
-      if (isEditable(date)) {
+      if (date <= todayDate) {
         setSelectedDateRaw(date);
       }
     },
-    [isEditable],
+    [todayDate],
   );
 
   const isViewingPast = selectedDate !== todayDate;

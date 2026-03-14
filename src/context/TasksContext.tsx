@@ -28,7 +28,7 @@ const TasksContext = createContext<TasksContextType | null>(null);
 // ── Provider ──────────────────────────────────
 // Wrap this around your app (in layout.tsx) so any page can access task state.
 export function TasksProvider({ children }: { children: React.ReactNode }) {
-  const { selectedDate } = useDate();
+  const { selectedDate, isEditable } = useDate();
   const [userId, setUserId] = useState<string | null>(null);
   const [tasks,  setTasks]  = useState<Task[]>([]);
   const [streak, setStreak] = useState(0);
@@ -63,6 +63,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const toggleTask = useCallback((id: string) => {
     if (!userId) return;
+    // Block edits on dates outside the edit window (today + 3 previous days)
+    if (!isEditable(selectedDate)) return;
     // Optimistic update: flip the checkbox immediately so the UI feels instant
     setTasks((prev) => {
       const task = prev.find((t) => t.id === id);
@@ -75,7 +77,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       return prev.map((t) => (t.id === id ? { ...t, done: newDone } : t));
     });
-  }, [userId, selectedDate]);
+  }, [userId, selectedDate, isEditable]);
 
   const completedCount    = tasks.filter((t) => t.done).length;
   const totalCount        = tasks.length;

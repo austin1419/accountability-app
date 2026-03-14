@@ -19,7 +19,8 @@ const CATEGORY_ORDER = ["Activity", "Nutrition", "Supplements", "Sleep/Recovery"
 
 export default function TasksPage() {
   const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak } = useTasks();
-  const { selectedDate, isViewingPast } = useDate();
+  const { selectedDate, isViewingPast, isEditable } = useDate();
+  const canEdit = isEditable(selectedDate);
 
   const allDone = completedCount === totalCount;
 
@@ -117,7 +118,7 @@ export default function TasksPage() {
               {/* Tasks in this category — onToggle makes them interactive */}
               <ul>
                 {categoryTasks.map((task) => (
-                  <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+                  <TaskItem key={task.id} task={task} onToggle={canEdit ? toggleTask : undefined} />
                 ))}
               </ul>
             </section>

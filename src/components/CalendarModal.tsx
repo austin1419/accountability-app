@@ -4,8 +4,8 @@
 // CalendarModal — month grid overlay for date selection
 //
 // Shows all days in a month, colored by compliance level.
-// Only the last 3 calendar days (including today) are editable.
-// Older days are visible but locked. Includes monthly compliance bar.
+// Any past date is selectable for viewing.
+// Read-only indicator shown on dates outside the edit window.
 // ─────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
@@ -20,7 +20,7 @@ interface Props {
 const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export function CalendarModal({ userId, onClose }: Props) {
-  const { selectedDate, todayDate, setSelectedDate, isEditable } = useDate();
+  const { selectedDate, todayDate, setSelectedDate } = useDate();
 
   // Initialize view to the month of the selected date
   const initDate  = new Date(selectedDate + "T00:00:00");
@@ -78,25 +78,20 @@ export function CalendarModal({ userId, onClose }: Props) {
 
   function getComplianceStyle(dateStr: string): string {
     const isFuture  = dateStr > todayDate;
-    const isToday   = dateStr === todayDate;
-    const editable  = isEditable(dateStr);
     const pct       = compliance[dateStr];
 
     // Future — dim
     if (isFuture) return "opacity-20 cursor-not-allowed text-[#9A9080]";
 
-    // Locked (past, not editable) — visible but dimmed
-    const lockOpacity = !editable && !isToday ? "opacity-40 cursor-not-allowed" : "";
-
-    if (pct === undefined) return `text-[#9A9080] ${lockOpacity}`;
-    if (pct === 100)       return `bg-green-900/50 text-green-400 ${lockOpacity}`;
-    if (pct >= 34)         return `bg-yellow-900/50 text-yellow-400 ${lockOpacity}`;
-    return                        `bg-red-900/50 text-red-400 ${lockOpacity}`;
+    // Past dates are all selectable — compliance coloring only
+    if (pct === undefined) return "text-[#9A9080]";
+    if (pct === 100)       return "bg-green-900/50 text-green-400";
+    if (pct >= 34)         return "bg-yellow-900/50 text-yellow-400";
+    return                        "bg-red-900/50 text-red-400";
   }
 
   function handleDayClick(dateStr: string) {
     if (dateStr > todayDate) return;
-    if (!isEditable(dateStr)) return;
     setSelectedDate(dateStr);
     onClose();
   }
@@ -158,14 +153,12 @@ export function CalendarModal({ userId, onClose }: Props) {
             const isFuture   = dateStr > todayDate;
             const isToday    = dateStr === todayDate;
             const isSelected = dateStr === selectedDate;
-            const editable   = isEditable(dateStr);
-            const locked     = !isFuture && !editable;
             const styleClass = getComplianceStyle(dateStr);
 
             return (
               <button
                 key={dateStr}
-                disabled={isFuture || locked}
+                disabled={isFuture}
                 onClick={() => handleDayClick(dateStr)}
                 className={[
                   "mx-auto w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition-colors",
@@ -193,7 +186,7 @@ export function CalendarModal({ userId, onClose }: Props) {
             <span className="w-2.5 h-2.5 rounded-full bg-red-400/50 inline-block" /> Missed
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#9A9080]/30 inline-block" /> Locked
+            <span className="w-2.5 h-2.5 rounded-full bg-[#9A9080]/30 inline-block" /> No data
           </span>
         </div>
 

@@ -4,7 +4,7 @@
 // DateHeader — date navigation bar for the dashboard
 //
 // Shows left arrow / centered date label / right arrow.
-// Arrows step one day within the editable 3-day window.
+// Arrows step one day — any past date is viewable.
 // Tapping the label opens the CalendarModal month view.
 // Reads/writes selectedDate from DateContext.
 // Also pushes URL params so the server-rendered dashboard re-fetches.
@@ -33,36 +33,27 @@ function stepDate(dateStr: string, days: number): string {
 
 export function DateHeader({ userId }: Props) {
   const router = useRouter();
-  const { selectedDate, todayDate, setSelectedDate, isEditable } = useDate();
+  const { selectedDate, todayDate, setSelectedDate } = useDate();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const isToday = selectedDate === todayDate;
 
   function navigate(days: number) {
     const next = stepDate(selectedDate, days);
-    if (next <= todayDate && isEditable(next)) {
+    if (next <= todayDate) {
       setSelectedDate(next);
       router.push(`/?date=${next}`);
     }
   }
 
-  // Check if left arrow should be disabled (at edge of 3-day window)
-  const prevDate = stepDate(selectedDate, -1);
-  const canGoBack = isEditable(prevDate);
-
   return (
     <>
       <div className="mx-5 mb-3 border border-[#252525] rounded-lg bg-[#141414]">
         <div className="flex items-center justify-between px-4 py-3">
-        {/* Left arrow — limited to editable window */}
+        {/* Left arrow — any past date is viewable */}
         <button
           onClick={() => navigate(-1)}
-          disabled={!canGoBack}
-          className={`w-9 h-9 flex items-center justify-center rounded text-2xl transition-colors ${
-            canGoBack
-              ? "text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A]"
-              : "text-[#2E2E2E] cursor-not-allowed"
-          }`}
+          className="w-9 h-9 flex items-center justify-center rounded text-2xl transition-colors text-[#9A9080] hover:bg-[#252525] hover:text-[#B8933A]"
           aria-label="Previous day"
         >
           ‹

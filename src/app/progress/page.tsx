@@ -370,7 +370,7 @@ function RangeTabs({ value, onChange }: { value: ChartRange; onChange: (r: Chart
 // Progress Page
 // ─────────────────────────────────────────────
 export default function ProgressPage() {
-  const { selectedDate } = useDate();
+  const { selectedDate, isEditable } = useDate();
   const [userId,      setUserId]      = useState<string | null>(null);
   const [goalId,      setGoalId]      = useState<string | null>(null);
   const [weightLog,   setWeightLog]   = useState<WeightEntry[]>([]);
@@ -462,6 +462,7 @@ export default function ProgressPage() {
   // ── Weight handlers ───────────────────────────
   async function handleLogWeight() {
     if (!userId) return;
+    if (!isEditable(selectedDate)) { setError("This date is read-only."); return; }
     const w = parseFloat(weightInput);
     if (isNaN(w) || w < 50 || w > 500) { setError("Enter a valid weight between 50 and 500 lbs."); return; }
     const r1 = await insertWeightLog(userId, w, selectedDate);
@@ -483,6 +484,7 @@ export default function ProgressPage() {
   // ── Body comp handlers ────────────────────────
   async function handleLogBodyComp() {
     if (!userId || !goalId) return;
+    if (!isEditable(selectedDate)) { setError("This date is read-only."); return; }
     const bf  = bfInput.trim()  ? parseFloat(bfInput)  : null;
     const smm = smmInput.trim() ? parseFloat(smmInput) : null;
     if (bf === null && smm === null) { setError("Enter at least one value."); return; }
@@ -523,6 +525,7 @@ export default function ProgressPage() {
   // ── Performance handlers ──────────────────────
   async function handleLogPerformance() {
     if (!userId || !goalId) return;
+    if (!isEditable(selectedDate)) { setError("This date is read-only."); return; }
     const v = parseFloat(perfInput);
     if (isNaN(v)) { setError("Enter a valid number."); return; }
 
