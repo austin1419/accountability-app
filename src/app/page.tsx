@@ -367,37 +367,88 @@ export default async function ClientDashboard({
                     </div>
                   </div>
                   {/* Stats column */}
-                  <div style={{
-                    flex: 1, paddingLeft: 20, borderLeft: "1px solid #252525",
-                    display: "flex", flexDirection: "column", justifyContent: "center",
-                    gap: progressStats.length > 3 ? 6 : 14,
-                  }}>
-                    {progressStats.map((s, i) => (
-                      <React.Fragment key={s.label}>
-                        {/* Divider between BF and SMM groups */}
-                        {progressStats.length > 3 && i === 3 && (
-                          <div style={{ height: 1, background: "#252525", margin: "4px 0" }} />
-                        )}
-                        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  {progressStats.length > 3 ? (
+                    /* Body composition: two-column grid (BF | SMM) */
+                    <div style={{
+                      flex: 1, paddingLeft: 16, borderLeft: "1px solid #252525",
+                      display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px",
+                    }}>
+                      {/* Column headers */}
+                      <span style={{
+                        fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: "0.12em",
+                        color: "#807868", textTransform: "uppercase",
+                      }}>
+                        Body Fat
+                      </span>
+                      <span style={{
+                        fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: "0.12em",
+                        color: "#807868", textTransform: "uppercase",
+                      }}>
+                        SMM
+                      </span>
+                      {/* Rows: Starting, Current, Goal — BF left, SMM right */}
+                      {[0, 1, 2].map((row) => {
+                        const bf  = progressStats[row];
+                        const smm = progressStats[row + 3];
+                        const rowLabel = ["Starting", "Current", "Goal"][row];
+                        return (
+                          <React.Fragment key={rowLabel}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                              <span style={{
+                                fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+                                fontSize: 10, color: "#807868",
+                              }}>
+                                {rowLabel}
+                              </span>
+                              <span style={{
+                                fontFamily: "'EB Garamond', serif", fontSize: 16, fontWeight: 600,
+                                color: bf.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
+                              }}>
+                                {bf.value}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                              <span style={{
+                                fontFamily: "'EB Garamond', serif", fontStyle: "italic",
+                                fontSize: 10, color: "#807868",
+                              }}>
+                                {rowLabel}
+                              </span>
+                              <span style={{
+                                fontFamily: "'EB Garamond', serif", fontSize: 16, fontWeight: 600,
+                                color: smm.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
+                              }}>
+                                {smm.value}
+                              </span>
+                            </div>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* Weight / Performance: single column */
+                    <div style={{
+                      flex: 1, paddingLeft: 20, borderLeft: "1px solid #252525",
+                      display: "flex", flexDirection: "column", justifyContent: "center", gap: 14,
+                    }}>
+                      {progressStats.map((s) => (
+                        <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                           <span style={{
                             fontFamily: "'EB Garamond', serif", fontStyle: "italic",
-                            fontSize: progressStats.length > 3 ? 11 : 12,
-                            color: "#807868",
+                            fontSize: 12, color: "#807868",
                           }}>
                             {s.label}
                           </span>
                           <span style={{
-                            fontFamily: "'EB Garamond', serif",
-                            fontSize: progressStats.length > 3 ? 17 : 20,
-                            fontWeight: 600,
+                            fontFamily: "'EB Garamond', serif", fontSize: 20, fontWeight: 600,
                             color: s.gold ? "#B8933A" : "#F4EEE4", lineHeight: 1.1,
                           }}>
                             {s.value}
                           </span>
                         </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </section>
             </LinkCard>
