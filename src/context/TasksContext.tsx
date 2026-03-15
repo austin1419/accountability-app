@@ -9,7 +9,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { Task } from "@/lib/mockData";
 import { supabase } from "@/lib/supabase";
-import { fetchTasksForDate, upsertTaskLog, fetchStreak } from "@/lib/queries";
+import { fetchTasksForDate, upsertTaskLog, fetchStreak, fetchWeekCompliance } from "@/lib/queries";
 import { useDate } from "@/context/DateContext";
 
 // ── Shape of what the context exposes ─────────
@@ -20,6 +20,7 @@ type TasksContextType = {
   totalCount: number;
   compliancePercent: number;
   streak: number;
+  weekPerfectDays: Set<string>;
 };
 
 // ── Create the context (starts empty — provider fills it in) ──
@@ -32,6 +33,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [tasks,  setTasks]  = useState<Task[]>([]);
   const [streak, setStreak] = useState(0);
+  const [weekPerfectDays, setWeekPerfectDays] = useState<Set<string>>(new Set());
   const initializedRef = useRef(false);
 
   // Resolve the current user's public.users id on mount
@@ -59,6 +61,17 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     if (!userId) return;
     fetchTasksForDate(userId, selectedDate).then(setTasks);
     fetchStreak(userId).then(setStreak);
+
+    // Compute week range (Sun–Sat) containing selectedDate for dot display
+    const sel = new Date(selectedDate + "T12:00:00");
+    const dow = sel.getDay(); // 0=Sun
+    const sun = new Date(sel);
+    sun.setDate(sun.getDate() - dow);
+    const sat = new Date(sun);
+    sat.setDate(sat.getDate() + 6);
+    const fmt = (d: Date) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d);
+    fetchWeekCompliance(userId, fmt(sun), fmt(sat)).then(setWeekPerfectDays);
   }, [userId, selectedDate]);
 
   const toggleTask = useCallback((id: string) => {
@@ -86,8 +99,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     : 0;
 
   const value = useMemo(() => ({
-    tasks, toggleTask, completedCount, totalCount, compliancePercent, streak,
-  }), [tasks, toggleTask, completedCount, totalCount, compliancePercent, streak]);
+    tasks, toggleTask, completedCount, totalCount, compliancePercent, streak, weekPerfectDays,
+  }), [tasks, toggleTask, completedCount, totalCount, compliancePercent, streak, weekPerfectDays]);
 
   return (
     <TasksContext.Provider value={value}>

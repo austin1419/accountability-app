@@ -40,7 +40,7 @@ const divider: React.CSSProperties = {
 };
 
 export default function TasksPage() {
-  const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak } = useTasks();
+  const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak, weekPerfectDays } = useTasks();
   const { selectedDate, isViewingPast, isEditable } = useDate();
   const canEdit = isEditable(selectedDate);
 
@@ -61,15 +61,17 @@ export default function TasksPage() {
   const shortDate = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   // Week dots: compute Sun–Sat for the week containing selectedDate
+  // Each dot fills if that day had 100% compliance (from weekPerfectDays context)
   const dayOfWeek = dateObj.getDay(); // 0=Sun
   const weekDots = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(dateObj);
     d.setDate(d.getDate() - dayOfWeek + i);
     const ds = d.toISOString().slice(0, 10);
     const isToday = ds === selectedDate;
-    // A day is "done" if it's the selected date and all tasks are complete,
-    // or for simplicity we only highlight the current selected date's state
-    const isDone = isToday && completedCount > 0 && completedCount === totalCount;
+    // For the selected date, use live state so toggling a task updates the dot instantly
+    const isDone = isToday
+      ? completedCount > 0 && completedCount === totalCount
+      : weekPerfectDays.has(ds);
     return { ds, isToday, isDone };
   });
 

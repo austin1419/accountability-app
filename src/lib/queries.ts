@@ -305,6 +305,57 @@ export async function deleteHabit(taskId: string, reason?: string): Promise<{ er
 }
 
 
+// ── fetchWeekCompliance ────────────────────────
+// Returns a Set of date strings (YYYY-MM-DD) within the given week
+// where the user achieved 100% task completion.
+// weekStart and weekEnd are inclusive date strings.
+export async function fetchWeekCompliance(
+  userId: string,
+  weekStart: string,
+  weekEnd: string,
+): Promise<Set<string>> {
+  const { data: goal } = await supabase
+    .from("goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!goal) return new Set();
+
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("goal_id", goal.id)
+    .eq("is_active", true);
+
+  const totalTasks = tasks?.length ?? 0;
+  if (totalTasks === 0) return new Set();
+
+  const taskIds = tasks!.map((t) => t.id);
+
+  const { data: logs } = await supabase
+    .from("task_logs")
+    .select("date, completed")
+    .eq("user_id", userId)
+    .gte("date", weekStart)
+    .lte("date", weekEnd)
+    .in("task_id", taskIds);
+
+  const completedByDate: Record<string, number> = {};
+  for (const log of logs ?? []) {
+    if (log.completed) {
+      completedByDate[log.date] = (completedByDate[log.date] ?? 0) + 1;
+    }
+  }
+
+  const perfect = new Set<string>();
+  for (const [date, count] of Object.entries(completedByDate)) {
+    if (count >= totalTasks) perfect.add(date);
+  }
+  return perfect;
+}
+
+
 // ── fetchStreak ────────────────────────────────
 // Calculates the user's current daily streak from task_logs.
 // A day counts if ALL active tasks were completed that day.
