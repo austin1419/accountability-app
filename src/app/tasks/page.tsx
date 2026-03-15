@@ -1,10 +1,14 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { BottomNav }     from "@/components/BottomNav";
 import { DateHeader }    from "@/components/DateHeader";
 import { EditingBanner } from "@/components/EditingBanner";
+import { JournalModal }  from "@/components/JournalModal";
 import { useTasks }      from "@/context/TasksContext";
 import { useDate }       from "@/context/DateContext";
+import { supabase }      from "@/lib/supabase";
+import { fetchJournal, countJournalSignals } from "@/lib/queries";
 import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 
 // Map raw DB categories to PULSE pillar labels for the pill badges
@@ -43,6 +47,54 @@ export default function TasksPage() {
   const { tasks, toggleTask, completedCount, totalCount, compliancePercent, streak, weekPerfectDays } = useTasks();
   const { selectedDate, isViewingPast, isEditable } = useDate();
   const canEdit = isEditable(selectedDate);
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [journalDate, setJournalDate] = useState(selectedDate);
+  const [userId, setUserId] = useState<string | null>(null);
+  // Signal counts per date string for the visible week (0–11)
+  const [journalCounts, setJournalCounts] = useState<Record<string, number>>({});
+
+  // Resolve userId once
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => { if (data) setUserId(data.id); });
+    });
+  }, []);
+
+  // Compute the 7 dates for the week containing selectedDate
+  const baseDateObj = new Date(selectedDate + "T12:00:00");
+  const baseDow = baseDateObj.getDay();
+  const weekDateStrings = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(baseDateObj);
+    d.setDate(d.getDate() - baseDow + i);
+    return d.toISOString().slice(0, 10);
+  });
+
+  // Fetch journal signal counts for the visible week
+  const loadJournalCounts = useCallback(async () => {
+    if (!userId) return;
+    const counts: Record<string, number> = {};
+    await Promise.all(
+      weekDateStrings.map(async (ds) => {
+        const entry = await fetchJournal(userId, ds);
+        counts[ds] = countJournalSignals(entry);
+      }),
+    );
+    setJournalCounts(counts);
+  }, [userId, weekDateStrings.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadJournalCounts(); }, [loadJournalCounts]);
+
+  // Refetch journal counts when modal closes (picks up autosaved changes)
+  const handleJournalClose = useCallback(() => {
+    setJournalOpen(false);
+    loadJournalCounts();
+  }, [loadJournalCounts]);
 
   // Progress ring math
   const circumference = 2 * Math.PI * 26; // r=26 → ~163.4
@@ -348,12 +400,20 @@ export default function TasksPage() {
             </span>
           </div>
 
-          {/* Day strip */}
+          {/* Day strip — journal circles */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
             {dayAbbrs.map((abbr, i) => {
-              const dot = weekDots[i];
+              const ds = weekDateStrings[i];
+              const count = journalCounts[ds] ?? 0;
+              const isComplete = count >= 11;
+              const isPartial = count > 0 && count < 11;
+              const isSelected = ds === selectedDate;
               return (
-                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div
+                  key={i}
+                  onClick={() => { setJournalDate(ds); setJournalOpen(true); }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer" }}
+                >
                   <span style={{
                     fontFamily: "'Cinzel', serif",
                     fontSize: 7,
@@ -365,26 +425,33 @@ export default function TasksPage() {
                     width: 26,
                     height: 26,
                     borderRadius: "50%",
-                    border: dot.isDone
+                    border: isComplete
                       ? "1.5px solid #B8933A"
-                      : dot.isToday
+                      : isPartial
+                      ? "1.5px solid rgba(184,147,58,0.5)"
+                      : isSelected
                       ? "1.5px solid #B8933A"
                       : "1px solid #252525",
-                    background: dot.isDone
+                    background: isComplete
                       ? "rgba(184,147,58,0.1)"
-                      : dot.isToday
+                      : isPartial
+                      ? "rgba(184,147,58,0.04)"
+                      : isSelected
                       ? "transparent"
                       : "#111111",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
-                    {dot.isDone && (
+                    {isComplete && (
                       <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
                         <path d="M3 8l3.5 3.5L13 5" stroke="#B8933A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
-                    {dot.isToday && !dot.isDone && (
+                    {isPartial && (
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(184,147,58,0.5)" }} />
+                    )}
+                    {!isComplete && !isPartial && isSelected && (
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#B8933A", opacity: 0.4 }} />
                     )}
                   </div>
@@ -395,7 +462,7 @@ export default function TasksPage() {
 
           {/* CTA button */}
           <button
-            onClick={() => console.log("Journal coming soon")}
+            onClick={() => { setJournalDate(selectedDate); setJournalOpen(true); }}
             style={{
               width: "100%",
               background: "rgba(184,147,58,0.05)",
@@ -432,6 +499,13 @@ export default function TasksPage() {
 
       {/* ── Bottom nav ─────────────────── */}
       <BottomNav />
+
+      {/* Journal modal */}
+      <JournalModal
+        isOpen={journalOpen}
+        onClose={handleJournalClose}
+        date={journalDate}
+      />
     </div>
   );
 }

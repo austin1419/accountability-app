@@ -491,3 +491,95 @@ export async function fetchMonthCompliance(
   }
   return result;
 }
+
+
+// ── Daily Journal types ──────────────────────
+export type DailyJournalRow = {
+  id: string;
+  user_id: string;
+  date: string;
+  sleep_hours: number | null;
+  felt_rested: boolean | null;
+  protein_hit: boolean | null;
+  hydration_hit: boolean | null;
+  alcohol: boolean | null;
+  trained_today: boolean | null;
+  zone2_cardio: boolean | null;
+  recovery_work: boolean | null;
+  supplements_taken: boolean | null;
+  stress_level: number | null;
+  energy_level: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// The 11 signal fields used for fill-state counting
+const JOURNAL_SIGNAL_KEYS: (keyof DailyJournalRow)[] = [
+  "sleep_hours",
+  "felt_rested",
+  "protein_hit",
+  "hydration_hit",
+  "alcohol",
+  "trained_today",
+  "zone2_cardio",
+  "recovery_work",
+  "supplements_taken",
+  "stress_level",
+  "energy_level",
+];
+
+
+// ── fetchJournal ──────────────────────────────
+// Returns the journal entry for a given user and date, or null.
+export async function fetchJournal(
+  userId: string,
+  date: string,
+): Promise<DailyJournalRow | null> {
+  const { data, error } = await supabase
+    .from("daily_journal")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[fetchJournal] failed:", error);
+    return null;
+  }
+  return data as DailyJournalRow | null;
+}
+
+
+// ── upsertJournal ─────────────────────────────
+// Auto-saves journal fields. Upserts on the (user_id, date) unique constraint.
+// Only the fields present in `patch` are written; updated_at is always refreshed.
+export async function upsertJournal(
+  userId: string,
+  date: string,
+  patch: Partial<Omit<DailyJournalRow, "id" | "user_id" | "date" | "created_at" | "updated_at">>,
+): Promise<{ error?: string }> {
+  const payload = { user_id: userId, date, ...patch, updated_at: new Date().toISOString() };
+
+  const { error } = await supabase
+    .from("daily_journal")
+    .upsert(payload, { onConflict: "user_id,date" });
+
+  if (error) {
+    console.error("[upsertJournal] failed:", error);
+    return { error: `${error.code}: ${error.message}` };
+  }
+  return {};
+}
+
+
+// ── countJournalSignals ───────────────────────
+// Returns the number of non-null signal fields (0–11).
+// Used to determine circle fill state:
+//   0       → empty circle
+//   1–10    → partial (in progress)
+//   11      → complete (checkmark)
+export function countJournalSignals(entry: DailyJournalRow | null): number {
+  if (!entry) return 0;
+  return JOURNAL_SIGNAL_KEYS.filter((key) => entry[key] != null).length;
+}

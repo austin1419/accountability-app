@@ -90,6 +90,74 @@ export type Database = {
           },
         ]
       }
+      daily_journal: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          sleep_hours: number | null
+          felt_rested: boolean | null
+          protein_hit: boolean | null
+          hydration_hit: boolean | null
+          alcohol: boolean | null
+          trained_today: boolean | null
+          zone2_cardio: boolean | null
+          recovery_work: boolean | null
+          supplements_taken: boolean | null
+          stress_level: number | null
+          energy_level: number | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          sleep_hours?: number | null
+          felt_rested?: boolean | null
+          protein_hit?: boolean | null
+          hydration_hit?: boolean | null
+          alcohol?: boolean | null
+          trained_today?: boolean | null
+          zone2_cardio?: boolean | null
+          recovery_work?: boolean | null
+          supplements_taken?: boolean | null
+          stress_level?: number | null
+          energy_level?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          sleep_hours?: number | null
+          felt_rested?: boolean | null
+          protein_hit?: boolean | null
+          hydration_hit?: boolean | null
+          alcohol?: boolean | null
+          trained_today?: boolean | null
+          zone2_cardio?: boolean | null
+          recovery_work?: boolean | null
+          supplements_taken?: boolean | null
+          stress_level?: number | null
+          energy_level?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_journal_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_profile_answers: {
         Row: {
           id: string
