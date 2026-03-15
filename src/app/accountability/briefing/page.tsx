@@ -21,6 +21,8 @@ import { getFeatureReadiness }   from "@/lib/ai/getAIFeatureReadiness";
 import { fetchRelevantMemories, detectAndStoreMemories } from "@/lib/ai/aiMemory";
 import { buildKnowledgeContext } from "@/lib/ai/knowledgeRetrieval";
 import { determineCoachingFocus } from "@/lib/ai/determineCoachingFocus";
+import { buildScenarioSignals } from "@/lib/coaching/buildSignals";
+import { buildCoachResponse }   from "@/lib/coaching/buildCoachResponse";
 import { BriefingShell }         from "@/components/briefing/BriefingShell";
 
 export const dynamic = "force-dynamic";
@@ -50,13 +52,15 @@ export default async function DailyBriefingPage() {
     buildClientContext(profile.id, selectedDate),
     fetchRelevantMemories(profile.id),
   ]);
-  const readiness     = getFeatureReadiness(ctx, "dailyBriefing");
-  const analysis      = analyzeClientContext(ctx);
-  const clientSummary = buildClientSummary(ctx, analysis);
-  const coachSummary  = buildCoachSummary(ctx, analysis);
-  const knowledge     = await buildKnowledgeContext(ctx, analysis, coachSummary);
-  const focus         = determineCoachingFocus(ctx, analysis, memories, knowledge);
-  const briefing      = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness, memories, knowledge, focus);
+  const readiness      = getFeatureReadiness(ctx, "dailyBriefing");
+  const analysis       = analyzeClientContext(ctx);
+  const clientSummary  = buildClientSummary(ctx, analysis);
+  const coachSummary   = buildCoachSummary(ctx, analysis);
+  const knowledge      = await buildKnowledgeContext(ctx, analysis, coachSummary);
+  const focus          = determineCoachingFocus(ctx, analysis, memories, knowledge);
+  const signals        = buildScenarioSignals(ctx);
+  const coachResponse  = buildCoachResponse(signals);
+  const briefing       = buildDailyBriefing(ctx, analysis, clientSummary, coachSummary, readiness, memories, knowledge, focus, coachResponse);
 
   // Store noteworthy memories from this session (fire-and-forget)
   if (readiness.available) {

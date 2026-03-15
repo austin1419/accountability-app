@@ -19,7 +19,14 @@ export type CoachingScenario =
   | "perfect_day"
   | "streak_milestone"
   | "goal_pace_ahead"
-  | "midweek_rescue";
+  | "midweek_rescue"
+  // Journal-derived scenarios
+  | "sleep_deficit"
+  | "recovery_deficit"
+  | "nutrition_slip"
+  | "training_gap"
+  | "high_stress_low_energy"
+  | "low_readiness";
 
 export const coachingScenarios: CoachingScenario[] = [
   "training_only_no_nutrition",
@@ -33,4 +40,10 @@ export const coachingScenarios: CoachingScenario[] = [
   "streak_milestone",
   "goal_pace_ahead",
   "midweek_rescue",
+  "sleep_deficit",
+  "recovery_deficit",
+  "nutrition_slip",
+  "training_gap",
+  "high_stress_low_energy",
+  "low_readiness",
 ];

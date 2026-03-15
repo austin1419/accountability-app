@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────
 
 import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
+import type { CoachResponse } from "@/lib/coaching/buildCoachResponse";
 import type {
   ClientAIContext,
   ClientAnalysis,
@@ -437,6 +438,9 @@ function focusAction(focus: CoachingFocus, ctx: ClientAIContext): string | null 
   }
 }
 
+/** Scenarios that represent the default/fallback — no strong signal detected. */
+const DEFAULT_SCENARIOS = new Set(["momentum_reinforcement", "early_streak"]);
+
 function buildCoachingMessage(
   ctx: ClientAIContext,
   analysis: ClientAnalysis,
@@ -446,13 +450,22 @@ function buildCoachingMessage(
   memories: AIMemory[],
   snippets: KnowledgeChunk[],
   focus: CoachingFocus,
+  coachResponse?: CoachResponse,
 ): CoachingMessage {
   const baseInsight = buildInsight(analysis, ctx, clientSummary, coachSummary);
   const baseGuidance = buildGuidance(analysis, coachSummary, momentum);
 
+  // When the deterministic coaching engine detected a specific scenario
+  // (not a generic fallback), use its message as the insight — it carries
+  // the scenario-specific coaching voice from the message library.
+  const scenarioInsight =
+    coachResponse && !DEFAULT_SCENARIOS.has(coachResponse.scenario)
+      ? coachResponse.message
+      : null;
+
   return {
     snapshot: focusSnapshot(focus, ctx) ?? buildSnapshot(ctx, analysis, clientSummary, momentum),
-    insight:  enrichInsightWithMemory(baseInsight, memories, ctx),
+    insight:  scenarioInsight ?? enrichInsightWithMemory(baseInsight, memories, ctx),
     guidance: enrichGuidanceWithKnowledge(focusGuidance(focus) ?? baseGuidance, snippets, momentum),
     action:   focusAction(focus, ctx) ?? buildAction(ctx, clientSummary, analysis),
   };
@@ -542,6 +555,7 @@ export function buildDailyBriefing(
   memories: AIMemory[] = [],
   knowledge?: KnowledgeContext,
   focus?: CoachingFocus,
+  coachResponse?: CoachResponse,
 ): DailyBriefing {
   if (!readiness.available) {
     return buildGatedBriefing(ctx, readiness);
@@ -565,7 +579,7 @@ export function buildDailyBriefing(
     greeting:        buildGreeting(ctx),
     momentumState,
     riskLevel,
-    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories, snippets, resolvedFocus),
+    coachingMessage: buildCoachingMessage(ctx, analysis, clientSummary, coachSummary, momentumState, memories, snippets, resolvedFocus, coachResponse),
     metrics:         buildMetrics(ctx),
     sourceSignals:   analysis.allSignals.filter((s) => s.detected).map((s) => s.key),
   };

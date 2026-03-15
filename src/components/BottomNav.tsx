@@ -190,7 +190,7 @@ export function BottomNav() {
       </div>
 
       {/* Pulse AI Chat Modal */}
-      <PulseChatModal isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+      <PulseChatModal isOpen={chatOpen} onClose={() => setChatOpen(false)} selectedDate={selectedDate} />
     </>
   );
 }

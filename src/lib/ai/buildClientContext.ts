@@ -30,6 +30,7 @@ import type {
   GoalContext,
   ComplianceContext,
   CoachingProfileContext,
+  JournalEntry,
 } from "./types";
 
 // ── Helpers ──────────────────────────────────
@@ -127,6 +128,7 @@ export async function buildClientContext(
     statusScore,
     coachingAnswers,
     notesResult,
+    journalRow,
   ] = await Promise.all([
     // User profile
     supabase
@@ -178,6 +180,15 @@ export async function buildClientContext(
       .eq("client_id", userId)
       .order("created_at", { ascending: false })
       .then((r) => r.data ?? []),
+
+    // Journal entry for selected date
+    supabase
+      .from("daily_journal")
+      .select("sleep_hours, felt_rested, protein_hit, hydration_hit, alcohol, trained_today, zone2_cardio, recovery_work, supplements_taken, stress_level, energy_level")
+      .eq("user_id", userId)
+      .eq("date", selectedDate)
+      .maybeSingle()
+      .then((r) => r.data),
   ]);
 
   // ── Phase 2: Goal-dependent queries ────────────────────────────
@@ -327,6 +338,24 @@ export async function buildClientContext(
     createdAt: n.created_at,
   }));
 
+  // ── Assemble journal entry ─────────────────────────────────────
+
+  const journalEntry: JournalEntry | null = journalRow
+    ? {
+        sleepHours:       journalRow.sleep_hours  != null ? Number(journalRow.sleep_hours)  : null,
+        feltRested:       journalRow.felt_rested       ?? null,
+        proteinHit:       journalRow.protein_hit       ?? null,
+        hydrationHit:     journalRow.hydration_hit     ?? null,
+        alcohol:          journalRow.alcohol            ?? null,
+        trainedToday:     journalRow.trained_today     ?? null,
+        zone2Cardio:      journalRow.zone2_cardio      ?? null,
+        recoveryWork:     journalRow.recovery_work     ?? null,
+        supplementsTaken: journalRow.supplements_taken ?? null,
+        stressLevel:      journalRow.stress_level != null ? Number(journalRow.stress_level) : null,
+        energyLevel:      journalRow.energy_level != null ? Number(journalRow.energy_level) : null,
+      }
+    : null;
+
   // ── Return assembled context ───────────────────────────────────
 
   return {
@@ -349,5 +378,6 @@ export async function buildClientContext(
     progressLog,
     coachingProfile: coachingAnswers,
     notes,
+    journalEntry,
   };
 }

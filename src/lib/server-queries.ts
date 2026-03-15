@@ -15,6 +15,8 @@ import { generateProjection, type ChartPoint } from "@/lib/projection";
 import { computeGoalProgress, type GoalMetrics } from "@/lib/computeGoalProgress";
 import { computeCompliance } from "@/lib/utils/computeCompliance";
 import { COMPLIANCE_TARGET, COMPLIANCE_WEIGHT, PROGRESS_WEIGHT } from "@/lib/constants/thresholds";
+import { deriveJournalSignals } from "@/lib/coaching/buildSignals";
+import type { JournalEntry } from "@/lib/ai/types";
 
 // Re-export so existing consumers can still import from here
 export type { GoalMetrics } from "@/lib/computeGoalProgress";
@@ -78,6 +80,14 @@ export type LeaderboardEntry = {
   goalName:     string | null;
 };
 
+export type HealthFlag =
+  | "low_readiness"
+  | "recovery_deficit"
+  | "high_stress_low_energy"
+  | "sleep_deficit"
+  | "nutrition_slip"
+  | "training_gap";
+
 export type CoachClientRow = {
   id:            string;
   name:          string;
@@ -89,6 +99,7 @@ export type CoachClientRow = {
   weekPercent:   number;
   monthPercent:  number;
   isFlagged:     boolean;
+  healthFlags:   HealthFlag[];
 };
 
 export type ArchivedClientRow = {
@@ -122,6 +133,7 @@ export type ClientDetail = {
   todayPercent: number;
   weekPercent:  number;
   monthPercent: number;
+  healthFlags:  HealthFlag[];
 };
 
 
@@ -407,13 +419,38 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
 
   const allTaskIds = (tasks ?? []).map((t) => t.id);
 
-  const { data: logs } = await supabase
-    .from("task_logs")
-    .select("user_id, date, completed")
-    .in("user_id", clientIds)
-    .gte("date", monthStart)
-    .lte("date", today)
-    .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]);
+  const [{ data: logs }, { data: journals }] = await Promise.all([
+    supabase
+      .from("task_logs")
+      .select("user_id, date, completed")
+      .in("user_id", clientIds)
+      .gte("date", monthStart)
+      .lte("date", today)
+      .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]),
+    supabase
+      .from("daily_journal")
+      .select("user_id, sleep_hours, felt_rested, protein_hit, hydration_hit, alcohol, trained_today, zone2_cardio, recovery_work, supplements_taken, stress_level, energy_level")
+      .in("user_id", clientIds)
+      .eq("date", today),
+  ]);
+
+  // Map journal rows by user_id for O(1) lookup
+  const journalByUser = new Map<string, JournalEntry>();
+  for (const row of journals ?? []) {
+    journalByUser.set(row.user_id, {
+      sleepHours:       row.sleep_hours  != null ? Number(row.sleep_hours)  : null,
+      feltRested:       row.felt_rested       ?? null,
+      proteinHit:       row.protein_hit       ?? null,
+      hydrationHit:     row.hydration_hit     ?? null,
+      alcohol:          row.alcohol            ?? null,
+      trainedToday:     row.trained_today     ?? null,
+      zone2Cardio:      row.zone2_cardio      ?? null,
+      recoveryWork:     row.recovery_work     ?? null,
+      supplementsTaken: row.supplements_taken ?? null,
+      stressLevel:      row.stress_level != null ? Number(row.stress_level) : null,
+      energyLevel:      row.energy_level != null ? Number(row.energy_level) : null,
+    });
+  }
 
   return clients.map((client) => {
     const goal        = goalByUser.get(client.id) ?? null;
@@ -438,6 +475,17 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
 
     const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
+    // Derive health flags from today's journal entry
+    const journalEntry = journalByUser.get(client.id) ?? null;
+    const signals = deriveJournalSignals(journalEntry);
+    const healthFlags: HealthFlag[] = [];
+    if (signals.lowReadiness === true)        healthFlags.push("low_readiness");
+    if (signals.recoveryDeficit === true)     healthFlags.push("recovery_deficit");
+    if (signals.highStressLowEnergy === true) healthFlags.push("high_stress_low_energy");
+    if (signals.sleepDeficit === true)        healthFlags.push("sleep_deficit");
+    if (signals.nutritionSlip === true)       healthFlags.push("nutrition_slip");
+    if (signals.trainingGap === true)         healthFlags.push("training_gap");
+
     return {
       id:            client.id,
       name:          client.name,
@@ -449,6 +497,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
       weekPercent,
       monthPercent,
       isFlagged:     taskCount > 0 && (todayPercent < COMPLIANCE_TARGET || weekPercent < COMPLIANCE_TARGET || monthPercent < COMPLIANCE_TARGET),
+      healthFlags,
     };
   });
 }
@@ -667,6 +716,39 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
 
   const goalProgress = goal ? computeGoalProgress(goal as unknown as GoalMetrics) : 0;
 
+  // Journal-based health flags
+  const { data: journalRow } = await supabase
+    .from("daily_journal")
+    .select("sleep_hours, felt_rested, protein_hit, hydration_hit, alcohol, trained_today, zone2_cardio, recovery_work, supplements_taken, stress_level, energy_level")
+    .eq("user_id", clientId)
+    .eq("date", today)
+    .maybeSingle();
+
+  const journalEntry: JournalEntry | null = journalRow
+    ? {
+        sleepHours:       journalRow.sleep_hours  != null ? Number(journalRow.sleep_hours)  : null,
+        feltRested:       journalRow.felt_rested       ?? null,
+        proteinHit:       journalRow.protein_hit       ?? null,
+        hydrationHit:     journalRow.hydration_hit     ?? null,
+        alcohol:          journalRow.alcohol            ?? null,
+        trainedToday:     journalRow.trained_today     ?? null,
+        zone2Cardio:      journalRow.zone2_cardio      ?? null,
+        recoveryWork:     journalRow.recovery_work     ?? null,
+        supplementsTaken: journalRow.supplements_taken ?? null,
+        stressLevel:      journalRow.stress_level != null ? Number(journalRow.stress_level) : null,
+        energyLevel:      journalRow.energy_level != null ? Number(journalRow.energy_level) : null,
+      }
+    : null;
+
+  const detailSignals = deriveJournalSignals(journalEntry);
+  const healthFlags: HealthFlag[] = [];
+  if (detailSignals.lowReadiness === true)        healthFlags.push("low_readiness");
+  if (detailSignals.recoveryDeficit === true)     healthFlags.push("recovery_deficit");
+  if (detailSignals.highStressLowEnergy === true) healthFlags.push("high_stress_low_energy");
+  if (detailSignals.sleepDeficit === true)        healthFlags.push("sleep_deficit");
+  if (detailSignals.nutritionSlip === true)       healthFlags.push("nutrition_slip");
+  if (detailSignals.trainingGap === true)         healthFlags.push("training_gap");
+
   return {
     id:    user.id,
     name:  user.name,
@@ -715,6 +797,7 @@ export async function fetchClientDetail(clientId: string): Promise<ClientDetail 
     todayPercent,
     weekPercent,
     monthPercent,
+    healthFlags,
   };
 }
 

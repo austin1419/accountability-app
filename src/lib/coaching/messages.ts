@@ -101,4 +101,54 @@ export const coachingMessages: Record<CoachingScenario, string[]> = {
     "It's been a tough week so far. That's fine — what matters is what you do with what's left. One strong day can shift the whole trajectory. What are you willing to commit to finishing today?",
   ],
 
+  // ── Journal-derived scenarios ──────────────────
+
+  sleep_deficit: [
+    "Your journal is telling me something — sleep was short or you didn't feel rested. That's not a minor detail. Underslept means elevated cortisol, worse decisions, and harder workouts. What got in the way of sleep last night?",
+    "Less than six hours or waking up drained — either way, recovery took a hit. No nutrition plan or training session outperforms a sleep deficit. What's one thing you can protect tonight to get a better night?",
+    "The data says sleep was off. That affects everything downstream — energy, hunger, willpower, performance. Before we talk about anything else, what happened with sleep?",
+    "Sleep came up short. I'm not going to pretend that doesn't matter — it's the foundation everything else sits on. What's your plan for tonight?",
+    "Your body is telling you it didn't recover. When sleep is off, the smartest move is to protect the basics and not try to be a hero. What does tonight's wind-down look like?",
+  ],
+
+  recovery_deficit: [
+    "Short sleep and no recovery work — that's a compounding problem. Your body didn't rest and it didn't get any active recovery either. That's how fatigue builds up quietly. What's one recovery thing you can do today — even ten minutes?",
+    "You're running on low sleep and skipping recovery. That's a pattern that catches up fast. You don't need a full yoga session — you need something. A walk, some stretching, five minutes of mobility. What's realistic today?",
+    "Sleep was off and recovery work didn't happen. That combination is where injuries and burnout start to creep in. I'm not asking you to overhaul your schedule — just add one recovery action today. What will it be?",
+    "Your journal shows a recovery gap — not enough sleep and no recovery work to offset it. When the body doesn't recover, performance drops and stress compounds. What's one thing you can do today to give your body a break?",
+    "Low sleep plus no recovery is a red flag. Not an emergency, but a signal worth paying attention to. Your body keeps score even when you're not watching. What recovery can you fit in today?",
+  ],
+
+  nutrition_slip: [
+    "The journal flagged a nutrition miss — protein, hydration, or alcohol showed up where it shouldn't. One off day isn't a disaster, but the pattern matters. What happened with nutrition yesterday?",
+    "Nutrition slipped. Maybe protein was low, maybe water wasn't where it needed to be, maybe alcohol got involved. I'm not here to judge the day — I'm here to ask what tomorrow looks like. What's your plan?",
+    "Your journal shows a gap on the nutrition side. The hierarchy says protein and water come before everything else in the kitchen. Which one can you nail today without overthinking it?",
+    "Something on the nutrition front didn't land — the journal made that clear. One miss is fine. Two in a row is a pattern. What's the one nutrition task you're going to protect today?",
+    "Nutrition took a hit. That's the honest read from your journal. Before we talk about anything fancy, the basics matter most — protein target and water. Which one are you locking in first today?",
+  ],
+
+  training_gap: [
+    "No training and no cardio logged in your journal. Rest days are real and necessary — but if this wasn't planned, it's worth asking the question. Was today a deliberate rest day or did the day just get away from you?",
+    "The journal shows no training or zone 2 work. If that was the plan, respect the rest. If it wasn't, the question is simple — what got in the way, and what does tomorrow look like?",
+    "No movement logged today. That's not automatically a problem — recovery days matter. But if this is becoming a pattern, it's worth naming. Was this intentional or did something block you?",
+    "Training didn't happen and neither did cardio. I'm not going to assume the worst — some days are legitimate rest. But if the honest answer is that you skipped, what would it take to show up tomorrow?",
+    "Your journal says no training, no zone 2. If that was a scheduled off day, good — recovery is part of the plan. If it wasn't, let's talk about what happened and how to protect tomorrow.",
+  ],
+
+  high_stress_low_energy: [
+    "High stress and low energy — your journal is painting a clear picture. When the body is in that state, adding more load doesn't help. The smart move is to simplify. What's the one thing you can take off your plate today?",
+    "Stress is elevated and energy is in the basement. That's not a mindset problem — it's a physiological state. Your body is telling you something. What's driving the stress right now?",
+    "Your journal shows high stress and low energy at the same time. That combination burns people out fast if they try to push through it. What would it look like to protect your energy today instead of spending it?",
+    "The numbers say stressed and drained. I'm not going to ask you to power through that. When stress is high and energy is low, the hierarchy says protect sleep and water first. What's one thing you can control today?",
+    "Stress up, energy down. That's your body telling you the load is too high right now. We don't add complexity here — we subtract it. What's one thing you can drop or simplify today?",
+  ],
+
+  low_readiness: [
+    "You didn't feel rested and your energy is low. That's your body saying it's not ready for a hard push today. Respect the signal. What does a scaled-back version of today look like for you?",
+    "Low readiness — not rested, low energy. Days like this call for the minimum effective dose, not the maximum. Protect sleep tonight, stay hydrated, and don't try to be a hero. What's one thing you can do well today?",
+    "Your journal says you're running on empty — not rested and energy is bottomed out. The worst thing you can do is pretend you're fine and grind. The best thing is to name it and adjust. What's realistic for today?",
+    "Not rested and low energy. That's a readiness signal, not a character flaw. The plan today should match your capacity, not your ambition. What's the scaled-down version of today that still moves the needle?",
+    "Readiness is low. The data is clear — you're not recovered and energy isn't there. Pushing hard today won't get you ahead. Protecting your recovery will. What's your plan for getting better sleep tonight?",
+  ],
+
 };

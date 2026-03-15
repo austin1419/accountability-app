@@ -49,6 +49,23 @@ function buildContextSummary(ctx: ClientAIContext): string {
   if (ctx.progressTrends) {
     parts.push(`Pace: ${ctx.progressTrends.status}`);
   }
+
+  // Journal entry
+  const j = ctx.journalEntry;
+  if (j) {
+    const jLines: string[] = [];
+    if (j.sleepHours != null)    jLines.push(`Sleep: ${j.sleepHours}h`);
+    if (j.feltRested != null)    jLines.push(`Rested: ${j.feltRested ? "yes" : "no"}`);
+    if (j.proteinHit != null)    jLines.push(`Protein: ${j.proteinHit ? "hit" : "missed"}`);
+    if (j.hydrationHit != null)  jLines.push(`Hydration: ${j.hydrationHit ? "hit" : "missed"}`);
+    if (j.alcohol != null && j.alcohol) jLines.push("Alcohol: yes");
+    if (j.trainedToday != null)  jLines.push(`Trained: ${j.trainedToday ? "yes" : "no"}`);
+    if (j.recoveryWork != null)  jLines.push(`Recovery work: ${j.recoveryWork ? "yes" : "no"}`);
+    if (j.stressLevel != null)   jLines.push(`Stress: ${j.stressLevel}/5`);
+    if (j.energyLevel != null)   jLines.push(`Energy: ${j.energyLevel}/5`);
+    if (jLines.length > 0) parts.push(`Journal: ${jLines.join(", ")}`);
+  }
+
   return parts.join("\n");
 }
 
@@ -59,6 +76,7 @@ async function generateAIResponse(
   scenario: string,
   deterministicMessage: string,
   contextSummary: string,
+  activeSignals: string[] = [],
 ): Promise<string> {
   const { getAnthropicClient } = await import("@/lib/anthropic");
   const anthropic = getAnthropicClient();
@@ -72,14 +90,21 @@ async function generateAIResponse(
   }));
 
   // Add the current user message with coaching context
+  const contextParts = [
+    `[Client context]\n${contextSummary}`,
+    `[Detected scenario] ${scenario}`,
+  ];
+  if (activeSignals.length > 0) {
+    contextParts.push(`[Active health signals] ${activeSignals.join(", ")}`);
+  }
+  contextParts.push(
+    `[Deterministic coaching message] ${deterministicMessage}`,
+    `[User message] ${userMessage}`,
+  );
+
   messages.push({
     role: "user" as const,
-    content: [
-      `[Client context]\n${contextSummary}`,
-      `[Detected scenario] ${scenario}`,
-      `[Deterministic coaching message] ${deterministicMessage}`,
-      `[User message] ${userMessage}`,
-    ].join("\n\n"),
+    content: contextParts.join("\n\n"),
   });
 
   const response = await anthropic.messages.create({
@@ -171,6 +196,20 @@ export async function POST(request: NextRequest) {
   const signals = buildScenarioSignals(clientContext);
   const response = buildCoachResponse(signals);
 
+  // Collect active health signal names for Claude
+  const activeSignals: string[] = [];
+  if (signals.sleepDeficit === true)        activeSignals.push("sleep_deficit");
+  if (signals.recoveryDeficit === true)     activeSignals.push("recovery_deficit");
+  if (signals.nutritionSlip === true)       activeSignals.push("nutrition_slip");
+  if (signals.trainingGap === true)         activeSignals.push("training_gap");
+  if (signals.highStressLowEnergy === true) activeSignals.push("high_stress_low_energy");
+  if (signals.lowReadiness === true)        activeSignals.push("low_readiness");
+
+  console.log("[pulse-chat] journalEntry:", clientContext.journalEntry ? "present" : "NULL");
+  console.log("[pulse-chat] scenario:", response.scenario);
+  console.log("[pulse-chat] activeSignals:", activeSignals);
+  console.log("[pulse-chat] deterministicMsg:", response.message.slice(0, 80));
+
   // ── Append deterministic message to history ─
   history.push({ role: "coach", message: response.message });
 
@@ -184,6 +223,7 @@ export async function POST(request: NextRequest) {
       response.scenario,
       response.message,
       contextSummary,
+      activeSignals,
     );
 
     // Replace the deterministic message in history with the AI message

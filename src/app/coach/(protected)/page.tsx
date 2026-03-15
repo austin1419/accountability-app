@@ -10,8 +10,34 @@
 
 import Link from "next/link";
 import { fetchAllClientsForCoach } from "@/lib/server-queries";
-import type { CoachClientRow } from "@/lib/server-queries";
+import type { CoachClientRow, HealthFlag } from "@/lib/server-queries";
 import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
+
+const healthFlagLabels: Record<HealthFlag, string> = {
+  low_readiness:          "Low Readiness",
+  recovery_deficit:       "Recovery",
+  high_stress_low_energy: "Stress",
+  sleep_deficit:          "Sleep",
+  nutrition_slip:         "Nutrition",
+  training_gap:           "Training",
+};
+
+function HealthFlagBadges({ flags }: { flags: HealthFlag[] }) {
+  if (flags.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {flags.map((flag) => (
+        <span
+          key={flag}
+          className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#7A1E1E] text-[#C94A4A] bg-[#7A1E1E]/10"
+          style={{ fontFamily: "'Cinzel', serif" }}
+        >
+          {healthFlagLabels[flag]}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 // Always re-fetch — compliance data changes throughout the day.
 export const dynamic = "force-dynamic";
@@ -37,13 +63,13 @@ function CompliancePill({ label, pct }: { label: string; pct: number }) {
 
 function FlaggedClientCard({ client }: { client: CoachClientRow }) {
   return (
-    <div className="bg-[#141414] rounded p-5 border border-[#252525] flex flex-col gap-4">
+    <div className="bg-[#0D0D0D] rounded-[7px] p-4 border border-[#1E1E1E] border-l-[3px] border-l-[#7A1E1E] flex flex-col gap-4">
 
       {/* Name + goal + view link */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold text-[#DDD5C0] truncate">{client.name}</p>
-          <p className="text-xs text-[#9A9080] mt-0.5 truncate">
+          <p className="font-semibold text-[#DDD5C0] truncate" style={{ fontFamily: "'EB Garamond', serif", fontSize: "15px" }}>{client.name}</p>
+          <p className="text-xs text-[#9A9080] mt-0.5 truncate" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
             {client.goalName ?? "No goal set"}
           </p>
         </div>
@@ -55,6 +81,9 @@ function FlaggedClientCard({ client }: { client: CoachClientRow }) {
           View →
         </Link>
       </div>
+
+      {/* Health flags */}
+      <HealthFlagBadges flags={client.healthFlags} />
 
       {/* Compliance metrics */}
       <div className="flex items-center gap-4">
@@ -87,6 +116,7 @@ function FlaggedClientCard({ client }: { client: CoachClientRow }) {
 export default async function CoachDashboard() {
   const clients = await fetchAllClientsForCoach();
   const flagged = clients.filter((c) => c.isFlagged);
+  const healthFlaggedCount = clients.filter((c) => c.healthFlags.length > 0).length;
 
   // New clients = joined within the last 30 days
   const thirtyDaysAgo = new Date();
@@ -120,72 +150,83 @@ export default async function CoachDashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1
-            className="text-2xl text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            className="text-[#F4EEE4]"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em" }}
           >
             Coach Dashboard
           </h1>
-          <p className="text-sm text-[#9A9080] mt-1">{todayDate}</p>
+          <p className="mt-1" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic", color: "#4A3F2A" }}>{todayDate}</p>
         </div>
         <Link
           href="/coach/clients"
-          className="text-sm font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
-          style={{ fontFamily: "'Cinzel', serif" }}
+          className="text-[#B8933A] hover:text-[#C9A44A] border border-[#B8933A] hover:border-[#C9A44A] hover:bg-[#1A1A1A] rounded cursor-pointer transition-all duration-150 uppercase"
+          style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", padding: "6px 12px", letterSpacing: "0.1em" }}
         >
-          View all clients →
+          View All Clients →
         </Link>
       </div>
 
       {/* ── Summary stat cards ───────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
 
         {/* Total clients */}
-        <div className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E]" style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Total Clients
           </p>
-          <p className="text-3xl font-bold text-[#DDD5C0]">{total}</p>
+          <p className="text-[#DDD5C0]" style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>{total}</p>
         </div>
 
         {/* Today avg */}
-        <div className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E]" style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Today&apos;s Avg
           </p>
-          <p className={`text-3xl font-bold ${avgToday >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
-            {avgToday}<span className="text-xl font-medium text-[#9A9080]">%</span>
+          <p className={avgToday >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"} style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>
+            {avgToday}<span className="text-[#9A9080]" style={{ fontSize: "14px", fontWeight: 500 }}>%</span>
           </p>
         </div>
 
         {/* 7-day avg */}
-        <div className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E]" style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             7-Day Avg
           </p>
-          <p className={`text-3xl font-bold ${avgWeek >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
-            {avgWeek}<span className="text-xl font-medium text-[#9A9080]">%</span>
+          <p className={avgWeek >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"} style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>
+            {avgWeek}<span className="text-[#9A9080]" style={{ fontSize: "14px", fontWeight: 500 }}>%</span>
           </p>
         </div>
 
         {/* 30-day avg */}
-        <div className="bg-[#141414] rounded p-5 border border-[#252525]">
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E]" style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             30-Day Avg
           </p>
-          <p className={`text-3xl font-bold ${avgMonth >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"}`}>
-            {avgMonth}<span className="text-xl font-medium text-[#9A9080]">%</span>
+          <p className={avgMonth >= COMPLIANCE_TARGET ? "text-[#B8933A]" : "text-[#7A1E1E]"} style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>
+            {avgMonth}<span className="text-[#9A9080]" style={{ fontSize: "14px", fontWeight: 500 }}>%</span>
           </p>
         </div>
 
         {/* Flagged */}
-        <div className={`bg-[#141414] rounded p-5 border ${flagged.length > 0 ? "border-[#7A1E1E]" : "border-[#252525]"}`}>
-          <p className="text-xs uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className={`bg-[#0D0D0D] rounded-[7px] border ${flagged.length > 0 ? "border-[#7A1E1E]" : "border-[#1E1E1E]"}`} style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Flagged
           </p>
-          <p className={`text-3xl font-bold ${flagged.length > 0 ? "text-[#7A1E1E]" : "text-[#DDD5C0]"}`}>
+          <p className={flagged.length > 0 ? "text-[#7A1E1E]" : "text-[#DDD5C0]"} style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>
             {flagged.length}
           </p>
-          <p className="text-xs text-[#807868] mt-1">below 70%</p>
+          <p className="text-[#807868] mt-1" style={{ fontSize: "10px" }}>below 70%</p>
+        </div>
+
+        {/* Health Alerts */}
+        <div className={`bg-[#0D0D0D] rounded-[7px] border ${healthFlaggedCount > 0 ? "border-[#7A1E1E]" : "border-[#1E1E1E]"}`} style={{ padding: "12px 14px" }}>
+          <p className="uppercase tracking-widest text-[#9A9080] mb-2" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
+            Health Alerts
+          </p>
+          <p className={healthFlaggedCount > 0 ? "text-[#C94A4A]" : "text-[#DDD5C0]"} style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 900 }}>
+            {healthFlaggedCount}
+          </p>
+          <p className="text-[#807868] mt-1" style={{ fontSize: "10px" }}>journal flags</p>
         </div>
 
       </div>
@@ -194,8 +235,8 @@ export default async function CoachDashboard() {
       <section>
         <div className="flex items-center gap-3 mb-4">
           <h2
-            className="text-base text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            className="text-[#F4EEE4] uppercase"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em" }}
           >
             Clients Needing Attention
           </h2>
@@ -211,7 +252,7 @@ export default async function CoachDashboard() {
         </div>
 
         {flagged.length === 0 ? (
-          <div className="bg-[#141414] rounded p-10 border border-[#252525] text-center">
+          <div className="bg-[#0D0D0D] rounded-[7px] p-10 border border-[#1E1E1E] text-center">
             <p className="text-[#DDD5C0] font-medium mb-1">All clients are on track</p>
             <p className="text-sm text-[#9A9080]">
               Everyone is above 70% compliance across all timeframes.
@@ -230,8 +271,8 @@ export default async function CoachDashboard() {
       <section>
         <div className="flex items-center gap-3 mb-4">
           <h2
-            className="text-base text-[#F4EEE4] tracking-wide"
-            style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}
+            className="text-[#F4EEE4] uppercase"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em" }}
           >
             New Clients
           </h2>
@@ -246,7 +287,7 @@ export default async function CoachDashboard() {
         </div>
 
         {newClients.length === 0 ? (
-          <div className="bg-[#141414] rounded p-10 border border-[#252525] text-center">
+          <div className="bg-[#0D0D0D] rounded-[7px] p-10 border border-[#1E1E1E] text-center">
             <p className="text-[#DDD5C0] font-medium mb-1">No new clients this month</p>
             <p className="text-sm text-[#9A9080]">
               Clients added in the last 30 days will appear here.
@@ -257,13 +298,13 @@ export default async function CoachDashboard() {
             {newClients.map((client) => (
               <div
                 key={client.id}
-                className="bg-[#141414] rounded p-5 border border-[#252525] flex flex-col gap-4"
+                className="bg-[#0D0D0D] rounded-[7px] p-4 border border-[#1E1E1E] flex flex-col gap-4"
               >
                 {/* Name + goal + view link */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-semibold text-[#DDD5C0] truncate">{client.name}</p>
-                    <p className="text-xs text-[#9A9080] mt-0.5 truncate">
+                    <p className="font-semibold text-[#DDD5C0] truncate" style={{ fontFamily: "'EB Garamond', serif", fontSize: "15px" }}>{client.name}</p>
+                    <p className="text-[#9A9080] mt-0.5 truncate" style={{ fontFamily: "'EB Garamond', serif", fontStyle: "italic", fontSize: "12px" }}>
                       {client.goalName ?? "No goal set"}
                     </p>
                     <p className="text-xs text-[#9A9080] mt-1">
@@ -280,6 +321,9 @@ export default async function CoachDashboard() {
                     View →
                   </Link>
                 </div>
+
+                {/* Health flags */}
+                <HealthFlagBadges flags={client.healthFlags} />
 
                 {/* Compliance pills */}
                 <div className="flex items-center gap-4">

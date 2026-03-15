@@ -9,7 +9,7 @@
 // No DB calls. No side effects. Pure derivation.
 // ─────────────────────────────────────────────
 
-import type { ClientAIContext } from "@/lib/ai/types";
+import type { ClientAIContext, JournalEntry } from "@/lib/ai/types";
 import type { ScenarioSignals } from "./detectScenario";
 
 /**
@@ -69,6 +69,64 @@ function deriveGoalPaceStatus(
 }
 
 /**
+ * Derive journal-based boolean signals.
+ * Returns null for each signal when no journal entry exists.
+ *
+ * Exported so coach-side queries can reuse the same signal
+ * logic without building a full ClientAIContext.
+ */
+export function deriveJournalSignals(journal: JournalEntry | null) {
+  const j = journal;
+  if (!j) {
+    return {
+      sleepDeficit: null,
+      recoveryDeficit: null,
+      nutritionSlip: null,
+      trainingGap: null,
+      highStressLowEnergy: null,
+      lowReadiness: null,
+    } as const;
+  }
+
+  // sleep_deficit: slept < 6 hours OR reported not rested
+  const sleepDeficit =
+    (j.sleepHours != null && j.sleepHours < 6)
+    || j.feltRested === false;
+
+  // recovery_deficit: sleep deficit + no recovery work
+  const recoveryDeficit = sleepDeficit && j.recoveryWork === false;
+
+  // nutrition_slip: missed protein OR missed hydration OR drank alcohol
+  const nutritionSlip =
+    j.proteinHit === false
+    || j.hydrationHit === false
+    || j.alcohol === true;
+
+  // training_gap: did not train AND did not do zone 2
+  const trainingGap =
+    j.trainedToday === false && j.zone2Cardio === false;
+
+  // high_stress_low_energy: stress >= 4 AND energy <= 2
+  const highStressLowEnergy =
+    j.stressLevel != null && j.energyLevel != null
+    && j.stressLevel >= 4 && j.energyLevel <= 2;
+
+  // low_readiness: not rested AND energy <= 2
+  const lowReadiness =
+    j.feltRested === false
+    && j.energyLevel != null && j.energyLevel <= 2;
+
+  return {
+    sleepDeficit,
+    recoveryDeficit,
+    nutritionSlip,
+    trainingGap,
+    highStressLowEnergy,
+    lowReadiness,
+  };
+}
+
+/**
  * Build ScenarioSignals from a ClientAIContext.
  *
  * This is the single adapter between the progress data
@@ -79,6 +137,8 @@ export function buildScenarioSignals(ctx: ClientAIContext): ScenarioSignals {
   const nutritionTasks = ctx.tasks.filter(
     (t) => t.category?.toLowerCase() === "nutrition",
   );
+
+  const journal = deriveJournalSignals(ctx.journalEntry);
 
   return {
     // Tasks
@@ -112,5 +172,8 @@ export function buildScenarioSignals(ctx: ClientAIContext): ScenarioSignals {
 
     // Goal pace
     goalPaceStatus: deriveGoalPaceStatus(ctx),
+
+    // Journal-derived signals
+    ...journal,
   };
 }

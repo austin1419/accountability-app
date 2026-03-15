@@ -18,6 +18,8 @@ import type {
   KnowledgeContext,
   AIMemory,
 } from "./types";
+import type { CoachResponse } from "@/lib/coaching/buildCoachResponse";
+import type { ScenarioSignals } from "@/lib/coaching/detectScenario";
 
 // ═══════════════════════════════════════════════
 // CONTEXT FORMATTERS
@@ -94,6 +96,48 @@ function formatMemories(memories: AIMemory[]): string {
     .join("\n");
 }
 
+function formatJournal(ctx: ClientAIContext): string {
+  const j = ctx.journalEntry;
+  if (!j) return "No journal entry logged today.";
+
+  const lines: string[] = [];
+  if (j.sleepHours != null)    lines.push(`Sleep: ${j.sleepHours} hours`);
+  if (j.feltRested != null)    lines.push(`Felt rested: ${j.feltRested ? "yes" : "no"}`);
+  if (j.proteinHit != null)    lines.push(`Protein target: ${j.proteinHit ? "hit" : "missed"}`);
+  if (j.hydrationHit != null)  lines.push(`Hydration target: ${j.hydrationHit ? "hit" : "missed"}`);
+  if (j.alcohol != null)       lines.push(`Alcohol: ${j.alcohol ? "yes" : "no"}`);
+  if (j.trainedToday != null)  lines.push(`Trained today: ${j.trainedToday ? "yes" : "no"}`);
+  if (j.zone2Cardio != null)   lines.push(`Zone 2 cardio: ${j.zone2Cardio ? "yes" : "no"}`);
+  if (j.recoveryWork != null)  lines.push(`Recovery work: ${j.recoveryWork ? "yes" : "no"}`);
+  if (j.supplementsTaken != null) lines.push(`Supplements: ${j.supplementsTaken ? "taken" : "missed"}`);
+  if (j.stressLevel != null)   lines.push(`Stress level: ${j.stressLevel}/5`);
+  if (j.energyLevel != null)   lines.push(`Energy level: ${j.energyLevel}/5`);
+
+  return lines.length > 0 ? lines.join("\n") : "Journal submitted but all fields empty.";
+}
+
+function formatDerivedSignals(signals: ScenarioSignals): string {
+  const journalKeys: { key: keyof ScenarioSignals; label: string }[] = [
+    { key: "sleepDeficit",        label: "Sleep deficit" },
+    { key: "recoveryDeficit",     label: "Recovery deficit" },
+    { key: "nutritionSlip",       label: "Nutrition slip" },
+    { key: "trainingGap",         label: "Training gap" },
+    { key: "highStressLowEnergy", label: "High stress / low energy" },
+    { key: "lowReadiness",        label: "Low readiness" },
+  ];
+
+  const active = journalKeys.filter((k) => signals[k.key] === true);
+  if (active.length === 0) return "No health flags active today.";
+  return active.map((k) => `- ${k.label}: YES`).join("\n");
+}
+
+function formatScenarioContext(coachResponse: CoachResponse): string {
+  return [
+    `Detected scenario: ${coachResponse.scenario}`,
+    `Deterministic coaching message: ${coachResponse.message}`,
+  ].join("\n");
+}
+
 function formatCoachNotes(ctx: ClientAIContext): string {
   if (ctx.notes.length === 0) return "No coach notes.";
   return ctx.notes
@@ -126,6 +170,8 @@ export type ChatPromptInputs = {
   knowledge?: KnowledgeContext;
   memories: AIMemory[];
   coreIdentity: string;
+  signals?: ScenarioSignals;
+  coachResponse?: CoachResponse;
 };
 
 /**
@@ -136,7 +182,7 @@ export type ChatPromptInputs = {
  * the PULSE AI coach.
  */
 export function buildChatSystemPrompt(inputs: ChatPromptInputs): string {
-  const { ctx, analysis, coachSummary, focus, knowledge, memories, coreIdentity } = inputs;
+  const { ctx, analysis, coachSummary, focus, knowledge, memories, coreIdentity, signals, coachResponse } = inputs;
 
   return `## Who You Are
 
@@ -171,6 +217,16 @@ ${formatCoachingProfile(ctx)}
 Status: ${analysis.coachingStatus} | Risk: ${analysis.riskLevel} | Momentum: ${analysis.momentumState} | Score: ${analysis.statusScore.overallScore}/100
 Risks: ${formatRisks(analysis)}
 Patterns: ${formatPatterns(analysis)}
+
+### Today's Journal Entry
+${formatJournal(ctx)}
+
+### Health Signals (derived from journal — do not name these signals to the client)
+${signals ? formatDerivedSignals(signals) : "No signal data available."}
+
+### Coaching Engine Assessment
+${coachResponse ? formatScenarioContext(coachResponse) : "No scenario detected."}
+The deterministic message above is the coaching engine's recommended response for this situation. Use it as your primary coaching direction — elaborate on it, ask about the underlying causes, or help the client act on it. Do not contradict it.
 
 ### Coaching Focus
 ${formatFocus(focus)}

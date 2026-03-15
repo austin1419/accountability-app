@@ -20,6 +20,14 @@ export type ScenarioSignals = {
   nutritionTasksDone: boolean;
   previousWeekCompliance: number | null;
   goalPaceStatus: "ahead" | "on_track" | "behind" | null;
+
+  // Journal-derived signals (null = no journal entry for the day)
+  sleepDeficit: boolean | null;
+  recoveryDeficit: boolean | null;
+  nutritionSlip: boolean | null;
+  trainingGap: boolean | null;
+  highStressLowEnergy: boolean | null;
+  lowReadiness: boolean | null;
 };
 
 export function detectScenario(signals: ScenarioSignals): CoachingScenario {
@@ -38,9 +46,42 @@ export function detectScenario(signals: ScenarioSignals): CoachingScenario {
     return "goal_deadline_approaching";
   }
 
+  // ── Journal health signals (high priority) ───
+  // Health-safety signals outprioritize task-level nudges.
+  // If the client is sleep-deprived, drained, or under-recovered,
+  // that matters more than which task category was missed.
+
+  if (signals.lowReadiness === true) {
+    return "low_readiness";
+  }
+
+  if (signals.highStressLowEnergy === true) {
+    return "high_stress_low_energy";
+  }
+
+  if (signals.recoveryDeficit === true) {
+    return "recovery_deficit";
+  }
+
+  if (signals.sleepDeficit === true) {
+    return "sleep_deficit";
+  }
+
   // Training tasks done but nutrition tasks missed — targeted nudge
   if (signals.hasNutritionTasks && !signals.nutritionTasksDone && signals.tasksCompletedToday > 0) {
     return "training_only_no_nutrition";
+  }
+
+  // ── Journal behavioral signals (lower priority) ──
+  // Nutrition slips and training gaps are important but sit
+  // below task-level scenario detection.
+
+  if (signals.nutritionSlip === true) {
+    return "nutrition_slip";
+  }
+
+  if (signals.trainingGap === true) {
+    return "training_gap";
   }
 
   // Streak hit a milestone (7, 14, 21, 30) — celebrate and reinforce

@@ -26,6 +26,8 @@ import { determineCoachingFocus }      from "@/lib/ai/determineCoachingFocus";
 import { fetchRelevantMemories }       from "@/lib/ai/aiMemory";
 import { buildChatSystemPrompt }       from "@/lib/ai/buildChatSystemPrompt";
 import { generateRuleBasedCoachResponse } from "@/lib/coach/generateRuleBasedCoachResponse";
+import { buildScenarioSignals }        from "@/lib/coaching/buildSignals";
+import { buildCoachResponse }          from "@/lib/coaching/buildCoachResponse";
 import { readFile }                    from "fs/promises";
 import { join }                        from "path";
 
@@ -174,10 +176,12 @@ export async function POST(request: NextRequest) {
     loadCoreIdentity(),
   ]);
 
-  const analysis     = analyzeClientContext(ctx);
-  const coachSummary = buildCoachSummary(ctx, analysis);
-  const knowledge    = await buildKnowledgeContext(ctx, analysis, coachSummary);
-  const focus        = determineCoachingFocus(ctx, analysis, memories, knowledge);
+  const analysis      = analyzeClientContext(ctx);
+  const coachSummary  = buildCoachSummary(ctx, analysis);
+  const knowledge     = await buildKnowledgeContext(ctx, analysis, coachSummary);
+  const focus         = determineCoachingFocus(ctx, analysis, memories, knowledge);
+  const signals       = buildScenarioSignals(ctx);
+  const coachResponse = buildCoachResponse(signals);
 
   // ── Determine response mode ──────────────────
   // LLM only when: global switch ON + (user has AI access OR dev override)
@@ -216,6 +220,8 @@ export async function POST(request: NextRequest) {
         knowledge,
         memories,
         coreIdentity,
+        signals,
+        coachResponse,
       });
 
       assistantContent = await generateLLMResponse(systemPrompt, history, message);
@@ -232,11 +238,13 @@ export async function POST(request: NextRequest) {
         focus,
         knowledge,
         userMessage: message,
+        coachResponse,
       });
       responseMode = "fallback_rule_based";
     }
   } else {
     console.log("[pulse/chat] using rule-based mode (AI not enabled for user)");
+    console.log("[pulse/chat] scenario:", coachResponse.scenario, "| message:", coachResponse.message.slice(0, 80));
     // ── Rule-based mode: deterministic response ──
     assistantContent = generateRuleBasedCoachResponse({
       ctx,
@@ -244,6 +252,7 @@ export async function POST(request: NextRequest) {
       focus,
       knowledge,
       userMessage: message,
+      coachResponse,
     });
     responseMode = "rule_based";
   }

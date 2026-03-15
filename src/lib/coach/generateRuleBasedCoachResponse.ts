@@ -18,6 +18,7 @@ import type {
   CoachingFocus,
   KnowledgeContext,
 } from "@/lib/ai/types";
+import type { CoachResponse } from "@/lib/coaching/buildCoachResponse";
 
 export type RuleBasedInput = {
   ctx: ClientAIContext;
@@ -25,6 +26,7 @@ export type RuleBasedInput = {
   focus: CoachingFocus;
   knowledge?: KnowledgeContext;
   userMessage: string;
+  coachResponse?: CoachResponse;
 };
 
 // ═══════════════════════════════════════════════
@@ -328,8 +330,29 @@ function buildAction(ctx: ClientAIContext, intent: string): string {
 // PUBLIC API
 // ═══════════════════════════════════════════════
 
+/** Scenarios that represent the default/fallback — no strong signal detected. */
+const DEFAULT_SCENARIOS = new Set([
+  "momentum_reinforcement",
+  "early_streak",
+  "perfect_day",
+]);
+
 export function generateRuleBasedCoachResponse(input: RuleBasedInput): string {
-  const { ctx, analysis, focus, knowledge, userMessage } = input;
+  const { ctx, analysis, focus, knowledge, userMessage, coachResponse } = input;
+
+  // ── Coaching engine override ───────────────────
+  // When the deterministic engine detected a meaningful scenario
+  // (health signal, compliance issue, deadline, etc.), use its
+  // message as the primary response. This ensures the rule-based
+  // path references journal data, sleep, recovery, nutrition, etc.
+  if (coachResponse && !DEFAULT_SCENARIOS.has(coachResponse.scenario)) {
+    return coachResponse.message;
+  }
+
+  // ── Intent-based fallback ──────────────────────
+  // Default scenarios (momentum, early streak, perfect day) fall
+  // through to intent detection so the response addresses
+  // the user's actual question.
   const intent = detectIntent(userMessage);
 
   switch (intent) {

@@ -82,6 +82,20 @@ export type ClientNote = {
   createdAt: string;   // ISO timestamp
 };
 
+export type JournalEntry = {
+  sleepHours:        number | null;
+  feltRested:        boolean | null;
+  proteinHit:        boolean | null;
+  hydrationHit:      boolean | null;
+  alcohol:           boolean | null;
+  trainedToday:      boolean | null;
+  zone2Cardio:       boolean | null;
+  recoveryWork:      boolean | null;
+  supplementsTaken:  boolean | null;
+  stressLevel:       number | null;   // 1–5
+  energyLevel:       number | null;   // 1–5
+};
+
 export type ClientAIContext = {
   selectedDate:    string;
   builtAt:         string;
@@ -97,6 +111,7 @@ export type ClientAIContext = {
   progressLog:     ProgressLogEntry[];
   coachingProfile: CoachingProfileContext;
   notes:           ClientNote[];
+  journalEntry:    JournalEntry | null;
 };
 
 

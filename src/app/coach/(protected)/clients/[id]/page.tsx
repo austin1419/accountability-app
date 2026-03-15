@@ -11,7 +11,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchClientDetail } from "@/lib/server-queries";
+import type { HealthFlag } from "@/lib/server-queries";
 import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
+
+const healthFlagLabels: Record<HealthFlag, string> = {
+  low_readiness:          "Low Readiness",
+  recovery_deficit:       "Recovery Deficit",
+  high_stress_low_energy: "High Stress / Low Energy",
+  sleep_deficit:          "Sleep Deficit",
+  nutrition_slip:         "Nutrition Slip",
+  training_gap:           "Training Gap",
+};
 import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
@@ -72,13 +82,14 @@ export default async function ClientDetailPage({
       {/* ── Back link ───────────────────────────── */}
       <Link
         href="/coach/clients"
-        className="inline-flex items-center gap-1 text-sm text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-3 py-1.5 rounded cursor-pointer transition-all duration-150"
+        className="inline-flex items-center gap-1 text-[#9A9080] hover:text-[#DDD5C0] border border-[#1E1E1E] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-3 py-1.5 rounded cursor-pointer transition-all duration-150 uppercase"
+        style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.1em" }}
       >
-        ← Back to Clients
+        ← Clients
       </Link>
 
       {/* ── Profile header ──────────────────────── */}
-      <div className="bg-[#141414] rounded border border-[#252525] p-6">
+      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl text-[#F4EEE4] tracking-wide" style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>{client.name}</h1>
@@ -103,6 +114,19 @@ export default async function ClientDetailPage({
             >
               {isOnTrack ? "On track" : "Needs attention"}
             </span>
+            {client.healthFlags.length > 0 && (
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {client.healthFlags.map((flag) => (
+                  <span
+                    key={flag}
+                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#7A1E1E] text-[#C94A4A] bg-[#7A1E1E]/10"
+                    style={{ fontFamily: "'Cinzel', serif" }}
+                  >
+                    {healthFlagLabels[flag]}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               {client.goal && (
                 <ChangeGoalModal clientId={client.id} clientName={client.name} />
@@ -117,14 +141,14 @@ export default async function ClientDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Goal card */}
-        <div className="bg-[#141414] rounded border border-[#252525] p-6 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6 space-y-5">
+          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Goal
           </p>
 
           {client.goal ? (
             <>
-              <p className="text-lg font-semibold text-[#F4EEE4] leading-snug">
+              <p className="font-semibold text-[#F4EEE4] leading-snug" style={{ fontFamily: "'EB Garamond', serif", fontSize: "16px" }}>
                 {client.goal.goal_name}
               </p>
 
@@ -255,8 +279,8 @@ export default async function ClientDetailPage({
         </div>
 
         {/* Compliance card */}
-        <div className="bg-[#141414] rounded border border-[#252525] p-6 space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6 space-y-5">
+          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Compliance
           </p>
 
@@ -272,9 +296,9 @@ export default async function ClientDetailPage({
       </div>
 
       {/* ── Habits (active + archived tabs) ─────── */}
-      <div className="bg-[#141414] rounded border border-[#252525] p-6">
+      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif" }}>
+          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
             Habits
           </p>
           {client.goal && <AddHabitModal goalId={client.goal.id} />}
@@ -287,8 +311,8 @@ export default async function ClientDetailPage({
       </div>
 
       {/* ── Coach Notes ──────────────────────────── */}
-      <div className="bg-[#141414] rounded border border-[#252525] p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
+        <p className="font-semibold uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
           Coach Notes
         </p>
         <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />

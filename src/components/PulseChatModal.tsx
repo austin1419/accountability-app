@@ -14,7 +14,7 @@ type ConversationEntry = {
   message: string;
 };
 
-export function PulseChatModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function PulseChatModal({ isOpen, onClose, selectedDate }: { isOpen: boolean; onClose: () => void; selectedDate: string }) {
   const [clientContext, setClientContext] = useState<ClientAIContext | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -24,17 +24,23 @@ export function PulseChatModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch client context when modal opens
+  // Track which date the cached context was built for
+  const [contextDate, setContextDate] = useState<string | null>(null);
+
+  // Fetch client context when modal opens or selected date changes
   useEffect(() => {
     if (!isOpen) return;
-    if (clientContext) return; // already loaded
+    if (clientContext && contextDate === selectedDate) return; // already loaded for this date
     setContextLoading(true);
-    fetch("/api/pulse/context")
+    fetch(`/api/pulse/context?date=${selectedDate}`)
       .then((res) => res.json())
-      .then((data) => setClientContext(data))
+      .then((data) => {
+        setClientContext(data);
+        setContextDate(selectedDate);
+      })
       .catch((err) => console.error("[PulseChatModal] context fetch failed:", err))
       .finally(() => setContextLoading(false));
-  }, [isOpen, clientContext]);
+  }, [isOpen, selectedDate, clientContext, contextDate]);
 
   // Lock body scroll when open
   useEffect(() => {
