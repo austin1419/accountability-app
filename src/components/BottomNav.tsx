@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDate } from "@/context/DateContext";
+import { PulseChatModal } from "@/components/PulseChatModal";
 
 const labelStyle: React.CSSProperties = {
   fontFamily: "'Cinzel', serif",
@@ -15,6 +17,7 @@ const labelStyle: React.CSSProperties = {
 export function BottomNav() {
   const pathname = usePathname();
   const { selectedDate } = useDate();
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Build tabs with dynamic href for Today (includes date param for dashboard sync)
   const navTabs = [
@@ -126,8 +129,8 @@ export function BottomNav() {
         </nav>
 
         {/* PULSE AI circle button */}
-        <Link
-          href="/pulse-chat"
+        <button
+          onClick={() => setChatOpen(true)}
           style={{
             position: "relative",
             width: 56,
@@ -141,7 +144,6 @@ export function BottomNav() {
             cursor: "pointer",
             flexShrink: 0,
             padding: 0,
-            textDecoration: "none",
           }}
           aria-label="Pulse AI Chat"
         >
@@ -184,8 +186,11 @@ export function BottomNav() {
           >
             AI
           </span>
-        </Link>
+        </button>
       </div>
+
+      {/* Pulse AI Chat Modal */}
+      <PulseChatModal isOpen={chatOpen} onClose={() => setChatOpen(false)} />
     </>
   );
 }
