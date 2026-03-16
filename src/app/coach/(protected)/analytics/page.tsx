@@ -1,34 +1,178 @@
 // ─────────────────────────────────────────────
-// Analytics — placeholder page
+// COACH ANALYTICS — Roster-level operational view
+//
+// Pure display layer. All aggregation, trend detection,
+// and insight generation lives in getCoachAnalytics().
+// This page only reads precomputed values.
 // ─────────────────────────────────────────────
 
-export default function AnalyticsPage() {
+import { getCoachAnalytics } from "@/lib/coach/analytics/getCoachAnalytics";
+
+import { AnalyticsMetricCard } from "@/components/coach/analytics/AnalyticsMetricCard";
+import { TrendCard } from "@/components/coach/analytics/TrendCard";
+import { ClientTrendList } from "@/components/coach/analytics/ClientTrendList";
+import { HabitBreakdownCard } from "@/components/coach/analytics/HabitBreakdownCard";
+import { CoachInsightPanel } from "@/components/coach/analytics/CoachInsightPanel";
+import { RosterHealthBar } from "@/components/coach/RosterHealthBar";
+
+export const dynamic = "force-dynamic";
+
+const TEMP_COACH_ID = "fb4bb26f-434e-4511-aa1e-b4c34146f510";
+
+// ── Display helpers (visual mapping only, no business logic) ─────
+
+function complianceColor(pct: number): string {
+  if (pct >= 70) return "#1D9E75";
+  if (pct >= 40) return "#B8933A";
+  return "#7A1E1E";
+}
+
+function complianceAccent(pct: number): "green" | "gold" | "crimson" {
+  if (pct >= 70) return "green";
+  if (pct >= 40) return "gold";
+  return "crimson";
+}
+
+function trendClientStatusColor(thirtyDayPct: number): string {
+  return complianceColor(thirtyDayPct);
+}
+
+// ── Page ─────────────────────────────────────────────────────────
+
+export default async function AnalyticsPage() {
+  const analytics = await getCoachAnalytics(TEMP_COACH_ID);
+
+  const {
+    thriving, atRisk, critical, total,
+    compliance, flaggedCount,
+    improved, declining, insights,
+  } = analytics;
+
+  const todayDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <div className="flex flex-col items-center justify-center py-32 text-center">
-      <svg viewBox="0 0 100 100" fill="none" width="28" height="28" className="mb-4">
-        <polygon
-          points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20"
-          stroke="#B8933A" strokeWidth={2.5} fill="none" opacity={0.5}
-        />
-        <polyline
-          points="14,50 24,50 28,50 32,36 36,64 40,50 45,50 50,24 55,50 60,50 64,41 68,59 72,50 76,50 86,50"
-          stroke="#B8933A" strokeWidth={3} fill="none"
-          strokeLinecap="round" strokeLinejoin="round"
-        />
-        <circle cx="50" cy="50" r="4" fill="#B8933A" />
-      </svg>
-      <p
-        className="text-[#807868] uppercase"
-        style={{ fontFamily: "'Cinzel', serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em" }}
+    <div className="-mx-6 -mt-8 lg:-mx-8">
+
+      {/* ── Date subheader ─────────────────────────── */}
+      <div
+        className="border-b border-[#1A1A1A]"
+        style={{ background: "#0A0A0A", padding: "6px 18px" }}
       >
-        Analytics
-      </p>
-      <p
-        className="mt-3 text-[#4A3F2A]"
-        style={{ fontFamily: "'EB Garamond', serif", fontSize: "13px", fontStyle: "italic" }}
-      >
-        Coming soon.
-      </p>
+        <p style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic", color: "#4A3F2A" }}>
+          {todayDate} — {total} active client{total !== 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {/* ── Page content ──────────────────────────── */}
+      <div style={{ padding: "18px" }}>
+
+        {/* ── Summary Metrics Row ─────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[9px] mb-6">
+          <AnalyticsMetricCard
+            label="Overall Compliance"
+            value={`${compliance.thirtyDay}%`}
+            subtext="30-day roster avg"
+            accent={complianceAccent(compliance.thirtyDay)}
+          />
+          <AnalyticsMetricCard
+            label="7-Day Trend"
+            value={`${compliance.sevenDay}%`}
+            subtext={
+              compliance.sevenDay >= compliance.thirtyDay
+                ? `+${compliance.sevenDay - compliance.thirtyDay}pts vs 30d`
+                : `${compliance.sevenDay - compliance.thirtyDay}pts vs 30d`
+            }
+            accent={complianceAccent(compliance.sevenDay)}
+          />
+          <AnalyticsMetricCard
+            label="30-Day Trend"
+            value={`${compliance.thirtyDay}%`}
+            subtext="baseline period"
+            accent={complianceAccent(compliance.thirtyDay)}
+          />
+          <AnalyticsMetricCard
+            label="Flagged / At Risk"
+            value={`${flaggedCount + atRisk}`}
+            subtext={`${flaggedCount} critical · ${atRisk} at risk`}
+            accent={flaggedCount + atRisk > 0 ? "crimson" : "green"}
+          />
+        </div>
+
+        {/* ── Roster Distribution ─────────────────── */}
+        <div className="mb-6">
+          <RosterHealthBar thriving={thriving} atRisk={atRisk} critical={critical} total={total} />
+        </div>
+
+        {/* ── Trend Section ───────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[9px] mb-6">
+          <TrendCard
+            title="Compliance Trend"
+            subtitle="Roster averages across time windows"
+            segments={[
+              { label: "Today", value: compliance.today, color: complianceColor(compliance.today) },
+              { label: "7-Day Avg", value: compliance.sevenDay, color: complianceColor(compliance.sevenDay) },
+              { label: "30-Day Avg", value: compliance.thirtyDay, color: complianceColor(compliance.thirtyDay) },
+            ]}
+          />
+          <TrendCard
+            title="Status Distribution"
+            subtitle="Client status breakdown by percentage"
+            segments={total > 0 ? [
+              { label: "Thriving", value: Math.round((thriving / total) * 100), color: "#1D9E75" },
+              { label: "At Risk", value: Math.round((atRisk / total) * 100), color: "#B8933A" },
+              { label: "Critical", value: Math.round((critical / total) * 100), color: "#7A1E1E" },
+              { label: "Gone Dark", value: Math.round((analytics.goneDark / total) * 100), color: "#2A2010" },
+            ] : []}
+            emptyMessage="No active clients."
+          />
+        </div>
+
+        {/* ── Roster Insights ─────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[9px] mb-6">
+          <ClientTrendList
+            title="Most Improved"
+            subtitle="Largest 7d vs 30d compliance gain"
+            clients={improved.map((c) => ({
+              ...c,
+              value: c.thirtyDayPct,
+              statusColor: trendClientStatusColor(c.thirtyDayPct),
+            }))}
+            emptyMessage="No improving trends detected."
+            accent="green"
+          />
+          <ClientTrendList
+            title="Attention Needed"
+            subtitle="Largest 7d vs 30d compliance decline"
+            clients={declining.map((c) => ({
+              ...c,
+              value: c.thirtyDayPct,
+              statusColor: trendClientStatusColor(c.thirtyDayPct),
+            }))}
+            emptyMessage="No declining trends. All clients stable."
+            accent="crimson"
+          />
+        </div>
+
+        {/* ── Habit Performance ────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[9px] mb-6">
+          <HabitBreakdownCard
+            title="Highest Adherence Habits"
+            subtitle="Requires per-habit compliance data"
+          />
+          <HabitBreakdownCard
+            title="Lowest Adherence Habits"
+            subtitle="Requires per-habit compliance data"
+          />
+        </div>
+
+        {/* ── Coach Insight Panel ─────────────────── */}
+        <CoachInsightPanel insights={insights} />
+
+      </div>
     </div>
   );
 }

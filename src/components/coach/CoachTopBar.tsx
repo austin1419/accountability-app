@@ -16,6 +16,7 @@ const routeTitles: { match: string; title: string }[] = [
   { match: "/coach/clients/",    title: "Client Detail" },
   { match: "/coach/clients",     title: "Clients" },
   { match: "/coach/analytics",   title: "Analytics" },
+  { match: "/coach/alerts",      title: "Coach Alerts" },
   { match: "/coach/notes",       title: "Notes" },
   { match: "/coach/reports",     title: "Reports" },
   { match: "/coach/dashboard",   title: "War Room" },

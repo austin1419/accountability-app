@@ -20,6 +20,10 @@ import { EditWeightsButton } from "./EditWeightsButton";
 import { ClientNotes } from "./ClientNotes";
 import { ArchiveClientButton } from "./ArchiveClientButton";
 import { ChangeGoalModal } from "./ChangeGoalModal";
+import { getClientTimeline } from "@/lib/coach/timeline/getClientTimeline";
+import { ClientTimeline } from "@/components/coach/timeline/ClientTimeline";
+import { detectBehaviorPatterns } from "@/lib/coach/patterns/detectBehaviorPatterns";
+import { PatternInsightCard } from "@/components/coach/patterns/PatternInsightCard";
 
 export const dynamic = "force-dynamic";
 
@@ -63,9 +67,19 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = await fetchClientDetail(id);
+  const [client, timelineEvents] = await Promise.all([
+    fetchClientDetail(id),
+    getClientTimeline(id),
+  ]);
 
   if (!client) notFound();
+
+  const behaviorPatterns = detectBehaviorPatterns({
+    events: timelineEvents,
+    todayPct: client.todayPercent,
+    weekPct: client.weekPercent,
+    monthPct: client.monthPercent,
+  });
 
   const isOnTrack =
     client.todayPercent >= COMPLIANCE_TARGET &&
@@ -437,6 +451,38 @@ export default async function ClientDetailPage({
           </div>
         </section>
       </div>
+
+      {/* ════════════════════════════════════════════
+          BEHAVIOR PATTERNS
+          ════════════════════════════════════════════ */}
+      <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+        <SectionLabel>Behavior Patterns</SectionLabel>
+        <div className="mt-3">
+          {behaviorPatterns.length === 0 ? (
+            <div className="py-4 text-center">
+              <p style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic", color: "#4A3F2A" }}>
+                No behavior patterns detected. Insufficient data or client is stable.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-[9px]">
+              {behaviorPatterns.map((pattern, idx) => (
+                <PatternInsightCard key={`${pattern.patternType}-${idx}`} pattern={pattern} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          CLIENT INTELLIGENCE TIMELINE
+          ════════════════════════════════════════════ */}
+      <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+        <SectionLabel>Client Timeline</SectionLabel>
+        <div className="mt-3">
+          <ClientTimeline events={timelineEvents} />
+        </div>
+      </section>
 
     </div>
   );
