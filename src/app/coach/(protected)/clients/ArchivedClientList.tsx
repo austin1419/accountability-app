@@ -19,11 +19,13 @@ export function ArchivedClientList({
   const [clients,       setClients]       = useState<ArchivedClientRow[]>(initialClients);
   const [loadingId,     setLoadingId]     = useState<string | null>(null);
   const [errorId,       setErrorId]       = useState<string | null>(null);
+  const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function handleReactivate(clientId: string) {
     setLoadingId(clientId);
     setErrorId(null);
+    setErrorMsg(null);
     const result = await reactivateClient(clientId);
     if (result.error) {
       setErrorId(clientId);
@@ -37,9 +39,11 @@ export function ArchivedClientList({
   async function handlePermanentDelete(clientId: string) {
     setLoadingId(clientId);
     setErrorId(null);
+    setErrorMsg(null);
     const result = await permanentlyDeleteClient(clientId);
     if (result.error) {
       setErrorId(clientId);
+      setErrorMsg(result.error);
       setLoadingId(null);
       setConfirmDeleteId(null);
       return;
@@ -95,8 +99,8 @@ export function ArchivedClientList({
                 {confirmDeleteId === client.id ? (
                   // ── Confirmation state ──────────────────
                   <div className="flex flex-col items-end gap-2">
-                    <p className="text-xs text-[#9A9080] text-right max-w-[220px]">
-                      Permanently delete <strong className="text-[#DDD5C0]">{client.name}</strong> and all their data? This cannot be undone.
+                    <p className="text-xs text-[#9A9080] text-right max-w-[260px]">
+                      This will permanently remove <strong className="text-[#DDD5C0]">{client.name}</strong> from your coaching system. Their data will no longer appear anywhere.
                     </p>
                     <div className="flex items-center gap-3">
                       <button
@@ -116,14 +120,14 @@ export function ArchivedClientList({
                       </button>
                     </div>
                     {errorId === client.id && (
-                      <span className="text-xs text-[#7A1E1E]">Failed — try again</span>
+                      <span className="text-xs text-[#7A1E1E]">{errorMsg ?? "An error occurred. Please try again."}</span>
                     )}
                   </div>
                 ) : (
                   // ── Default action buttons ──────────────
                   <div className="flex items-center justify-end gap-2">
                     {errorId === client.id && (
-                      <span className="text-xs text-[#7A1E1E]">Failed — try again</span>
+                      <span className="text-xs text-[#7A1E1E]">{errorMsg ?? "An error occurred. Please try again."}</span>
                     )}
                     <button
                       onClick={() => handleReactivate(client.id)}

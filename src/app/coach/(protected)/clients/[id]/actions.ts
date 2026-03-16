@@ -253,6 +253,7 @@ export async function changeClientGoal(
     .eq("id", clientId)
     .eq("role", "client")
     .eq("is_active", true)
+    .eq("is_deleted" as "is_active", false)
     .maybeSingle();
 
   if (!clientUser) return { error: "Client not found or not active." };
@@ -386,43 +387,31 @@ export async function permanentlyDeleteClient(
 
   const supabase = createAdminClient();
 
-  // Verify the client exists and is archived — only archived clients can be permanently deleted
+  // Verify the client exists and is archived — only archived clients can be soft-deleted
   const { data: client } = await supabase
     .from("users")
-    .select("id, auth_id, is_active")
+    .select("id, is_active")
     .eq("id", clientId)
     .maybeSingle();
 
   if (!client) return { error: "Client not found." };
-  if (client.is_active) return { error: "Only archived clients can be permanently deleted." };
+  if (client.is_active) return { error: "Only archived clients can be deleted. Archive the client first." };
 
-  // Step 1: Delete public.users row.
-  // All app data cascades automatically:
-  //   goals → tasks → task_logs (via task_id)
-  //   task_logs (via user_id)
-  //   progress_logs (via user_id and goal_id)
-  //   weight_logs (via user_id)
-  //   client_notes (via client_id)
-  const { error: deleteError } = await supabase
-    .from("users")
-    .delete()
-    .eq("id", clientId);
+  // Soft delete: mark as deleted instead of removing the row.
+  // This preserves all referential integrity and historical data.
+  // The is_deleted column is not in generated Supabase types yet.
+  const { error: updateError } = await (supabase as unknown as {
+    from: (table: string) => {
+      update: (data: Record<string, unknown>) => {
+        eq: (col: string, val: string) => Promise<{ error: unknown }>;
+      };
+    };
+  }).from("users").update({ is_deleted: true }).eq("id", clientId);
 
-  if (deleteError) {
-    console.error("[permanentlyDeleteClient] public.users delete failed:", deleteError.message);
-    return { error: "Failed to delete client. Please try again." };
-  }
-
-  // Step 2: Delete auth.users record — frees the email for reuse.
-  // Must happen after public.users is deleted because public.users.auth_id
-  // references auth.users(id) with NO ACTION, which blocks auth deletion while the reference exists.
-  if (client.auth_id) {
-    const { error: authError } = await supabase.auth.admin.deleteUser(client.auth_id);
-    if (authError) {
-      // App data is already gone. Auth account is orphaned but holds no usable data.
-      // Log for manual cleanup if needed.
-      console.error("[permanentlyDeleteClient] auth.users delete failed:", authError.message);
-    }
+  if (updateError) {
+    const msg = (updateError as { message?: string }).message ?? "Unknown error";
+    console.error("[permanentlyDeleteClient] soft delete failed:", msg);
+    return { error: `Failed to delete client: ${msg}` };
   }
 
   return {};

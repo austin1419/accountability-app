@@ -306,7 +306,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     .from("users")
     .select("id, name, created_at")
     .eq("role", "client")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("is_deleted" as "is_active", false);
 
   if (!clients || clients.length === 0) return [];
 
@@ -387,6 +388,7 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
     .select("id, name, created_at")
     .eq("role", "client")
     .eq("is_active", true)
+    .eq("is_deleted" as "is_active", false)
     .order("name", { ascending: true });
 
   if (clientsError) console.error("[fetchAllClientsForCoach] users query failed:", clientsError);
@@ -512,6 +514,7 @@ export async function fetchArchivedClientsForCoach(): Promise<ArchivedClientRow[
     .select("id, name, email, archive_reason")
     .eq("role", "client")
     .eq("is_active", false)
+    .eq("is_deleted" as "is_active", false)
     .order("name", { ascending: true });
 
   if (!clients || clients.length === 0) return [];

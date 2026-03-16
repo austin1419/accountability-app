@@ -52,12 +52,13 @@ export async function getCoachDashboardData(
   const today = cstToday();
   const thirtyDaysAgo = cstDaysAgo(29);
 
-  // Step 1: Get active clients (all clients with role='client', is_active=true)
+  // Step 1: Get active clients (all clients with role='client', is_active=true, not soft-deleted)
   const { data: rawClients, error: clientsErr } = await supabase
     .from("users")
     .select("id, name")
     .eq("role", "client")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("is_deleted" as "is_active", false);
 
   if (clientsErr) {
     console.error("[getCoachDashboardData] clients query failed:", clientsErr);

@@ -93,6 +93,7 @@ export async function getActiveClients(
     .select("id, name")
     .eq("role", "client")
     .eq("is_active", true)
+    .eq("is_deleted" as "is_active", false)
     .order("name", { ascending: true });
 
   return (data ?? []).map((c) => ({ id: c.id, name: c.name }));
