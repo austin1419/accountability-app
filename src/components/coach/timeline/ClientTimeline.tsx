@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────
 // ClientTimeline — unified coaching intelligence timeline
 //
-// Server component. Renders a vertical timeline of
-// events from multiple data sources, sorted by
-// timestamp descending.
+// Renders a vertical timeline with expand/collapse.
+// Server component passes all events; the
+// CollapsibleTimeline client wrapper handles state.
 // ─────────────────────────────────────────────
 
 import type { TimelineEvent } from "@/lib/coach/timeline/types";
-import { TimelineEventCard } from "./TimelineEventCard";
+import { CollapsibleTimeline } from "./CollapsibleTimeline";
 
 interface ClientTimelineProps {
   events: TimelineEvent[];
@@ -24,11 +24,5 @@ export function ClientTimeline({ events }: ClientTimelineProps) {
     );
   }
 
-  return (
-    <div className="relative pl-4 border-l border-[#1A1A1A]">
-      {events.map((event) => (
-        <TimelineEventCard key={event.id} event={event} />
-      ))}
-    </div>
-  );
+  return <CollapsibleTimeline events={events} />;
 }

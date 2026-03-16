@@ -20,6 +20,7 @@ import { EditWeightsButton } from "./EditWeightsButton";
 import { ClientNotes } from "./ClientNotes";
 import { ArchiveClientButton } from "./ArchiveClientButton";
 import { ChangeGoalModal } from "./ChangeGoalModal";
+import { QuickAddCoachNote } from "./QuickAddCoachNote";
 import { getClientTimeline } from "@/lib/coach/timeline/getClientTimeline";
 import { ClientTimeline } from "@/components/coach/timeline/ClientTimeline";
 import { detectBehaviorPatterns } from "@/lib/coach/patterns/detectBehaviorPatterns";
@@ -445,7 +446,10 @@ export default async function ClientDetailPage({
 
         {/* ── Coach Notes ──────────────────────────── */}
         <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
-          <SectionLabel>Coach Notes</SectionLabel>
+          <div className="flex items-center justify-between">
+            <SectionLabel>Coach Notes</SectionLabel>
+            <QuickAddCoachNote clientId={client.id} />
+          </div>
           <div className="mt-3">
             <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />
           </div>
