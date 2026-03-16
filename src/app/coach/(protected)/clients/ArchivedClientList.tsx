@@ -3,24 +3,29 @@
 // ─────────────────────────────────────────────
 // ArchivedClientList
 //
-// Displays archived clients with Re-Activate and Permanently Delete actions.
+// Displays archived clients with three actions:
+// - Re-Activate Client
+// - Remove (soft delete — hides from coach view)
+// - Permanent Delete (full purge with email confirmation)
 // ─────────────────────────────────────────────
 
 import { useState } from "react";
 import Link from "next/link";
 import type { ArchivedClientRow } from "@/lib/server-queries";
 import { reactivateClient, permanentlyDeleteClient } from "./[id]/actions";
+import { PermanentDeleteConfirm } from "./PermanentDeleteConfirm";
 
 export function ArchivedClientList({
   initialClients,
 }: {
   initialClients: ArchivedClientRow[];
 }) {
-  const [clients,       setClients]       = useState<ArchivedClientRow[]>(initialClients);
-  const [loadingId,     setLoadingId]     = useState<string | null>(null);
-  const [errorId,       setErrorId]       = useState<string | null>(null);
-  const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [clients, setClients] = useState<ArchivedClientRow[]>(initialClients);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [softDeleteId, setSoftDeleteId] = useState<string | null>(null);
+  const [purgeId, setPurgeId] = useState<string | null>(null);
 
   async function handleReactivate(clientId: string) {
     setLoadingId(clientId);
@@ -29,6 +34,7 @@ export function ArchivedClientList({
     const result = await reactivateClient(clientId);
     if (result.error) {
       setErrorId(clientId);
+      setErrorMsg(result.error);
       setLoadingId(null);
       return;
     }
@@ -36,7 +42,7 @@ export function ArchivedClientList({
     setLoadingId(null);
   }
 
-  async function handlePermanentDelete(clientId: string) {
+  async function handleSoftDelete(clientId: string) {
     setLoadingId(clientId);
     setErrorId(null);
     setErrorMsg(null);
@@ -45,119 +51,185 @@ export function ArchivedClientList({
       setErrorId(clientId);
       setErrorMsg(result.error);
       setLoadingId(null);
-      setConfirmDeleteId(null);
+      setSoftDeleteId(null);
       return;
     }
     setClients((prev) => prev.filter((c) => c.id !== clientId));
     setLoadingId(null);
-    setConfirmDeleteId(null);
+    setSoftDeleteId(null);
+  }
+
+  function handlePurgeSuccess(clientId: string) {
+    setClients((prev) => prev.filter((c) => c.id !== clientId));
+    setPurgeId(null);
   }
 
   if (clients.length === 0) {
     return (
-      <div className="bg-[#141414] rounded border border-[#252525] px-5 py-14 text-center text-sm text-[#9A9080]">
-        No archived clients.
+      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A] px-5 py-14 text-center">
+        <p style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic", color: "#4A3F2A" }}>
+          No archived clients.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#141414] rounded border border-[#252525] overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-[#0D0D0D] border-b border-[#252525]">
-            <th className="text-left text-xs uppercase tracking-wider text-[#9A9080] px-5 py-3" style={{ fontFamily: "'Cinzel', serif" }}>
-              Client
-            </th>
-            <th className="text-left text-xs uppercase tracking-wider text-[#9A9080] px-5 py-3" style={{ fontFamily: "'Cinzel', serif" }}>
-              Goal
-            </th>
-            <th className="text-left text-xs uppercase tracking-wider text-[#9A9080] px-5 py-3" style={{ fontFamily: "'Cinzel', serif" }}>
-              Archive Reason
-            </th>
-            <th className="px-5 py-3 w-52" />
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map((client) => (
-            <tr key={client.id} className="border-b border-[#252525] last:border-0 hover:bg-[#1A1A1A] transition-colors">
-              <td className="px-5 py-4">
-                <p className="font-medium text-[#DDD5C0]">{client.name}</p>
-                <p className="text-xs text-[#9A9080]">{client.email}</p>
-              </td>
-              <td className="px-5 py-4">
-                <p className="text-sm text-[#9A9080]">
-                  {client.goalName ?? <span className="text-[#2E2E2E]">—</span>}
-                </p>
-              </td>
-              <td className="px-5 py-4">
-                <p className="text-sm text-[#807868] italic">
-                  {client.archiveReason ?? <span className="not-italic text-[#2E2E2E]">—</span>}
-                </p>
-              </td>
-              <td className="px-5 py-4 text-right">
-                {confirmDeleteId === client.id ? (
-                  // ── Confirmation state ──────────────────
-                  <div className="flex flex-col items-end gap-2">
-                    <p className="text-xs text-[#9A9080] text-right max-w-[260px]">
-                      This will permanently remove <strong className="text-[#DDD5C0]">{client.name}</strong> from your coaching system. Their data will no longer appear anywhere.
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setConfirmDeleteId(null)}
-                        disabled={loadingId === client.id}
-                        className="text-xs font-semibold text-[#9A9080] hover:text-[#DDD5C0] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handlePermanentDelete(client.id)}
-                        disabled={loadingId === client.id}
-                        className="text-xs font-semibold text-[#F4EEE4] bg-[#7A1E1E] hover:bg-[#8C2424] border border-[#7A1E1E] hover:border-[#8C2424] disabled:opacity-50 px-3 py-1.5 rounded cursor-pointer transition-all duration-150"
-                        style={{ fontFamily: "'Cinzel', serif" }}
-                      >
-                        {loadingId === client.id ? "Deleting…" : "Delete Permanently"}
-                      </button>
-                    </div>
-                    {errorId === client.id && (
-                      <span className="text-xs text-[#7A1E1E]">{errorMsg ?? "An error occurred. Please try again."}</span>
-                    )}
-                  </div>
-                ) : (
-                  // ── Default action buttons ──────────────
-                  <div className="flex items-center justify-end gap-2">
-                    {errorId === client.id && (
-                      <span className="text-xs text-[#7A1E1E]">{errorMsg ?? "An error occurred. Please try again."}</span>
-                    )}
-                    <button
-                      onClick={() => handleReactivate(client.id)}
-                      disabled={loadingId === client.id}
-                      className="text-xs font-semibold text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
-                      style={{ fontFamily: "'Cinzel', serif" }}
-                    >
-                      {loadingId === client.id ? "Reactivating…" : "Re-Activate Client"}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(client.id)}
-                      disabled={loadingId === client.id}
-                      className="text-xs font-semibold text-[#9A9080] hover:text-[#7A1E1E] border border-[#252525] hover:border-[#7A1E1E] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                    <Link
-                      href={`/coach/clients/${client.id}`}
-                      className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
-                      style={{ fontFamily: "'Cinzel', serif" }}
-                    >
-                      View →
-                    </Link>
-                  </div>
+    <div className="flex flex-col gap-[7px]">
+      {clients.map((client) => {
+        const isLoading = loadingId === client.id;
+        const showSoftConfirm = softDeleteId === client.id;
+        const showPurge = purgeId === client.id;
+
+        return (
+          <div
+            key={client.id}
+            className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
+            style={{ padding: "12px 16px" }}
+          >
+            {/* Client info row */}
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <div className="min-w-0">
+                <span
+                  className="truncate block"
+                  style={{ fontFamily: "'EB Garamond', serif", fontSize: "14px", fontWeight: 600, color: "#DDD5C0" }}
+                >
+                  {client.name}
+                </span>
+                <span style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", color: "#807868" }}>
+                  {client.email}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {client.goalName && (
+                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
+                    {client.goalName}
+                  </span>
                 )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                {client.archiveReason && (
+                  <span style={{ fontFamily: "'EB Garamond', serif", fontSize: "10px", fontStyle: "italic", color: "#807868" }}>
+                    · {client.archiveReason}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Error display */}
+            {errorId === client.id && errorMsg && (
+              <p className="mb-2" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", color: "#7A1E1E" }}>
+                {errorMsg}
+              </p>
+            )}
+
+            {/* Soft delete confirmation */}
+            {showSoftConfirm && (
+              <div
+                className="rounded-[5px] border border-[#2A2010] mb-2"
+                style={{ background: "rgba(184,147,58,0.08)", padding: "8px 10px" }}
+              >
+                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", color: "#DDD5C0", marginBottom: "6px" }}>
+                  Remove <strong>{client.name}</strong> from your coaching view? Their data will be preserved but hidden.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => handleSoftDelete(client.id)}
+                    className="rounded border uppercase transition-colors disabled:opacity-50"
+                    style={{
+                      fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                      color: "#B8933A", borderColor: "#2A2010", background: "transparent",
+                      padding: "3px 8px", cursor: isLoading ? "wait" : "pointer",
+                    }}
+                  >
+                    {isLoading ? "Removing..." : "Confirm Remove"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => setSoftDeleteId(null)}
+                    className="uppercase transition-colors"
+                    style={{
+                      fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                      color: "#4A3F2A", background: "none", border: "none", cursor: "pointer", padding: "3px 8px",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Permanent delete confirmation */}
+            {showPurge && (
+              <div className="mb-2">
+                <PermanentDeleteConfirm
+                  clientId={client.id}
+                  clientName={client.name}
+                  clientEmail={client.email}
+                  onClose={() => setPurgeId(null)}
+                  onSuccess={() => handlePurgeSuccess(client.id)}
+                />
+              </div>
+            )}
+
+            {/* Action buttons (hidden during confirmation flows) */}
+            {!showSoftConfirm && !showPurge && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => handleReactivate(client.id)}
+                  className="rounded border uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                    color: "#1D9E75", borderColor: "#0D3A25", background: "transparent",
+                    padding: "3px 8px", cursor: isLoading ? "wait" : "pointer",
+                  }}
+                >
+                  {isLoading ? "..." : "Re-Activate"}
+                </button>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setSoftDeleteId(client.id)}
+                  className="rounded border uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                    color: "#B8933A", borderColor: "#2A2010", background: "transparent",
+                    padding: "3px 8px", cursor: "pointer",
+                  }}
+                >
+                  Remove
+                </button>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setPurgeId(client.id)}
+                  className="rounded border uppercase transition-colors disabled:opacity-50"
+                  style={{
+                    fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                    color: "#7A1E1E", borderColor: "#2A1010", background: "transparent",
+                    padding: "3px 8px", cursor: "pointer",
+                  }}
+                >
+                  Permanent Delete
+                </button>
+                <Link
+                  href={`/coach/clients/${client.id}`}
+                  className="rounded border uppercase no-underline transition-colors hover:text-[#B8933A]"
+                  style={{
+                    fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em",
+                    color: "#F4EEE4", borderColor: "#1A1A1A", padding: "3px 8px",
+                  }}
+                >
+                  View &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

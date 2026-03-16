@@ -416,3 +416,108 @@ export async function permanentlyDeleteClient(
 
   return {};
 }
+
+// ── Permanent purge (irreversible) ───────────────────────────────
+// Deletes the client and ALL related data. Removes auth account.
+// Requires email confirmation from the UI to prevent accidental use.
+
+type UntypedDelete = {
+  from: (table: string) => {
+    delete: () => {
+      eq: (col: string, val: string) => Promise<{ error: unknown; count: number | null }>;
+    };
+  };
+};
+
+export async function purgeClient(
+  clientId: string,
+  confirmEmail: string,
+): Promise<{ error?: string }> {
+  const authResult = await assertCoach(true);
+  if ("error" in authResult) return authResult;
+
+  const supabase = createAdminClient();
+
+  // Step 1: Verify client exists and email matches
+  const { data: client } = await supabase
+    .from("users")
+    .select("id, email, auth_id, is_active")
+    .eq("id", clientId)
+    .eq("role", "client")
+    .maybeSingle();
+
+  if (!client) return { error: "Client not found." };
+  if (client.is_active) return { error: "Only archived clients can be permanently purged. Archive the client first." };
+  if (client.email !== confirmEmail) return { error: "Email confirmation does not match. Purge aborted." };
+
+  const errors: string[] = [];
+
+  // Step 2: Delete tables that block user deletion (NO ACTION FKs)
+  // These must be removed explicitly before the users row.
+  const blockingTables: { table: string; column: string }[] = [
+    { table: "daily_journal", column: "user_id" },
+    { table: "pulse_chat_messages", column: "user_id" },
+    { table: "client_notes", column: "client_id" },
+  ];
+
+  for (const { table, column } of blockingTables) {
+    const { error } = await (supabase as unknown as UntypedDelete)
+      .from(table)
+      .delete()
+      .eq(column, clientId);
+
+    if (error) {
+      const msg = (error as { message?: string }).message ?? "Unknown error";
+      errors.push(`${table}: ${msg}`);
+    }
+  }
+
+  // Step 3: Delete tables with untyped schemas (not in generated types)
+  const untypedTables: { table: string; column: string }[] = [
+    { table: "coach_alert_state", column: "client_id" },
+    { table: "coach_notes", column: "client_id" },
+  ];
+
+  for (const { table, column } of untypedTables) {
+    const { error } = await (supabase as unknown as UntypedDelete)
+      .from(table)
+      .delete()
+      .eq(column, clientId);
+
+    if (error) {
+      const msg = (error as { message?: string }).message ?? "Unknown error";
+      errors.push(`${table}: ${msg}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error("[purgeClient] pre-deletion failures:", errors);
+    return { error: `Failed to remove related data: ${errors.join("; ")}` };
+  }
+
+  // Step 4: Delete the users row.
+  // Remaining CASCADE FKs handle:
+  //   goals → tasks → task_logs (via task_id)
+  //   task_logs (via user_id), weight_logs, progress_logs,
+  //   ai_conversations, ai_memories, coaching_profile_answers
+  const { error: deleteError } = await supabase
+    .from("users")
+    .delete()
+    .eq("id", clientId);
+
+  if (deleteError) {
+    console.error("[purgeClient] users delete failed:", deleteError.message);
+    return { error: `Failed to delete client record: ${deleteError.message}` };
+  }
+
+  // Step 5: Delete auth account (frees email for reuse)
+  if (client.auth_id) {
+    const { error: authError } = await supabase.auth.admin.deleteUser(client.auth_id);
+    if (authError) {
+      console.error("[purgeClient] auth.users delete failed:", authError.message);
+      return { error: `Client data deleted but auth account removal failed: ${authError.message}. Contact support to free the email.` };
+    }
+  }
+
+  return {};
+}
