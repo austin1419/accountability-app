@@ -13,12 +13,13 @@ const cinzel = "'Cinzel', serif";
 
 /** Map route prefixes to page titles */
 const routeTitles: { match: string; title: string }[] = [
-  { match: "/coach/clients/",  title: "Client Detail" },
-  { match: "/coach/clients",   title: "Clients" },
-  { match: "/coach/analytics", title: "Analytics" },
-  { match: "/coach/notes",     title: "Notes" },
-  { match: "/coach/reports",   title: "Reports" },
-  { match: "/coach",           title: "Dashboard" },
+  { match: "/coach/clients/",    title: "Client Detail" },
+  { match: "/coach/clients",     title: "Clients" },
+  { match: "/coach/analytics",   title: "Analytics" },
+  { match: "/coach/notes",       title: "Notes" },
+  { match: "/coach/reports",     title: "Reports" },
+  { match: "/coach/dashboard",   title: "War Room" },
+  { match: "/coach",             title: "Dashboard" },
 ];
 
 function deriveTitle(pathname: string): string {
@@ -34,8 +35,8 @@ export function CoachTopBar() {
 
   return (
     <header
-      className="sticky top-0 z-30 bg-[#111111] border-b border-[#1E1E1E] flex items-center justify-between"
-      style={{ padding: "12px 22px" }}
+      className="sticky top-0 z-30 flex items-center justify-between"
+      style={{ background: "#0A0A0A", borderBottom: "1px solid #1A1A1A", padding: "10px 22px" }}
     >
       <h1
         className="text-[#F4EEE4]"

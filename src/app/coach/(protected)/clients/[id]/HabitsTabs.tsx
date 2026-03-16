@@ -83,13 +83,16 @@ export function HabitsTabs({
           {tab === "active" ? "No habits assigned yet." : "No old habits."}
         </p>
       ) : (
-        <ul className="divide-y divide-[#252525]">
+        <ul className="space-y-1">
           {habits.map((task) => {
             const colorClass =
               categoryColors[task.category ?? ""] ?? "bg-gray-100 text-gray-500";
             const reason = "removal_reason" in task ? (task as ArchivedHabit).removal_reason : null;
             return (
-              <li key={task.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+              <li
+                key={task.id}
+                className="flex items-start gap-3 bg-[#111111] border border-[#1A1A1A] rounded-[5px] px-3 py-2.5"
+              >
                 <span className={`text-xs font-medium px-2.5 py-1 rounded flex-shrink-0 mt-0.5 ${colorClass}`}>
                   {task.category ?? "General"}
                 </span>

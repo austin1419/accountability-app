@@ -42,32 +42,37 @@ export default async function CoachLayout({ children }: { children: React.ReactN
   // ── Shell ─────────────────────────────────────
   return (
     <div
-      className="min-h-screen bg-[#141414]"
+      className="min-h-screen bg-[#111111]"
       style={{
-        "--coach-bg": "#141414",
-        "--coach-sidebar": "#0D0D0D",
+        "--coach-bg": "#111111",
+        "--coach-sidebar": "#080808",
         "--coach-surface": "#0D0D0D",
-        "--coach-topbar": "#111111",
-        "--coach-border": "#1E1E1E",
-        "--coach-border-subtle": "#252525",
+        "--coach-topbar": "#0A0A0A",
+        "--coach-border": "#1A1A1A",
+        "--coach-border-subtle": "#111111",
         "--coach-gold": "#B8933A",
         "--coach-gold-bg": "rgba(184,147,58,0.08)",
-        "--coach-gold-border": "#3A3020",
+        "--coach-gold-border": "#2A2010",
         "--coach-gold-dim": "#4A3F2A",
+        "--coach-green": "#1D9E75",
+        "--coach-green-bg": "rgba(29,158,117,0.08)",
+        "--coach-green-border": "#0D3A25",
         "--coach-crimson": "#7A1E1E",
         "--coach-crimson-bg": "rgba(122,30,30,0.10)",
-        "--coach-crimson-border": "#3A1010",
+        "--coach-crimson-border": "#2A1010",
         "--coach-text-primary": "#F4EEE4",
         "--coach-text-warm": "#DDD5C0",
         "--coach-text-muted": "#807868",
         "--coach-text-dim": "#4A3F2A",
-        "--coach-divider": "#1A1A1A",
+        "--coach-text-ghost": "#3A3020",
+        "--coach-text-dark": "#2A2010",
+        "--coach-divider": "#141414",
       } as React.CSSProperties}
     >
       <CoachSidebar coachName={profile.name} />
 
       {/* Content area — offset by sidebar width */}
-      <div className="ml-[190px] min-h-screen flex flex-col">
+      <div className="ml-[180px] min-h-screen flex flex-col">
         <CoachTopBar />
         <main className="flex-1">
           <CoachPageContainer>

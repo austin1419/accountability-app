@@ -1,50 +1,29 @@
 // ─────────────────────────────────────────────
 // COACH — All Clients
 //
-// Full table of every client with compliance metrics,
-// goal progress, and current weight.
-// Rows link to /coach/clients/[id] (Phase 2: client profile).
+// Responsive card grid of every client with compliance
+// metrics, goal progress, health flags, and current weight.
+// Cards link to /coach/clients/[id].
 //
-// Server Component — desktop-first layout.
+// Server Component — card-grid layout.
 // ─────────────────────────────────────────────
 
 import Link from "next/link";
 import { fetchAllClientsForCoach, fetchArchivedClientsForCoach } from "@/lib/server-queries";
-import type { HealthFlag } from "@/lib/server-queries";
-import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
-
-const healthFlagLabels: Record<HealthFlag, string> = {
-  low_readiness:          "Low Readiness",
-  recovery_deficit:       "Recovery",
-  high_stress_low_energy: "Stress",
-  sleep_deficit:          "Sleep",
-  nutrition_slip:         "Nutrition",
-  training_gap:           "Training",
-};
+import { ClientCard } from "@/components/coach/ClientCard";
 import { AddClientModal } from "./AddClientModal";
 import { ArchivedClientList } from "./ArchivedClientList";
 
 export const dynamic = "force-dynamic";
 
-function ComplianceBadge({ pct }: { pct: number }) {
-  const cls =
-    pct >= COMPLIANCE_TARGET ? "text-[#B8933A] border border-[#B8933A]" :
-    pct >= 50 ? "text-[#C9A44A] border border-[#C9A44A]" :
-                "text-[#7A1E1E] border border-[#7A1E1E]";
-  return (
-    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded ${cls}`} style={{ fontFamily: "'Cinzel', serif" }}>
-      {pct}%
-    </span>
-  );
-}
-
 export default async function ClientsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; add?: string }>;
 }) {
-  const { tab: tabParam } = await searchParams;
+  const { tab: tabParam, add: addParam } = await searchParams;
   const tab = tabParam === "archived" ? "archived" : "active";
+  const autoOpenAdd = addParam === "true";
 
   const [clients, archivedClients] = await Promise.all([
     fetchAllClientsForCoach(),
@@ -73,7 +52,7 @@ export default async function ClientsListPage({
             )}
           </p>
         </div>
-        <AddClientModal />
+        <AddClientModal autoOpen={autoOpenAdd} />
       </div>
 
       {/* ── Tab bar ──────────────────────────────── */}
@@ -113,169 +92,34 @@ export default async function ClientsListPage({
         <ArchivedClientList initialClients={archivedClients} />
       )}
 
-      {/* ── Active clients table ─────────────────── */}
-      {tab === "active" && <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-[#0D0D0D] border-b border-[#1E1E1E]">
-              <th className="text-left uppercase tracking-wider text-[#9A9080] px-5 py-3 w-40" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Client
-              </th>
-              <th className="text-left uppercase tracking-wider text-[#9A9080] px-5 py-3" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Goal
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-28" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Progress
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Today
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                7-Day
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-24" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                30-Day
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-32" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Current Weight
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3 w-36" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Status
-              </th>
-              <th className="text-center uppercase tracking-wider text-[#9A9080] px-4 py-3" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px" }}>
-                Health
-              </th>
-              <th className="px-5 py-3 w-16" />
-            </tr>
-          </thead>
-
-          <tbody>
-            {clients.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-5 py-14 text-center text-sm text-[#9A9080]">
-                  No clients yet. Add clients in Supabase to get started.
-                </td>
-              </tr>
-            ) : (
-              clients.map((client) => (
-                <tr
-                  key={client.id}
-                  className={`border-b border-[#1E1E1E] last:border-0 transition-colors hover:bg-[rgba(184,147,58,0.04)] ${
-                    client.isFlagged ? "border-l-[3px] border-l-[#7A1E1E]" : ""
-                  }`}
-                >
-                  {/* Name */}
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-[#DDD5C0]">{client.name}</p>
-                  </td>
-
-                  {/* Goal */}
-                  <td className="px-5 py-4">
-                    <p className="text-sm text-[#9A9080] truncate max-w-xs">
-                      {client.goalName ?? <span className="text-[#2E2E2E]">—</span>}
-                    </p>
-                  </td>
-
-                  {/* Goal progress */}
-                  <td className="px-4 py-4">
-                    <div className="flex flex-col items-center gap-1.5">
-                      <span className="text-sm font-semibold text-[#DDD5C0]">
-                        {client.goalProgress}%
-                      </span>
-                      <div className="w-20 h-0.5 bg-[#252525] rounded overflow-hidden">
-                        <div
-                          className="h-full bg-[#B8933A] rounded"
-                          style={{ width: `${client.goalProgress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Compliance columns */}
-                  <td className="px-4 py-4 text-center">
-                    <ComplianceBadge pct={client.todayPercent} />
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <ComplianceBadge pct={client.weekPercent} />
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <ComplianceBadge pct={client.monthPercent} />
-                  </td>
-
-                  {/* Current weight */}
-                  <td className="px-4 py-4 text-center">
-                    <span className="text-sm text-[#9A9080]">
-                      {client.currentWeight != null
-                        ? `${client.currentWeight} lbs`
-                        : <span className="text-[#2E2E2E]">—</span>}
-                    </span>
-                  </td>
-
-                  {/* Status badge */}
-                  <td className="px-4 py-4 text-center">
-                    {client.isFlagged ? (
-                      <span className="inline-block text-xs font-semibold text-[#7A1E1E] border border-[#7A1E1E] px-2.5 py-1 rounded" style={{ fontFamily: "'Cinzel', serif" }}>
-                        Needs attention
-                      </span>
-                    ) : (
-                      <span className="inline-block text-xs font-semibold text-[#B8933A] border border-[#B8933A] px-2.5 py-1 rounded" style={{ fontFamily: "'Cinzel', serif" }}>
-                        On track
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Health flags */}
-                  <td className="px-4 py-4">
-                    {client.healthFlags.length > 0 ? (
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {client.healthFlags.map((flag) => (
-                          <span
-                            key={flag}
-                            className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#7A1E1E] text-[#C94A4A] bg-[#7A1E1E]/10"
-                            style={{ fontFamily: "'Cinzel', serif" }}
-                          >
-                            {healthFlagLabels[flag]}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-[#2E2E2E] text-xs">—</span>
-                    )}
-                  </td>
-
-                  {/* View link */}
-                  <td className="px-5 py-4 text-center">
-                    <Link
-                      href={`/coach/clients/${client.id}`}
-                      className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-[#B8933A] hover:text-[#C9A44A] border border-[#252525] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-2.5 py-1 rounded cursor-pointer transition-all duration-150"
-                      style={{ fontFamily: "'Cinzel', serif" }}
-                    >
-                      View →
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>}
-
-      {/* ── Legend (active tab only) ─────────────── */}
+      {/* ── Active clients card grid ─────────────── */}
       {tab === "active" && (
-        <div className="flex items-center gap-6 text-[#9A9080]" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic" }}>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-[#B8933A] inline-block" /> ≥70% on track
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-[#C9A44A] inline-block" /> 50–69% at risk
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-[#7A1E1E] inline-block" /> &lt;50% critical
-          </span>
-          <span className="flex items-center gap-1.5 ml-4">
-            <span className="w-3 h-1 rounded bg-[#7A1E1E] inline-block" /> Left border = flagged
-          </span>
-        </div>
+        clients.length === 0 ? (
+          <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A] py-14 px-6 text-center">
+            <p
+              className="text-[#807868]"
+              style={{ fontFamily: "'EB Garamond', serif", fontSize: "13px", fontStyle: "italic" }}
+            >
+              No clients yet.
+            </p>
+            <a
+              href="/coach/clients?add=true"
+              className="inline-block mt-4 text-[#F4EEE4] bg-[#B8933A] hover:bg-[#C9A44A] rounded-[5px] transition-colors cursor-pointer uppercase no-underline"
+              style={{ fontFamily: "'Cinzel', serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "7px 14px" }}
+            >
+              + Add Client
+            </a>
+          </div>
+        ) : (
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}
+          >
+            {clients.map((client) => (
+              <ClientCard key={client.id} client={client} />
+            ))}
+          </div>
+        )
       )}
 
     </div>

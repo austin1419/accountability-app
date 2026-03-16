@@ -84,18 +84,30 @@ export function ClientNotes({
         </div>
       </form>
 
-      {/* Notes list */}
+      {/* Notes timeline */}
       {notes.length === 0 ? (
-        <p className="text-sm text-[#9A9080]">No notes yet.</p>
+        <p className="text-[#807868]" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic" }}>
+          No notes yet.
+        </p>
       ) : (
-        <ul className="divide-y divide-[#252525]">
+        <div className="relative pl-4 border-l border-[#1A1A1A]">
           {notes.map((n) => (
-            <li key={n.id} className="py-3 first:pt-0 last:pb-0 space-y-1">
-              <p className="text-sm text-[#DDD5C0] whitespace-pre-wrap">{n.note}</p>
-              <p className="text-xs text-[#807868]">{formatDate(n.created_at)}</p>
-            </li>
+            <div key={n.id} className="relative pb-4 last:pb-0">
+              {/* Timeline dot */}
+              <div
+                className="absolute bg-[#B8933A] rounded-full"
+                style={{ width: "6px", height: "6px", left: "-19px", top: "6px" }}
+              />
+              <p
+                className="text-[#807868] mb-1"
+                style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.06em" }}
+              >
+                {formatDate(n.created_at)}
+              </p>
+              <p className="text-sm text-[#DDD5C0] whitespace-pre-wrap leading-relaxed">{n.note}</p>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

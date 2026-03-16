@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────
-// COACH — Client Detail
+// COACH — Client Profile
 //
-// Profile view for a single client. Shows contact info,
-// goal, compliance metrics, and assigned habits.
-// This is the destination of every "View →" link in the coach portal.
+// Primary coaching screen. Two-column layout with
+// goal progress, compliance, health flags, body metrics,
+// habits, and coach notes.
 //
-// Server Component — desktop-first layout.
+// Server Component — PulseOS design system.
 // ─────────────────────────────────────────────
 
 import { notFound } from "next/navigation";
@@ -14,14 +14,6 @@ import { fetchClientDetail } from "@/lib/server-queries";
 import type { HealthFlag } from "@/lib/server-queries";
 import { COMPLIANCE_TARGET } from "@/lib/constants/thresholds";
 
-const healthFlagLabels: Record<HealthFlag, string> = {
-  low_readiness:          "Low Readiness",
-  recovery_deficit:       "Recovery Deficit",
-  high_stress_low_energy: "High Stress / Low Energy",
-  sleep_deficit:          "Sleep Deficit",
-  nutrition_slip:         "Nutrition Slip",
-  training_gap:           "Training Gap",
-};
 import { AddHabitModal } from "./AddHabitModal";
 import { HabitsTabs } from "./HabitsTabs";
 import { EditWeightsButton } from "./EditWeightsButton";
@@ -31,27 +23,39 @@ import { ChangeGoalModal } from "./ChangeGoalModal";
 
 export const dynamic = "force-dynamic";
 
-function ComplianceBar({ label, pct }: { label: string; pct: number }) {
-  const color =
-    pct >= COMPLIANCE_TARGET ? "bg-[#B8933A]" :
-    pct >= 50 ? "bg-[#C9A44A]" :
-                "bg-[#7A1E1E]";
-  const text =
-    pct >= COMPLIANCE_TARGET ? "text-[#B8933A]" :
-    pct >= 50 ? "text-[#C9A44A]" :
-                "text-[#7A1E1E]";
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm text-[#9A9080]">{label}</span>
-        <span className={`text-sm font-bold ${text}`}>{pct}%</span>
-      </div>
-      <div className="h-2 bg-[#252525] rounded overflow-hidden">
-        <div className={`h-full rounded transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
+// ── Design tokens ────────────────────────────────────────────────
+
+const healthFlagLabels: Record<HealthFlag, string> = {
+  low_readiness:          "Low Readiness",
+  recovery_deficit:       "Recovery Deficit",
+  high_stress_low_energy: "High Stress / Low Energy",
+  sleep_deficit:          "Sleep Deficit",
+  nutrition_slip:         "Nutrition Slip",
+  training_gap:           "Training Gap",
+};
+
+const healthFlagIcons: Record<HealthFlag, string> = {
+  low_readiness:          "◉",
+  recovery_deficit:       "↻",
+  high_stress_low_energy: "⚡",
+  sleep_deficit:          "☽",
+  nutrition_slip:         "▽",
+  training_gap:           "△",
+};
+
+function complianceColor(pct: number) {
+  if (pct >= COMPLIANCE_TARGET) return { bar: "bg-[#1D9E75]", text: "text-[#1D9E75]" };
+  if (pct >= 50)               return { bar: "bg-[#B8933A]", text: "text-[#B8933A]" };
+  return                              { bar: "bg-[#7A1E1E]", text: "text-[#7A1E1E]" };
 }
+
+function progressBarColor(pct: number): string {
+  if (pct >= 70) return "bg-[#1D9E75]";
+  if (pct >= 40) return "bg-[#B8933A]";
+  return "bg-[#7A1E1E]";
+}
+
+// ── Page ─────────────────────────────────────────────────────────
 
 export default async function ClientDetailPage({
   params,
@@ -77,107 +81,201 @@ export default async function ClientDetailPage({
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
-      {/* ── Back link ───────────────────────────── */}
-      <Link
-        href="/coach/clients"
-        className="inline-flex items-center gap-1 text-[#9A9080] hover:text-[#DDD5C0] border border-[#1E1E1E] hover:border-[#C9A44A] hover:bg-[#1A1A1A] px-3 py-1.5 rounded cursor-pointer transition-all duration-150 uppercase"
-        style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.1em" }}
+      {/* ════════════════════════════════════════════
+          CLIENT HEADER
+          ════════════════════════════════════════════ */}
+      <div
+        className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
+        style={{ padding: "16px 20px" }}
       >
-        ← Clients
-      </Link>
+        {/* Back link */}
+        <Link
+          href="/coach/clients"
+          className="inline-flex items-center gap-1 text-[#807868] hover:text-[#DDD5C0] transition-colors mb-3"
+          style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.1em" }}
+        >
+          ← CLIENTS
+        </Link>
 
-      {/* ── Profile header ──────────────────────── */}
-      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl text-[#F4EEE4] tracking-wide" style={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>{client.name}</h1>
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#9A9080]">
-              <span>{client.email}</span>
+          {/* Left: identity + goal + compliance */}
+          <div className="min-w-0 flex-1">
+            {/* Name + status inline */}
+            <div className="flex items-center gap-3">
+              <h1
+                className="text-[#F4EEE4] truncate"
+                style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1.2 }}
+              >
+                {client.name}
+              </h1>
+              <span
+                className={`flex-shrink-0 px-2.5 py-1 rounded border text-[9px] font-semibold uppercase tracking-wider ${
+                  isOnTrack
+                    ? "text-[#1D9E75] border-[#0D3A25] bg-[rgba(29,158,117,0.08)]"
+                    : "text-[#7A1E1E] border-[#2A1010] bg-[rgba(122,30,30,0.10)]"
+                }`}
+                style={{ fontFamily: "'Cinzel', serif" }}
+              >
+                {isOnTrack ? "On Track" : "Needs Attention"}
+              </span>
+            </div>
+
+            {/* Goal name + contact */}
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              {client.goal && (
+                <span className="text-[#B8933A]" style={{ fontFamily: "'EB Garamond', serif", fontSize: "13px", fontStyle: "italic" }}>
+                  {client.goal.goal_name}
+                </span>
+              )}
+              {client.goal && <span className="text-[#2A2A2A]">·</span>}
+              <span className="text-[#807868]" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px" }}>
+                {client.email}
+              </span>
               {client.phone && (
                 <>
-                  <span className="text-[#252525]">·</span>
-                  <span>{client.phone}</span>
+                  <span className="text-[#2A2A2A]">·</span>
+                  <span className="text-[#807868]" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px" }}>
+                    {client.phone}
+                  </span>
                 </>
               )}
             </div>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded border ${
-                isOnTrack
-                  ? "text-[#B8933A] border-[#B8933A]"
-                  : "text-[#7A1E1E] border-[#7A1E1E]"
-              }`}
-              style={{ fontFamily: "'Cinzel', serif" }}
-            >
-              {isOnTrack ? "On track" : "Needs attention"}
-            </span>
-            {client.healthFlags.length > 0 && (
-              <div className="flex flex-wrap justify-end gap-1.5">
-                {client.healthFlags.map((flag) => (
-                  <span
-                    key={flag}
-                    className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#7A1E1E] text-[#C94A4A] bg-[#7A1E1E]/10"
-                    style={{ fontFamily: "'Cinzel', serif" }}
-                  >
-                    {healthFlagLabels[flag]}
+
+            {/* Compliance summary */}
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1A1A1A]">
+              {[
+                { label: "TODAY", pct: client.todayPercent },
+                { label: "7-DAY", pct: client.weekPercent },
+                { label: "30-DAY", pct: client.monthPercent },
+              ].map(({ label, pct }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <span className="text-[#4A3F2A]" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px", letterSpacing: "0.06em" }}>
+                    {label}
                   </span>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              {client.goal && (
-                <ChangeGoalModal clientId={client.id} clientName={client.name} />
-              )}
-              <ArchiveClientButton clientId={client.id} clientName={client.name} />
+                  <span
+                    className={`font-bold ${complianceColor(pct).text}`}
+                    style={{ fontFamily: "'Cinzel', serif", fontSize: "14px" }}
+                  >
+                    {pct}%
+                  </span>
+                </div>
+              ))}
             </div>
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+            {client.goal && (
+              <ChangeGoalModal clientId={client.id} clientName={client.name} />
+            )}
+            <ArchiveClientButton clientId={client.id} clientName={client.name} />
           </div>
         </div>
       </div>
 
-      {/* ── Two-column: Goal + Compliance ───────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ════════════════════════════════════════════
+          TWO-COLUMN GRID
+          ════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start" style={{ gap: "10px" }}>
 
-        {/* Goal card */}
-        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6 space-y-5">
-          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
-            Goal
-          </p>
+        {/* ──────────────────────────────────────────
+            LEFT COLUMN: Goal Progress + Compliance
+            ────────────────────────────────────────── */}
+        <div className="flex flex-col" style={{ gap: "10px" }}>
 
-          {client.goal ? (
-            <>
-              <p className="font-semibold text-[#F4EEE4] leading-snug" style={{ fontFamily: "'EB Garamond', serif", fontSize: "16px" }}>
-                {client.goal.goal_name}
-              </p>
+          {/* ── Goal Progress ──────────────────────── */}
+          <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+            <SectionLabel>Goal</SectionLabel>
 
-              {goalDateLabel && (
-                <p className="text-sm text-[#9A9080]">
-                  Target date:{" "}
-                  <strong className="text-[#DDD5C0] font-medium">{goalDateLabel}</strong>
-                </p>
-              )}
-
-              {client.goal.goalProgress > 0 && (
+            {client.goal ? (
+              <div className="space-y-4 mt-3">
+                {/* Goal name + date */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#9A9080]">Progress toward goal</span>
-                    <span className="text-xs font-semibold text-[#DDD5C0]">
-                      {client.goal.goalProgress}%
-                    </span>
+                  <p
+                    className="text-[#F4EEE4] font-semibold leading-snug"
+                    style={{ fontFamily: "'EB Garamond', serif", fontSize: "16px" }}
+                  >
+                    {client.goal.goal_name}
+                  </p>
+                  {goalDateLabel && (
+                    <p className="text-[#807868] mt-0.5" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic" }}>
+                      Target: {goalDateLabel}
+                    </p>
+                  )}
+                </div>
+
+                {/* Progress bar (prominent) */}
+                {client.goal.goalProgress > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[#807868]" style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.08em" }}>
+                        PROGRESS
+                      </span>
+                      <span className="text-[#F4EEE4]" style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700 }}>
+                        {client.goal.goalProgress}%
+                      </span>
+                    </div>
+                    <div className="h-[6px] bg-[#1A1A1A] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${progressBarColor(client.goal.goalProgress)}`}
+                        style={{ width: `${Math.min(client.goal.goalProgress, 100)}%`, transition: "width 0.4s ease" }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 bg-[#252525] rounded overflow-hidden">
-                    <div
-                      className="h-full bg-[#B8933A] rounded"
-                      style={{ width: `${client.goal.goalProgress}%` }}
+                )}
+
+                {/* Category-aware metrics */}
+                {client.goal.goal_category === "weight" && (
+                  <MetricsRow
+                    items={[
+                      { label: "Start", val: client.goal.start_weight, unit: "lbs" },
+                      { label: "Current", val: client.goal.current_weight, unit: "lbs" },
+                      { label: "Goal", val: client.goal.goal_weight, unit: "lbs" },
+                    ]}
+                  />
+                )}
+
+                {client.goal.goal_category === "body_composition" && (
+                  <div className="space-y-2">
+                    <MetricsRow
+                      items={[
+                        { label: "Start BF%", val: client.goal.starting_body_fat, unit: "%" },
+                        { label: "Current BF%", val: client.goal.current_body_fat, unit: "%" },
+                        { label: "Goal BF%", val: client.goal.goal_body_fat, unit: "%" },
+                      ]}
+                    />
+                    <MetricsRow
+                      items={[
+                        { label: "Start SMM", val: client.goal.starting_smm, unit: " lbs" },
+                        { label: "Current SMM", val: client.goal.current_smm, unit: " lbs" },
+                        { label: "Goal SMM", val: client.goal.goal_smm, unit: " lbs" },
+                      ]}
                     />
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Category-aware metrics */}
-              {client.goal && (
+                {client.goal.goal_category === "performance" && (
+                  <div>
+                    {client.goal.performance_metric_name && (
+                      <p className="text-[#807868] mb-2" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px" }}>
+                        Metric: <span className="text-[#DDD5C0]">{client.goal.performance_metric_name}</span>
+                        {client.goal.performance_unit && ` (${client.goal.performance_unit})`}
+                        {client.goal.performance_direction && ` · ${client.goal.performance_direction}`}
+                      </p>
+                    )}
+                    <MetricsRow
+                      items={[
+                        { label: "Start", val: client.goal.starting_performance_value, unit: client.goal.performance_unit ? ` ${client.goal.performance_unit}` : "" },
+                        { label: "Current", val: client.goal.current_performance_value, unit: client.goal.performance_unit ? ` ${client.goal.performance_unit}` : "" },
+                        { label: "Goal", val: client.goal.goal_performance_value, unit: client.goal.performance_unit ? ` ${client.goal.performance_unit}` : "" },
+                      ]}
+                    />
+                  </div>
+                )}
+
+                {/* Edit metrics button */}
                 <EditWeightsButton
                   goalId={client.goal.id}
                   goalCategory={client.goal.goal_category}
@@ -190,134 +288,204 @@ export default async function ClientDetailPage({
                   currentPerformanceValue={client.goal.current_performance_value}
                   goalPerformanceValue={client.goal.goal_performance_value}
                 />
-              )}
+              </div>
+            ) : (
+              <p className="text-[#807868] mt-3" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic" }}>
+                No goal set yet.
+              </p>
+            )}
+          </section>
 
-              {/* Weight */}
-              {client.goal.goal_category === "weight" && (
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Starting", val: client.goal.start_weight,   unit: "lbs" },
-                    { label: "Current",  val: client.goal.current_weight, unit: "lbs" },
-                    { label: "Goal",     val: client.goal.goal_weight,    unit: "lbs" },
-                  ].map(({ label, val, unit }) => (
-                    <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
-                      <p className="text-base font-bold text-[#DDD5C0]">
-                        {val != null ? `${val} ${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
-                      </p>
-                      <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
+          {/* ── Compliance ─────────────────────────── */}
+          <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+            <SectionLabel>Compliance</SectionLabel>
+
+            <div className="space-y-5 mt-3">
+              {[
+                { label: "Today",  pct: client.todayPercent },
+                { label: "7-Day",  pct: client.weekPercent },
+                { label: "30-Day", pct: client.monthPercent },
+              ].map(({ label, pct }) => {
+                const { bar, text } = complianceColor(pct);
+                return (
+                  <div key={label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[#807868]" style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.08em" }}>
+                        {label.toUpperCase()}
+                      </span>
+                      <span className={`font-bold ${text}`} style={{ fontFamily: "'Cinzel', serif", fontSize: "13px" }}>
+                        {pct}%
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Body composition */}
-              {client.goal.goal_category === "body_composition" && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Starting BF%", val: client.goal.starting_body_fat, unit: "%" },
-                      { label: "Current BF%",  val: client.goal.current_body_fat,  unit: "%" },
-                      { label: "Goal BF%",     val: client.goal.goal_body_fat,     unit: "%" },
-                    ].map(({ label, val, unit }) => (
-                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
-                        <p className="text-base font-bold text-[#DDD5C0]">
-                          {val != null ? `${val}${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
-                        </p>
-                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
-                      </div>
-                    ))}
+                    <div className="h-[8px] bg-[#1A1A1A] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${bar}`}
+                        style={{ width: `${pct}%`, transition: "width 0.4s ease" }}
+                      />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Starting SMM", val: client.goal.starting_smm, unit: " lbs" },
-                      { label: "Current SMM",  val: client.goal.current_smm,  unit: " lbs" },
-                      { label: "Goal SMM",     val: client.goal.goal_smm,     unit: " lbs" },
-                    ].map(({ label, val, unit }) => (
-                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
-                        <p className="text-base font-bold text-[#DDD5C0]">
-                          {val != null ? `${val}${unit}` : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
-                        </p>
-                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                );
+              })}
+              <p className="text-[#4A3F2A] pt-1" style={{ fontFamily: "'EB Garamond', serif", fontSize: "10px", fontStyle: "italic" }}>
+                Target: {COMPLIANCE_TARGET}% or better
+              </p>
+            </div>
+          </section>
+        </div>
 
-              {/* Performance */}
-              {client.goal.goal_category === "performance" && (
-                <div>
-                  {client.goal.performance_metric_name && (
-                    <p className="text-xs text-[#9A9080] mb-2">
-                      Metric: <strong className="text-[#DDD5C0] font-medium">{client.goal.performance_metric_name}</strong>
-                      {client.goal.performance_unit && ` (${client.goal.performance_unit})`}
-                      {client.goal.performance_direction && ` · ${client.goal.performance_direction}`}
-                    </p>
+        {/* ──────────────────────────────────────────
+            RIGHT COLUMN: Health Flags + Body Metrics
+            ────────────────────────────────────────── */}
+        <div className="flex flex-col" style={{ gap: "10px" }}>
+
+          {/* ── Health Flags ───────────────────────── */}
+          <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+            <SectionLabel>Health Flags</SectionLabel>
+
+            {client.healthFlags.length === 0 ? (
+              <div className="mt-3 py-6 text-center bg-[rgba(29,158,117,0.04)] border border-[#0D3A25] rounded-[5px]">
+                <p className="text-[#1D9E75]" style={{ fontFamily: "'Cinzel', serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em" }}>
+                  ALL SYSTEMS CLEAR
+                </p>
+                <p className="text-[#0D3A25] mt-1" style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic" }}>
+                  No health flags detected today.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 mt-3" style={{ gap: "6px" }}>
+                {client.healthFlags.map((flag) => (
+                  <div
+                    key={flag}
+                    className="flex items-center gap-2 bg-[rgba(122,30,30,0.06)] border border-[#7A1E1E] rounded px-2.5 py-2"
+                  >
+                    <span className="text-[#C94A4A] flex-shrink-0" style={{ fontSize: "12px" }}>
+                      {healthFlagIcons[flag]}
+                    </span>
+                    <span
+                      className="text-[#C94A4A] font-semibold truncate"
+                      style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.05em" }}
+                    >
+                      {healthFlagLabels[flag]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ── Body Metrics ───────────────────────── */}
+          <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+            <SectionLabel>Body Metrics</SectionLabel>
+
+            {client.goal ? (
+              <div className="mt-3 space-y-3">
+                {/* Metric chips */}
+                <div className="grid grid-cols-3" style={{ gap: "6px" }}>
+                  {client.goal.current_weight != null && (
+                    <MetricChip label="Weight" value={`${client.goal.current_weight}`} unit="lbs" />
                   )}
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Starting", val: client.goal.starting_performance_value },
-                      { label: "Current",  val: client.goal.current_performance_value  },
-                      { label: "Goal",     val: client.goal.goal_performance_value     },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="bg-[#1A1A1A] rounded p-3 text-center">
-                        <p className="text-base font-bold text-[#DDD5C0]">
-                          {val != null
-                            ? `${val}${client.goal?.performance_unit ? ` ${client.goal.performance_unit}` : ""}`
-                            : <span className="text-[#2E2E2E] text-sm font-normal">—</span>}
-                        </p>
-                        <p className="text-xs text-[#9A9080] mt-0.5">{label}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {client.goal.current_body_fat != null && (
+                    <MetricChip label="Body Fat" value={`${client.goal.current_body_fat}`} unit="%" />
+                  )}
+                  {client.goal.current_smm != null && (
+                    <MetricChip label="SMM" value={`${client.goal.current_smm}`} unit="lbs" />
+                  )}
                 </div>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-[#9A9080]">No goal set yet.</p>
-          )}
+
+                {/* Chart placeholder */}
+                <div className="border border-[#1A1A1A] rounded-[5px] bg-[#0A0A0A] py-8 px-4 text-center">
+                  <p className="text-[#4A3F2A]" style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.08em" }}>
+                    WEIGHT HISTORY CHART
+                  </p>
+                  <p className="text-[#2A2A2A] mt-1" style={{ fontFamily: "'EB Garamond', serif", fontSize: "10px", fontStyle: "italic" }}>
+                    Coming soon
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[#807868] mt-3" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic" }}>
+                No goal — no body metrics to display.
+              </p>
+            )}
+          </section>
         </div>
+      </div>
 
-        {/* Compliance card */}
-        <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6 space-y-5">
-          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
-            Compliance
-          </p>
+      {/* ════════════════════════════════════════════
+          BOTTOM: Habits + Coach Notes
+          ════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start" style={{ gap: "10px" }}>
 
-          <div className="space-y-4">
-            <ComplianceBar label="Today"  pct={client.todayPercent} />
-            <ComplianceBar label="7-Day"  pct={client.weekPercent}  />
-            <ComplianceBar label="30-Day" pct={client.monthPercent} />
+        {/* ── Habits ───────────────────────────────── */}
+        <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+          <div className="flex items-center justify-between mb-2">
+            <SectionLabel>Habits</SectionLabel>
+            {client.goal && <AddHabitModal goalId={client.goal.id} />}
           </div>
+          <HabitsTabs
+            key={client.tasks.length + client.archivedTasks.length}
+            active={client.tasks}
+            archived={client.archivedTasks}
+          />
+        </section>
 
-          <p className="text-xs text-[#807868]">Target: 70% or better</p>
-        </div>
-
+        {/* ── Coach Notes ──────────────────────────── */}
+        <section className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]" style={{ padding: "16px 20px" }}>
+          <SectionLabel>Coach Notes</SectionLabel>
+          <div className="mt-3">
+            <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />
+          </div>
+        </section>
       </div>
 
-      {/* ── Habits (active + archived tabs) ─────── */}
-      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
-        <div className="flex items-center justify-between mb-2">
-          <p className="font-semibold uppercase tracking-widest text-[#9A9080]" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
-            Habits
+    </div>
+  );
+}
+
+// ── Sub-components ───────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="text-[#807868] uppercase"
+      style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.12em" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function MetricsRow({
+  items,
+}: {
+  items: { label: string; val: number | null; unit: string }[];
+}) {
+  return (
+    <div className="grid grid-cols-3" style={{ gap: "6px" }}>
+      {items.map(({ label, val, unit }) => (
+        <div key={label} className="bg-[#111111] border border-[#1A1A1A] rounded-[5px] py-2.5 px-2 text-center">
+          <p className="text-[#F4EEE4] font-bold" style={{ fontFamily: "'Cinzel', serif", fontSize: "13px" }}>
+            {val != null ? `${val}${unit}` : <span className="text-[#2A2A2A] font-normal" style={{ fontSize: "11px" }}>—</span>}
           </p>
-          {client.goal && <AddHabitModal goalId={client.goal.id} />}
+          <p className="text-[#4A3F2A] mt-0.5" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px", letterSpacing: "0.06em" }}>
+            {label.toUpperCase()}
+          </p>
         </div>
-        <HabitsTabs
-          key={client.tasks.length + client.archivedTasks.length}
-          active={client.tasks}
-          archived={client.archivedTasks}
-        />
-      </div>
+      ))}
+    </div>
+  );
+}
 
-      {/* ── Coach Notes ──────────────────────────── */}
-      <div className="bg-[#0D0D0D] rounded-[7px] border border-[#1E1E1E] p-6">
-        <p className="font-semibold uppercase tracking-widest text-[#9A9080] mb-4" style={{ fontFamily: "'Cinzel', serif", fontSize: "9px" }}>
-          Coach Notes
-        </p>
-        <ClientNotes clientId={client.id} initialNotes={client.clientNotes} />
-      </div>
-
+function MetricChip({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div className="bg-[#111111] border border-[#1A1A1A] rounded-[5px] py-2 px-2 text-center">
+      <p className="text-[#DDD5C0] font-bold" style={{ fontFamily: "'Cinzel', serif", fontSize: "13px" }}>
+        {value}
+        <span className="text-[#807868] font-normal ml-0.5" style={{ fontSize: "9px" }}>{unit}</span>
+      </p>
+      <p className="text-[#4A3F2A] mt-0.5" style={{ fontFamily: "'Cinzel', serif", fontSize: "7px", letterSpacing: "0.06em" }}>
+        {label.toUpperCase()}
+      </p>
     </div>
   );
 }

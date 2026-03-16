@@ -17,17 +17,17 @@ const ebGaramond = "'EB Garamond', serif";
 type NavItem = {
   label: string;
   href: string;
-  match: string; // pathname prefix to match for active state
+  match: string;
   icon: React.ReactNode;
 };
 
 const navItems: NavItem[] = [
   {
     label: "Dashboard",
-    href: "/coach",
-    match: "/coach",
+    href: "/coach/dashboard",
+    match: "/coach/dashboard",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" />
         <rect x="14" y="3" width="7" height="7" />
         <rect x="3" y="14" width="7" height="7" />
@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
     href: "/coach/clients",
     match: "/coach/clients",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 00-3-3.87" />
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
     href: "/coach/analytics",
     match: "/coach/analytics",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
@@ -63,7 +63,7 @@ const navItems: NavItem[] = [
     href: "/coach/notes",
     match: "/coach/notes",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
@@ -76,7 +76,7 @@ const navItems: NavItem[] = [
     href: "/coach/reports",
     match: "/coach/reports",
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
         <polyline points="7 10 12 15 17 10" />
         <line x1="12" y1="15" x2="12" y2="3" />
@@ -86,9 +86,9 @@ const navItems: NavItem[] = [
 ];
 
 function isActive(pathname: string, match: string): boolean {
-  // Dashboard: exact match only (avoid matching /coach/clients etc.)
-  if (match === "/coach") return pathname === "/coach";
-  // All others: prefix match
+  if (match === "/coach/dashboard") {
+    return pathname === "/coach/dashboard" || pathname === "/coach";
+  }
   return pathname.startsWith(match);
 }
 
@@ -97,13 +97,16 @@ export function CoachSidebar({ coachName }: { coachName: string }) {
 
   return (
     <aside
-      className="fixed top-0 left-0 h-screen w-[190px] bg-[#0D0D0D] border-r border-[#1E1E1E] flex flex-col z-40"
-      style={{ padding: "20px 0" }}
+      className="fixed top-0 left-0 h-screen w-[180px] flex flex-col z-40"
+      style={{ background: "#080808", borderRight: "1px solid #1A1A1A" }}
     >
+      {/* ── Top shimmer line ──────────────────── */}
+      <div className="h-[1px] w-full" style={{ background: "linear-gradient(90deg, transparent 0%, #B8933A33 30%, #B8933A22 70%, transparent 100%)" }} />
+
       {/* ── Brand ──────────────────────────────── */}
-      <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #1E1E1E", marginBottom: "16px" }}>
+      <div style={{ padding: "16px 14px 16px", borderBottom: "1px solid #141414", marginBottom: "8px" }}>
         <div className="flex items-center gap-2" style={{ marginBottom: "2px" }}>
-          <svg viewBox="0 0 100 100" fill="none" width="18" height="18" className="flex-shrink-0">
+          <svg viewBox="0 0 100 100" fill="none" width="16" height="16" className="flex-shrink-0">
             <polygon
               points="50,3 87,20 97,57 80,90 50,97 20,90 3,57 13,20"
               stroke="#B8933A" strokeWidth={2.5} fill="none" opacity={0.5}
@@ -117,21 +120,32 @@ export function CoachSidebar({ coachName }: { coachName: string }) {
           </svg>
           <span
             className="text-[#F4EEE4] uppercase leading-none"
-            style={{ fontFamily: cinzel, fontSize: "12px", fontWeight: 700, letterSpacing: "0.12em" }}
+            style={{ fontFamily: cinzel, fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em" }}
           >
             PulseOS
           </span>
         </div>
         <span
           className="leading-none block"
-          style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#3A3020", marginLeft: "26px" }}
+          style={{ fontFamily: ebGaramond, fontSize: "9px", fontStyle: "italic", color: "#3A3020", marginLeft: "24px" }}
         >
           Coach Control Center
         </span>
       </div>
 
+      {/* ── EKG decorative line ────────────────── */}
+      <div className="px-3 mb-2">
+        <svg viewBox="0 0 160 20" className="w-full h-[14px] opacity-20" preserveAspectRatio="none">
+          <polyline
+            points="0,10 20,10 30,10 38,3 46,17 54,10 65,10 75,2 85,10 100,10 108,6 116,14 124,10 140,10 160,10"
+            stroke="#B8933A" strokeWidth={1.5} fill="none"
+            strokeLinecap="round" strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+
       {/* ── Navigation ─────────────────────────── */}
-      <nav className="flex-1 flex flex-col gap-0.5 overflow-y-auto" style={{ padding: "0 8px" }}>
+      <nav className="flex-1 flex flex-col gap-0.5 overflow-y-auto" style={{ padding: "0 6px" }}>
         {navItems.map((item) => {
           const active = isActive(pathname, item.match);
           return (
@@ -140,11 +154,11 @@ export function CoachSidebar({ coachName }: { coachName: string }) {
               href={item.href}
               className="flex items-center transition-all duration-150"
               style={{
-                gap: "9px",
-                padding: "8px 10px",
-                borderRadius: "6px",
+                gap: "8px",
+                padding: "7px 8px",
+                borderRadius: "5px",
                 fontFamily: cinzel,
-                fontSize: "9px",
+                fontSize: "8px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
@@ -168,17 +182,17 @@ export function CoachSidebar({ coachName }: { coachName: string }) {
       </nav>
 
       {/* ── Footer ─────────────────────────────── */}
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #1E1E1E", marginTop: "auto" }}>
+      <div style={{ padding: "10px 14px", borderTop: "1px solid #141414", marginTop: "auto" }}>
         <p
           className="uppercase"
-          style={{ fontFamily: cinzel, fontSize: "9px", letterSpacing: "0.1em", color: "#4A3F2A" }}
+          style={{ fontFamily: cinzel, fontSize: "8px", letterSpacing: "0.1em", color: "#4A3F2A" }}
         >
           {coachName}
         </p>
         <SignOutButton
           redirectTo="/coach/login"
           className="cursor-pointer mt-1 block"
-          style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: "#3A3020", background: "none", border: "none", padding: 0 }}
+          style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#3A3020", background: "none", border: "none", padding: 0 }}
         >
           Sign out
         </SignOutButton>

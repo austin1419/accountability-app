@@ -7,7 +7,7 @@
 // Supports three goal categories: Weight, Body Composition, Performance.
 // ─────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientWithInvite } from "./actions";
 
@@ -72,9 +72,13 @@ function parseNum(s: string): number | null {
   return isNaN(n) ? null : n;
 }
 
-export function AddClientModal() {
+export function AddClientModal({ autoOpen = false }: { autoOpen?: boolean }) {
   const router  = useRouter();
   const [open,    setOpen]    = useState(false);
+
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
   const [loading, setLoading] = useState(false);
   const [form,    setForm]    = useState<FormState>(EMPTY);
   const [errors,  setErrors]  = useState<Record<string, string>>({});
