@@ -68,7 +68,7 @@ export default async function DebugSeedPage() {
     progressLogsRes, clientNotesRes, coachRes,
   ] = await Promise.all([
     supabase.from("goals").select("id, user_id, goal_name, goal_category, goal_date, is_active").in("user_id", clientIds),
-    supabase.from("task_logs").select("user_id, date, completed").in("user_id", clientIds),
+    supabase.from("task_logs").select("user_id, date, completed").in("user_id", clientIds).limit(10000),
     supabase.from("daily_journal").select("user_id, date, stress_level, energy_level").in("user_id", clientIds).order("date", { ascending: false }),
     supabase.from("weight_logs").select("user_id").in("user_id", clientIds),
     supabase.from("progress_logs").select("user_id").in("user_id", clientIds),

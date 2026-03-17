@@ -344,7 +344,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     .in("user_id", clientIds)
     .gte("date", weekStart)
     .lte("date", today)
-    .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]);
+    .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""])
+    .limit(10000);
 
   const entries: LeaderboardEntry[] = clients.map((client) => {
     const goal      = goalByUser.get(client.id) ?? null;
