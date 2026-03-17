@@ -9,10 +9,12 @@
 --   1. Sarah Johnson  — Weight loss, thriving (90-100%)
 --   2. Mark Carter    — Body comp, thriving (85-95%)
 --   3. Emily Davis    — Performance, stable (70-85%)
---   4. Chris Walker   — Weight loss, declining (was 80%, now 50%)
+--   4. Chris Walker   — Weight loss, IMPROVING (40% → 85%)
 --   5. Natalie Brooks — Body comp, inconsistent (40-90% swings)
 --   6. Daniel Reed    — Performance, at risk (35-55%)
 --   7. Laura Mitchell — Weight loss, critical (10-25%)
+--
+-- Improving clients (Chris, Emily) will trigger "Most Improved" analytics.
 -- ═══════════════════════════════════════════════════════════════════
 
 BEGIN;
@@ -109,9 +111,9 @@ VALUES (g_mark, v_mark, 'Lean Out for Competition', 'body_composition', v_today 
 INSERT INTO public.goals (id, user_id, goal_name, goal_category, goal_date, is_active, performance_metric_name, performance_unit, performance_direction, starting_performance_value, current_performance_value, goal_performance_value, target_days_per_week)
 VALUES (g_emily, v_emily, 'Hit 200 lb Bench Press', 'performance', v_today + 90, true, 'Bench Press', 'lbs', 'increase', 135.0, 175.0, 200.0, 6);
 
--- Chris: Weight loss (declining)
+-- Chris: Weight loss (improving)
 INSERT INTO public.goals (id, user_id, goal_name, goal_category, goal_date, is_active, start_weight, current_weight, goal_weight, target_days_per_week)
-VALUES (g_chris, v_chris, 'Drop to 185 lbs', 'weight', v_today + 30, true, 210.0, 201.0, 185.0, 7);
+VALUES (g_chris, v_chris, 'Drop to 185 lbs', 'weight', v_today + 30, true, 210.0, 195.0, 185.0, 7);
 
 -- Natalie: Body composition (inconsistent)
 INSERT INTO public.goals (id, user_id, goal_name, goal_category, goal_date, is_active, starting_body_fat, current_body_fat, goal_body_fat, starting_smm, current_smm, goal_smm, target_days_per_week)
@@ -193,21 +195,21 @@ FOR day_offset IN 0..29 LOOP
   END LOOP;
 END LOOP;
 
--- EMILY (stable 70-85%)
+-- EMILY (IMPROVING: 50% week1 → 65% week2 → 80% week3 → 90% week4)
 FOR day_offset IN 0..29 LOOP
   d := v_today - day_offset;
+  compliance_roll := 0.50 + (0.40 * (1.0 - day_offset::double precision / 29.0));
   FOREACH t IN ARRAY ARRAY[t_emily_1, t_emily_2, t_emily_3, t_emily_4] LOOP
-    compliance_roll := random();
     INSERT INTO public.task_logs (task_id, user_id, date, completed, created_at)
-    VALUES (t, v_emily, d, compliance_roll < 0.78, d::timestamptz + interval '9 hours');
+    VALUES (t, v_emily, d, random() < compliance_roll, d::timestamptz + interval '9 hours');
   END LOOP;
 END LOOP;
 
--- CHRIS (declining: was 80% → now 50%)
+-- CHRIS (IMPROVING: 40% week1 → 55% week2 → 70% week3 → 85% week4)
 FOR day_offset IN 0..29 LOOP
   d := v_today - day_offset;
-  -- Probability decreases as we approach today
-  compliance_roll := 0.80 - (0.30 * (1.0 - day_offset::double precision / 29.0));
+  -- Probability increases as we approach today (inverse of declining)
+  compliance_roll := 0.40 + (0.45 * (1.0 - day_offset::double precision / 29.0));
   FOREACH t IN ARRAY ARRAY[t_chris_1, t_chris_2, t_chris_3, t_chris_4] LOOP
     INSERT INTO public.task_logs (task_id, user_id, date, completed, created_at)
     VALUES (t, v_chris, d, random() < compliance_roll, d::timestamptz + interval '10 hours');
@@ -271,12 +273,52 @@ FOR day_offset IN 0..29 LOOP
   END IF;
 END LOOP;
 
--- Chris: stalled around 201-204
+-- Chris: improving (210 → 195 over 30 days)
 FOR day_offset IN 0..29 LOOP
   IF day_offset % 3 = 0 THEN
     d := v_today - day_offset;
     INSERT INTO public.weight_logs (user_id, weight, logged_at, created_at)
-    VALUES (v_chris, 201.0 + (random() * 3.0 - 1.5), d, d::timestamptz + interval '8 hours')
+    VALUES (v_chris, 210.0 - (15.0 * (1.0 - day_offset::numeric / 29.0)) + (random() * 0.8 - 0.4), d, d::timestamptz + interval '8 hours')
+    ON CONFLICT (user_id, logged_at) DO NOTHING;
+  END IF;
+END LOOP;
+
+-- Emily: stable around 150-151 (performance goal, weight not primary)
+FOR day_offset IN 0..29 LOOP
+  IF day_offset % 4 = 0 THEN
+    d := v_today - day_offset;
+    INSERT INTO public.weight_logs (user_id, weight, logged_at, created_at)
+    VALUES (v_emily, 150.0 + (random() * 1.5 - 0.75), d, d::timestamptz + interval '8 hours')
+    ON CONFLICT (user_id, logged_at) DO NOTHING;
+  END IF;
+END LOOP;
+
+-- Natalie: fluctuating 155-159 (body comp recomp)
+FOR day_offset IN 0..29 LOOP
+  IF day_offset % 3 = 0 THEN
+    d := v_today - day_offset;
+    INSERT INTO public.weight_logs (user_id, weight, logged_at, created_at)
+    VALUES (v_natalie, 157.0 + (random() * 4.0 - 2.0), d, d::timestamptz + interval '9 hours')
+    ON CONFLICT (user_id, logged_at) DO NOTHING;
+  END IF;
+END LOOP;
+
+-- Daniel: slowly gaining (runner, adding muscle slowly) 165-168
+FOR day_offset IN 0..29 LOOP
+  IF day_offset % 5 = 0 THEN
+    d := v_today - day_offset;
+    INSERT INTO public.weight_logs (user_id, weight, logged_at, created_at)
+    VALUES (v_daniel, 165.0 + (3.0 * (1.0 - day_offset::numeric / 29.0)) + (random() * 0.5), d, d::timestamptz + interval '10 hours')
+    ON CONFLICT (user_id, logged_at) DO NOTHING;
+  END IF;
+END LOOP;
+
+-- Mark: cutting weight (185 → 178 for competition)
+FOR day_offset IN 0..29 LOOP
+  IF day_offset % 3 = 0 THEN
+    d := v_today - day_offset;
+    INSERT INTO public.weight_logs (user_id, weight, logged_at, created_at)
+    VALUES (v_mark, 185.0 - (7.0 * (1.0 - day_offset::numeric / 29.0)) + (random() * 0.5 - 0.25), d, d::timestamptz + interval '7 hours')
     ON CONFLICT (user_id, logged_at) DO NOTHING;
   END IF;
 END LOOP;
@@ -389,14 +431,14 @@ FOR i IN 0..9 LOOP
   ON CONFLICT (user_id, date) DO NOTHING;
 END LOOP;
 
--- Chris: declining motivation, rising stress
+-- Chris: improving motivation (recent entries more positive)
 FOR i IN 0..9 LOOP
   d := v_today - (i * 3);
   INSERT INTO public.daily_journal (user_id, date, sleep_hours, felt_rested, protein_hit, hydration_hit, alcohol, trained_today, zone2_cardio, recovery_work, supplements_taken, stress_level, energy_level, notes, created_at)
-  VALUES (v_chris, d, 5.5 + (random()), (random() < 0.3), (random() < 0.4), (random() < 0.5), (random() < 0.4), (random() < 0.4), false, false, (random() < 0.5),
-    6 + floor(random() * 3)::int,
-    3 + floor(random() * 3)::int,
-    (ARRAY['Skipped the gym again. Work was crazy.', 'Ate out twice this week. Not great.', 'Feeling unmotivated honestly.', 'Slept terrible. Stress from the job.', 'Had a beer with friends. Fell off plan.', 'Trying to get back on track.', 'Weight isn''t budging. Frustrated.', 'Missed my cardio session.', 'Need to meal prep but no time.', 'Going to try harder next week.'])[i + 1],
+  VALUES (v_chris, d, 5.5 + (random() * 1.5), (i < 5), (i < 6), (i < 5), (i > 6), (i < 7), false, (i < 4), (i < 5),
+    CASE WHEN i < 3 THEN 3 + floor(random() * 2)::int ELSE 6 + floor(random() * 2)::int END,
+    CASE WHEN i < 3 THEN 7 + floor(random() * 2)::int ELSE 3 + floor(random() * 2)::int END,
+    (ARRAY['Crushed my workout today! Feeling the momentum.', 'Hit all my targets. Coach plan is working.', 'Best week in a month. Energy is coming back.', 'Getting into a rhythm finally.', 'Simplified plan is helping. Less overwhelm.', 'Had a rough day but still got my walk in.', 'Work stress is high but trying to push through.', 'Missed my cardio session. Need to regroup.', 'Feeling unmotivated. Job is stressful.', 'Starting to think about giving up.'])[i + 1],
     d::timestamptz + interval '22 hours')
   ON CONFLICT (user_id, date) DO NOTHING;
 END LOOP;
@@ -437,7 +479,35 @@ FOR i IN 0..9 LOOP
   ON CONFLICT (user_id, date) DO NOTHING;
 END LOOP;
 
-RAISE NOTICE 'Seed complete: 7 clients, 30 days of task logs, journals, and metric logs created.';
+-- ═══════════════════════════════════════════════════════════════
+-- SEED ALERT STATE ROWS (intervention scenarios)
+-- ═══════════════════════════════════════════════════════════════
+
+-- Chris Walker: coach texted about training gap (intervention — waiting on outcome)
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, reviewed_at, intervention_type, intervention_note, updated_at)
+VALUES (v_coach_id, v_chris, 'compliance_drop', 'intervention', now() - interval '2 days', 'message_client', 'Texted Chris about his training gap. He said work has been overwhelming but wants to get back on track. We agreed to simplify his plan for this week.', now() - interval '2 days');
+
+-- Daniel Reed: recovery conversation scheduled (intervention — follow-up pending)
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, reviewed_at, intervention_type, intervention_note, follow_up_date, updated_at)
+VALUES (v_coach_id, v_daniel, 'high_stress_signal', 'intervention', now() - interval '1 day', 'schedule_call', 'Scheduled a recovery conversation for this week. Daniel mentioned family stress. Plan to discuss reducing training volume and focusing on walks + hydration.', now() + interval '2 days', now() - interval '1 day');
+
+-- Laura Mitchell: new critical alert (unactioned)
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, updated_at)
+VALUES (v_coach_id, v_laura, 'inactivity_streak', 'new', now());
+
+-- Laura Mitchell: reviewed journal gap alert
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, reviewed_at, updated_at)
+VALUES (v_coach_id, v_laura, 'journal_gap', 'reviewed', now() - interval '3 hours', now() - interval '3 hours');
+
+-- Daniel Reed: resolved old alert
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, reviewed_at, resolved_at, updated_at)
+VALUES (v_coach_id, v_daniel, 'low_energy_signal', 'resolved', now() - interval '5 days', now() - interval '3 days', now() - interval '3 days');
+
+-- Natalie Brooks: reviewed alert
+INSERT INTO public.coach_alert_state (coach_id, client_id, alert_type, status, reviewed_at, updated_at)
+VALUES (v_coach_id, v_natalie, 'stalled_goal_progress', 'reviewed', now() - interval '1 day', now() - interval '1 day');
+
+RAISE NOTICE 'Seed complete: 7 clients, 30 days of task logs, journals, metric logs, and alert states created.';
 
 END;
 $$;

@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────
 
 import { getCoachAnalytics } from "@/lib/coach/analytics/getCoachAnalytics";
+import { resolveCoachId } from "@/lib/coach/resolveCoachId";
 
 import { AnalyticsMetricCard } from "@/components/coach/analytics/AnalyticsMetricCard";
 import { TrendCard } from "@/components/coach/analytics/TrendCard";
@@ -16,8 +17,6 @@ import { CoachInsightPanel } from "@/components/coach/analytics/CoachInsightPane
 import { RosterHealthBar } from "@/components/coach/RosterHealthBar";
 
 export const dynamic = "force-dynamic";
-
-const TEMP_COACH_ID = "fb4bb26f-434e-4511-aa1e-b4c34146f510";
 
 // ── Display helpers (visual mapping only, no business logic) ─────
 
@@ -40,7 +39,8 @@ function trendClientStatusColor(thirtyDayPct: number): string {
 // ── Page ─────────────────────────────────────────────────────────
 
 export default async function AnalyticsPage() {
-  const analytics = await getCoachAnalytics(TEMP_COACH_ID);
+  const coachId = await resolveCoachId();
+  const analytics = await getCoachAnalytics(coachId);
 
   const {
     thriving, atRisk, critical, total,

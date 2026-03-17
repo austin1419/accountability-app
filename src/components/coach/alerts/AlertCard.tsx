@@ -35,10 +35,11 @@ const accentBorder = {
 };
 
 const statusLabels: Record<AlertStatus, { label: string; color: string }> = {
-  new:          { label: "New",          color: "#F4EEE4" },
-  reviewed:     { label: "Reviewed",     color: "#B8933A" },
-  action_taken: { label: "Action Taken", color: "#B8933A" },
-  resolved:     { label: "Resolved",     color: "#1D9E75" },
+  new:          { label: "New",            color: "#F4EEE4" },
+  reviewed:     { label: "Reviewed",       color: "#B8933A" },
+  action_taken: { label: "Action Taken",   color: "#B8933A" },
+  intervention: { label: "Intervention",   color: "#B8933A" },
+  resolved:     { label: "Resolved",       color: "#1D9E75" },
 };
 
 export function AlertCard({

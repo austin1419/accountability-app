@@ -21,7 +21,7 @@ export type AlertType =
 export type AlertSeverity = "critical" | "warning";
 
 /** Alert lifecycle states. */
-export type AlertStatus = "new" | "reviewed" | "action_taken" | "resolved";
+export type AlertStatus = "new" | "reviewed" | "action_taken" | "intervention" | "resolved";
 
 /** Intervention types a coach can record. */
 export type InterventionType =

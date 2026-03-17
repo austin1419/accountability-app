@@ -62,7 +62,7 @@ export function AlertTilesWithPanel({ tiles, rowsByFilter }: AlertTilesWithPanel
   return (
     <>
       {/* ── Summary Tiles ─────────────────────────── */}
-      <div className="grid grid-cols-4 gap-[9px] mb-6">
+      <div className="grid grid-cols-5 gap-[9px] mb-6">
         {tiles.map((tile) => {
           const a = accentMap[tile.accent];
           const isActive = activeFilter === tile.filter;

@@ -12,6 +12,7 @@
 
 import { getCoachAnalytics } from "@/lib/coach/analytics/getCoachAnalytics";
 import type { HydratedAlert } from "@/lib/coach/analytics/getCoachAnalytics";
+import { resolveCoachId } from "@/lib/coach/resolveCoachId";
 
 import { ClientRiskCard } from "@/components/coach/alerts/ClientRiskCard";
 import type { ClientAlert } from "@/components/coach/alerts/ClientRiskCard";
@@ -22,7 +23,7 @@ import { CoachInsightPanel } from "@/components/coach/analytics/CoachInsightPane
 
 export const dynamic = "force-dynamic";
 
-const TEMP_COACH_ID = "fb4bb26f-434e-4511-aa1e-b4c34146f510";
+// Coach ID resolved from auth at render time
 
 // ── Display helpers ──────────────────────────────────────────────
 
@@ -130,7 +131,8 @@ function groupAlertsByClient(alerts: HydratedAlert[]): ClientGroup[] {
 // ── Page ─────────────────────────────────────────────────────────
 
 export default async function CoachAlertsPage() {
-  const analytics = await getCoachAnalytics(TEMP_COACH_ID);
+  const coachId = await resolveCoachId();
+  const analytics = await getCoachAnalytics(coachId);
   const { alerts, insights } = analytics;
 
   const clientGroups = groupAlertsByClient(alerts);
@@ -138,9 +140,13 @@ export default async function CoachAlertsPage() {
   // Aggregate counts for summary
   const totalActive = alerts.filter((a) => a.status !== "resolved").length;
   const criticalCount = alerts.filter((a) => a.status !== "resolved" && a.alert_priority <= 1).length;
-  const warningCount = alerts.filter((a) => a.status !== "resolved" && a.alert_priority > 1).length;
+  const warningCount = alerts.filter((a) => a.status !== "resolved" && a.alert_priority > 1 && a.status !== "intervention" && a.status !== "action_taken").length;
+  const interventionCount = alerts.filter((a) => a.status === "intervention" || a.status === "action_taken").length;
   const resolvedCount = alerts.filter((a) => a.status === "resolved").length;
-  const clientsAtRisk = clientGroups.filter((g) => g.activeAlerts.length > 0).length;
+  // Count unique clients with active (non-resolved) alerts — must match visible cards
+  const clientsWithActiveAlerts = new Set(
+    alerts.filter((a) => a.status !== "resolved").map((a) => a.client_id),
+  ).size;
 
   // Build drill-down row data for each filter (server-side, passed to client wrapper)
   function toRow(a: HydratedAlert): DrillDownRowData {
@@ -160,7 +166,7 @@ export default async function CoachAlertsPage() {
 
   // Sort: critical first, unactioned first, newest first
   function triageSort(rows: DrillDownRowData[]): DrillDownRowData[] {
-    const statusOrder: Record<string, number> = { new: 0, reviewed: 1, action_taken: 2, resolved: 3 };
+    const statusOrder: Record<string, number> = { new: 0, reviewed: 1, action_taken: 2, intervention: 3, resolved: 4 };
     return [...rows].sort((a, b) => {
       const sevA = a.severity === "critical" ? 0 : 1;
       const sevB = b.severity === "critical" ? 0 : 1;
@@ -172,18 +178,22 @@ export default async function CoachAlertsPage() {
     });
   }
 
+  const interventionAlerts = alerts.filter((a) => a.status === "intervention" || a.status === "action_taken");
+
   const rowsByFilter: Record<DrillDownFilter, DrillDownRowData[]> = {
-    at_risk:  triageSort(activeAlerts.map(toRow)),
-    critical: triageSort(activeAlerts.filter((a) => a.alert_priority <= 1).map(toRow)),
-    warning:  triageSort(activeAlerts.filter((a) => a.alert_priority > 1).map(toRow)),
-    resolved: resolvedTodayAlerts.map(toRow),
+    at_risk:      triageSort(activeAlerts.map(toRow)),
+    critical:     triageSort(activeAlerts.filter((a) => a.alert_priority <= 1).map(toRow)),
+    warning:      triageSort(activeAlerts.filter((a) => a.alert_priority > 1 && a.status !== "intervention" && a.status !== "action_taken").map(toRow)),
+    intervention: triageSort(interventionAlerts.map(toRow)),
+    resolved:     resolvedTodayAlerts.map(toRow),
   };
 
   const tiles = [
-    { filter: "at_risk" as DrillDownFilter,  label: "Clients at Risk", count: clientsAtRisk, accent: (clientsAtRisk > 0 ? "crimson" : "green") as "crimson" | "green" },
-    { filter: "critical" as DrillDownFilter, label: "Critical",         count: criticalCount,  accent: (criticalCount > 0 ? "crimson" : "green") as "crimson" | "green", subtext: "Priority 1" },
-    { filter: "warning" as DrillDownFilter,  label: "Warning",          count: warningCount,   accent: (warningCount > 0 ? "gold" : "green") as "gold" | "green",      subtext: "Priority 2+" },
-    { filter: "resolved" as DrillDownFilter, label: "Resolved",         count: resolvedCount,  accent: (resolvedCount > 0 ? "green" : "neutral") as "green" | "neutral" },
+    { filter: "at_risk" as DrillDownFilter,      label: "Clients at Risk", count: clientsWithActiveAlerts,     accent: (clientsWithActiveAlerts > 0 ? "crimson" : "green") as "crimson" | "green" },
+    { filter: "critical" as DrillDownFilter,     label: "Critical",         count: criticalCount,      accent: (criticalCount > 0 ? "crimson" : "green") as "crimson" | "green", subtext: "Priority 1" },
+    { filter: "warning" as DrillDownFilter,      label: "Warning",          count: warningCount,       accent: (warningCount > 0 ? "gold" : "green") as "gold" | "green",      subtext: "Priority 2+" },
+    { filter: "intervention" as DrillDownFilter, label: "Intervention",     count: interventionCount,  accent: (interventionCount > 0 ? "gold" : "neutral") as "gold" | "neutral" },
+    { filter: "resolved" as DrillDownFilter,     label: "Resolved",         count: resolvedCount,      accent: (resolvedCount > 0 ? "green" : "neutral") as "green" | "neutral" },
   ];
 
   const todayDate = new Date().toLocaleDateString("en-US", {
@@ -201,7 +211,7 @@ export default async function CoachAlertsPage() {
         style={{ background: "#0A0A0A", padding: "6px 18px" }}
       >
         <p style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic", color: "#4A3F2A" }}>
-          {todayDate} — {clientsAtRisk} client{clientsAtRisk !== 1 ? "s" : ""} at risk · {totalActive} active signal{totalActive !== 1 ? "s" : ""}
+          {todayDate} — {clientsWithActiveAlerts} client{clientsWithActiveAlerts !== 1 ? "s" : ""} at risk · {totalActive} active signal{totalActive !== 1 ? "s" : ""}
         </p>
       </div>
 

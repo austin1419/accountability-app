@@ -10,6 +10,7 @@
 
 import { getCoachDashboard } from "@/lib/supabase/queries/getCoachDashboard";
 import type { CoachAlert } from "@/lib/supabase/queries/getCoachDashboard";
+import { resolveCoachId } from "@/lib/coach/resolveCoachId";
 
 import { AmbientBar } from "@/components/coach/AmbientBar";
 import { RosterScorecard } from "@/components/coach/RosterScorecard";
@@ -21,12 +22,11 @@ import { ClientWinCard } from "@/components/coach/ClientWinCard";
 
 export const dynamic = "force-dynamic";
 
-const TEMP_COACH_ID = "fb4bb26f-434e-4511-aa1e-b4c34146f510";
-
 // ── Page ─────────────────────────────────────────────────────────
 
 export default async function CoachDashboardPage() {
-  const dashboard = await getCoachDashboard(TEMP_COACH_ID);
+  const coachId = await resolveCoachId();
+  const dashboard = await getCoachDashboard(coachId);
   const { roster_snapshot, alerts, counts } = dashboard;
 
   // Map payload field names to design names

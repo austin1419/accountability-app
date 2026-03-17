@@ -218,7 +218,7 @@ export function computeCoachDashboardMetrics(input: {
     criticalAlerts: activeAlerts.filter((a) => CRITICAL_ALERT_TYPES.has(a.alert_type)).length,
     warningAlerts: activeAlerts.filter((a) => !CRITICAL_ALERT_TYPES.has(a.alert_type)).length,
     interventionsToday: alertStates.filter(
-      (a) => a.status === "action_taken" && a.intervention_type != null && isToday(a.updated_at),
+      (a) => (a.status === "action_taken" || a.status === "intervention") && a.intervention_type != null && isToday(a.updated_at),
     ).length,
     resolvedToday: alertStates.filter(
       (a) => a.status === "resolved" && isToday(a.resolved_at),

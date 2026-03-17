@@ -25,6 +25,8 @@ import { getClientTimeline } from "@/lib/coach/timeline/getClientTimeline";
 import { ClientTimeline } from "@/components/coach/timeline/ClientTimeline";
 import { detectBehaviorPatterns } from "@/lib/coach/patterns/detectBehaviorPatterns";
 import { PatternInsightCard } from "@/components/coach/patterns/PatternInsightCard";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { WeightHistoryChart } from "@/components/coach/WeightHistoryChart";
 
 export const dynamic = "force-dynamic";
 
@@ -68,12 +70,24 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [client, timelineEvents] = await Promise.all([
+  const supabase = createAdminClient();
+  const [client, timelineEvents, weightLogsRes] = await Promise.all([
     fetchClientDetail(id),
     getClientTimeline(id),
+    supabase
+      .from("weight_logs")
+      .select("weight, logged_at")
+      .eq("user_id", id)
+      .order("logged_at", { ascending: true })
+      .limit(60),
   ]);
 
   if (!client) notFound();
+
+  const weightHistory = (weightLogsRes.data ?? []).map((w) => ({
+    date: w.logged_at,
+    weight: Number(w.weight),
+  }));
 
   const behaviorPatterns = detectBehaviorPatterns({
     events: timelineEvents,
@@ -407,15 +421,8 @@ export default async function ClientDetailPage({
                   )}
                 </div>
 
-                {/* Chart placeholder */}
-                <div className="border border-[#1A1A1A] rounded-[5px] bg-[#0A0A0A] py-8 px-4 text-center">
-                  <p className="text-[#4A3F2A]" style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", letterSpacing: "0.08em" }}>
-                    WEIGHT HISTORY CHART
-                  </p>
-                  <p className="text-[#2A2A2A] mt-1" style={{ fontFamily: "'EB Garamond', serif", fontSize: "10px", fontStyle: "italic" }}>
-                    Coming soon
-                  </p>
-                </div>
+                {/* Weight history chart */}
+                <WeightHistoryChart data={weightHistory} />
               </div>
             ) : (
               <p className="text-[#807868] mt-3" style={{ fontFamily: "'EB Garamond', serif", fontSize: "12px", fontStyle: "italic" }}>

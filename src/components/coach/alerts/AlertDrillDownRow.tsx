@@ -25,6 +25,7 @@ function actionLabel(status: AlertStatus): { text: string; color: string } {
     case "reviewed":
       return { text: "Act Now →", color: "#F4EEE4" };
     case "action_taken":
+    case "intervention":
       return { text: "Follow Up →", color: "#B8933A" };
     case "resolved":
       return { text: "View →", color: "#1D9E75" };

@@ -8,10 +8,8 @@
 // Phase 3: Priority Strip, Attention Queue, Recent Interventions, Follow-Ups Due
 // ─────────────────────────────────────────────
 
-import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { createAdminClient } from "@/lib/supabase-admin";
 import { getCoachDashboardData } from "@/lib/coach/dashboard/getCoachDashboardData";
+import { resolveCoachId } from "@/lib/coach/resolveCoachId";
 import type { DashboardAlert, DashboardClient, PriorityItem, RecentIntervention, FollowUpDue, PillarBreakdown, DailyCompliance, CoachInsight } from "@/lib/coach/dashboard/getCoachDashboardData";
 
 import { AmbientBar } from "@/components/coach/AmbientBar";
@@ -22,25 +20,6 @@ export const dynamic = "force-dynamic";
 
 const cinzel = "'Cinzel', serif";
 const ebGaramond = "'EB Garamond', serif";
-
-// ── Resolve coach ID (same auth pattern as existing pages) ───────
-
-async function resolveCoachId(): Promise<string> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/coach/login");
-
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("users")
-    .select("id")
-    .eq("auth_id", user.id)
-    .eq("role", "coach")
-    .maybeSingle();
-
-  if (!data) redirect("/login");
-  return data.id;
-}
 
 // ── Display helpers ──────────────────────────────────────────────
 

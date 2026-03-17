@@ -80,6 +80,24 @@ function getActions(currentStatus: AlertStatus): ActionDef[] {
     case "action_taken":
       return [
         {
+          label: "Intervention",
+          nextStatus: "intervention",
+          style: { color: "#B8933A", borderColor: "#2A2010", hoverBg: "rgba(184,147,58,0.08)" },
+        },
+        {
+          label: "Resolve",
+          nextStatus: "resolved",
+          style: { color: "#1D9E75", borderColor: "#0D3A25", hoverBg: "rgba(29,158,117,0.08)" },
+        },
+        {
+          label: "Reopen",
+          nextStatus: "new",
+          style: { color: "#807868", borderColor: "#1A1A1A", hoverBg: "rgba(255,255,255,0.02)" },
+        },
+      ];
+    case "intervention":
+      return [
+        {
           label: "Resolve",
           nextStatus: "resolved",
           style: { color: "#1D9E75", borderColor: "#0D3A25", hoverBg: "rgba(29,158,117,0.08)" },

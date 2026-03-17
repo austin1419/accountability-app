@@ -8,7 +8,7 @@
 import { AlertDrillDownRow } from "./AlertDrillDownRow";
 import type { DrillDownRowData } from "./AlertDrillDownRow";
 
-export type DrillDownFilter = "at_risk" | "critical" | "warning" | "resolved";
+export type DrillDownFilter = "at_risk" | "critical" | "warning" | "intervention" | "resolved";
 
 interface AlertDrillDownPanelProps {
   filter: DrillDownFilter;
@@ -17,24 +17,27 @@ interface AlertDrillDownPanelProps {
 }
 
 const filterTitles: Record<DrillDownFilter, string> = {
-  at_risk:  "Clients at Risk",
-  critical: "Critical Signals",
-  warning:  "Warning Signals",
-  resolved: "Resolved Today",
+  at_risk:      "Clients at Risk",
+  critical:     "Critical Signals",
+  warning:      "Warning Signals",
+  intervention: "Interventions",
+  resolved:     "Resolved Today",
 };
 
 const filterEmptyMessages: Record<DrillDownFilter, string> = {
-  at_risk:  "No clients currently at risk.",
-  critical: "No critical signals active.",
-  warning:  "No warning signals active.",
-  resolved: "No alerts resolved today.",
+  at_risk:      "No clients currently at risk.",
+  critical:     "No critical signals active.",
+  warning:      "No warning signals active.",
+  intervention: "No active interventions.",
+  resolved:     "No alerts resolved today.",
 };
 
 const filterFooterLinks: Record<DrillDownFilter, { label: string; href: string }> = {
-  at_risk:  { label: "View all client profiles →",    href: "/coach/clients" },
-  critical: { label: "View full alert history →",      href: "/coach/alerts" },
-  warning:  { label: "View all warning alerts →",      href: "/coach/alerts" },
-  resolved: { label: "View full resolved history →",   href: "/coach/alerts" },
+  at_risk:      { label: "View all client profiles →",    href: "/coach/clients" },
+  critical:     { label: "View full alert history →",      href: "/coach/alerts" },
+  warning:      { label: "View all warning alerts →",      href: "/coach/alerts" },
+  intervention: { label: "View all interventions →",       href: "/coach/alerts" },
+  resolved:     { label: "View full resolved history →",   href: "/coach/alerts" },
 };
 
 const cinzel = "'Cinzel', serif";
