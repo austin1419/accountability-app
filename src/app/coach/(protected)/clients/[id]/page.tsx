@@ -82,6 +82,20 @@ export default async function ClientDetailPage({
       .limit(60),
   ]);
 
+  // coach_notes not in generated types — fetch separately
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lastNoteRes = await (supabase as any)
+    .from("coach_notes")
+    .select("created_at, note_type")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const lastNoteRow = (lastNoteRes.data as { created_at: string; note_type: string }[] | null)?.[0] ?? null;
+  const lastTouchDaysAgo = lastNoteRow
+    ? Math.floor((Date.now() - new Date(lastNoteRow.created_at).getTime()) / 86400000)
+    : null;
+
   if (!client) notFound();
 
   const weightHistory = (weightLogsRes.data ?? []).map((w) => ({
@@ -172,8 +186,33 @@ export default async function ClientDetailPage({
               )}
             </div>
 
+            {/* Last touch + quick actions */}
+            <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-[#1A1A1A]">
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: "6px", fontWeight: 700, letterSpacing: "0.08em", color: "#4A3F2A", textTransform: "uppercase" as const }}>
+                Last Note:
+              </span>
+              <span style={{ fontFamily: "'EB Garamond', serif", fontSize: "11px", fontStyle: "italic", color: lastTouchDaysAgo === null ? "#4A3F2A" : lastTouchDaysAgo <= 3 ? "#1D9E75" : lastTouchDaysAgo <= 7 ? "#B8933A" : "#7A1E1E" }}>
+                {lastTouchDaysAgo === null ? "No notes yet" : lastTouchDaysAgo === 0 ? "Today" : `${lastTouchDaysAgo}d ago`}
+              </span>
+              <div className="flex-1" />
+              <a
+                href={`/coach/notes?client=${id}`}
+                className="no-underline rounded border uppercase"
+                style={{ fontFamily: "'Cinzel', serif", fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 7px", color: "#B8933A", borderColor: "#2A2010", cursor: "pointer" }}
+              >
+                + Note
+              </a>
+              <a
+                href={`/coach/reports?client=${id}`}
+                className="no-underline rounded border uppercase"
+                style={{ fontFamily: "'Cinzel', serif", fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 7px", color: "#807868", borderColor: "#1A1A1A", cursor: "pointer" }}
+              >
+                Report
+              </a>
+            </div>
+
             {/* Compliance summary */}
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1A1A1A]">
+            <div className="flex items-center gap-4 mt-2.5 pt-2.5 border-t border-[#1A1A1A]">
               {[
                 { label: "TODAY", pct: client.todayPercent },
                 { label: "7-DAY", pct: client.weekPercent },

@@ -122,19 +122,42 @@ function getActions(currentStatus: AlertStatus): ActionDef[] {
 export function AlertCardActions({ clientId, alertType, currentStatus }: AlertCardActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
+  const [showResolveForm, setShowResolveForm] = useState(false);
   const [interventionType, setInterventionType] = useState<InterventionType>("message_client");
   const [interventionNote, setInterventionNote] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
+  const [resolveNote, setResolveNote] = useState("");
 
   const actions = getActions(currentStatus);
 
   function handleClick(action: ActionDef) {
     if (action.opensForm) {
       setShowForm(true);
+      setShowResolveForm(false);
+      return;
+    }
+    if (action.nextStatus === "resolved") {
+      setShowResolveForm(true);
+      setShowForm(false);
       return;
     }
     startTransition(async () => {
       await updateAlertStatus(clientId, alertType, action.nextStatus);
+    });
+  }
+
+  function handleResolve() {
+    if (!resolveNote.trim()) return;
+    startTransition(async () => {
+      await updateAlertIntervention(clientId, alertType, {
+        interventionType: "other",
+        interventionNote: resolveNote.trim(),
+        followUpDate: null,
+      });
+      // Then resolve
+      await updateAlertStatus(clientId, alertType, "resolved");
+      setShowResolveForm(false);
+      setResolveNote("");
     });
   }
 
@@ -306,6 +329,88 @@ export function AlertCardActions({ clientId, alertType, currentStatus }: AlertCa
                 e.preventDefault();
                 e.stopPropagation();
                 setShowForm(false);
+              }}
+              className="rounded border uppercase transition-colors"
+              style={{
+                fontFamily: cinzel,
+                fontSize: "7px",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: "#4A3F2A",
+                borderColor: "#1A1A1A",
+                background: "transparent",
+                padding: "4px 10px",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Resolve form — requires a note */}
+      {showResolveForm && (
+        <div
+          className="rounded-[5px] border border-[#0D3A25] mt-1"
+          style={{ background: "rgba(29,158,117,0.04)", padding: "10px 12px" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span
+            className="uppercase block mb-2"
+            style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, letterSpacing: "0.1em", color: "#1D9E75" }}
+          >
+            Resolve — What was done?
+          </span>
+
+          <textarea
+            value={resolveNote}
+            onChange={(e) => setResolveNote(e.target.value)}
+            rows={2}
+            placeholder="Brief note on resolution (required)"
+            className="w-full rounded border border-[#1A1A1A] mb-2 resize-none"
+            style={{
+              fontFamily: ebGaramond,
+              fontSize: "11px",
+              color: "#DDD5C0",
+              background: "#0D0D0D",
+              padding: "5px 8px",
+              outline: "none",
+            }}
+          />
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={isPending || !resolveNote.trim()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleResolve();
+              }}
+              className="rounded border uppercase transition-colors disabled:opacity-50"
+              style={{
+                fontFamily: cinzel,
+                fontSize: "7px",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: "#1D9E75",
+                borderColor: "#0D3A25",
+                background: "rgba(29,158,117,0.08)",
+                padding: "4px 10px",
+                cursor: isPending || !resolveNote.trim() ? "not-allowed" : "pointer",
+              }}
+            >
+              {isPending ? "Resolving..." : "Confirm Resolve"}
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowResolveForm(false);
+                setResolveNote("");
               }}
               className="rounded border uppercase transition-colors"
               style={{

@@ -111,13 +111,91 @@ export default async function CoachDashboardPage() {
       {/* ── Content ──────────────────────────────── */}
       <div style={{ padding: "12px 22px 24px" }}>
 
+        {/* ══ TOP 3 — REQUIRES ATTENTION ══════════════════════ */}
+        {(() => {
+          // Build top 3 from: gone dark > critical > declining > longest since touch
+          type Top3Item = { clientId: string; name: string; reason: string; actionLabel: string; actionHref: string; severity: number; accent: string };
+          const scored: Top3Item[] = [];
+          const seen = new Set<string>();
+
+          // 1) Follow-ups overdue
+          for (const fu of followUpsDue) {
+            if (seen.has(fu.clientId)) continue;
+            const overdue = new Date(fu.followUpDate).getTime() < Date.now();
+            if (!overdue) continue;
+            seen.add(fu.clientId);
+            scored.push({ clientId: fu.clientId, name: fu.clientName, reason: "Follow-up overdue — action required", actionLabel: "Handle Now", actionHref: `/coach/clients/${fu.clientId}`, severity: 0, accent: "#7A1E1E" });
+          }
+
+          // 2) Gone dark / critical from attention queue
+          for (const a of attentionQueue) {
+            if (seen.has(a.clientId)) continue;
+            seen.add(a.clientId);
+            const isDark = a.statusLabel === "gone_dark";
+            const isCritical = a.statusLabel === "critical";
+            if (isDark) {
+              scored.push({ clientId: a.clientId, name: a.clientName, reason: `Gone dark — ${a.daysSinceActive ?? "?"}d inactive, no response`, actionLabel: "Reach Out", actionHref: `/coach/clients/${a.clientId}`, severity: 1, accent: "#7A1E1E" });
+            } else if (isCritical) {
+              scored.push({ clientId: a.clientId, name: a.clientName, reason: `Critical — 7-day compliance ${a.sevenDayPct ?? 0}%`, actionLabel: "Intervene", actionHref: `/coach/clients/${a.clientId}`, severity: 2, accent: "#7A1E1E" });
+            } else if (a.sevenDayPct !== null && a.thirtyDayPct !== null && a.sevenDayPct < a.thirtyDayPct - 10) {
+              scored.push({ clientId: a.clientId, name: a.clientName, reason: `Declining — 7d ${a.sevenDayPct}% vs 30d ${a.thirtyDayPct}%`, actionLabel: "Review", actionHref: `/coach/clients/${a.clientId}`, severity: 3, accent: "#B8933A" });
+            }
+          }
+
+          scored.sort((a, b) => a.severity - b.severity);
+          const top3 = scored.slice(0, 3);
+
+          if (top3.length === 0) return null;
+
+          return (
+            <div className="mb-3 rounded-[7px] border" style={{ background: "#0D0D0D", borderColor: "#2A1010", padding: "12px 16px" }}>
+              <div className="flex items-center justify-between mb-2.5">
+                <span style={{ fontFamily: C, fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", color: "#7A1E1E", textTransform: "uppercase" }}>
+                  Top {top3.length} — Handle First
+                </span>
+                <span style={{ fontFamily: G, fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
+                  {kpis.interventionsToday + kpis.resolvedToday} actions completed today
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {top3.map((item, idx) => (
+                  <div key={item.clientId} className="rounded-[5px] border overflow-hidden" style={{ background: "#0A0A0A", borderColor: item.accent === "#7A1E1E" ? "#2A1010" : "#2A2010" }}>
+                    <div className="flex-shrink-0" style={{ height: "3px", background: item.accent }} />
+                    <div style={{ padding: "10px 12px" }}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span style={{ fontFamily: C, fontSize: "10px", fontWeight: 900, color: item.accent, lineHeight: 1 }}>
+                          {idx + 1}
+                        </span>
+                        <span style={{ fontFamily: G, fontSize: "14px", fontWeight: 600, color: "#F4EEE4" }}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <p style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#807868", lineHeight: 1.3, marginBottom: "8px" }}>
+                        {item.reason}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <a href={item.actionHref} className="no-underline rounded-[3px] border uppercase" style={{ fontFamily: C, fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em", padding: "4px 10px", color: item.accent, borderColor: item.accent === "#7A1E1E" ? "#2A1010" : "#2A2010", background: item.accent === "#7A1E1E" ? "rgba(122,30,30,0.12)" : "rgba(184,147,58,0.08)", cursor: "pointer" }}>
+                          {item.actionLabel} →
+                        </a>
+                        <a href={`/coach/notes?client=${item.clientId}`} className="no-underline rounded-[3px] border uppercase" style={{ fontFamily: C, fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em", padding: "4px 10px", color: "#4A3F2A", borderColor: "#1A1A1A", cursor: "pointer" }}>
+                          Note
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── KPI Strip ──────────────────────────── */}
         <div className="grid grid-cols-5 gap-2 mb-3">
           <KPI label="Clients at Risk" sub="need action today" value={kpis.clientsAtRisk} accent="crimson" />
           <KPI label="Critical Alerts" sub="priority 1" value={kpis.criticalAlerts} accent="crimson-dim" />
           <KPI label="Warning Alerts" sub="priority 2+" value={kpis.warningAlerts} accent="gold" />
-          <KPI label="Interventions Today" sub="actions logged" value={kpis.interventionsToday} accent="green" />
-          <KPI label="Resolved Today" sub="closed out" value={kpis.resolvedToday} accent="neutral" />
+          <KPI label="Actions Today" sub={`${kpis.interventionsToday} intervene · ${kpis.resolvedToday} resolved`} value={kpis.interventionsToday + kpis.resolvedToday} accent="green" />
+          <KPI label="Follow-Ups" sub={followUpsDue.length > 0 ? `${followUpsDue.length} pending` : "all clear"} value={followUpsDue.length} accent={followUpsDue.length > 0 ? "gold" : "neutral"} />
         </div>
 
         {/* ── Roster Health Bar ──────────────────── */}
@@ -377,6 +455,9 @@ function AlertCard({ alert: a }: { alert: DashboardAlert }) {
           </a>
           <a href={`/coach/clients/${a.clientId}`} className="no-underline rounded-[3px] border text-center uppercase" style={{ fontFamily: C, fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.1em", padding: "4px 10px", background: "transparent", borderColor: "#1A1A1A", color: "#3A3020", cursor: "pointer" }}>
             View
+          </a>
+          <a href={`/coach/notes?client=${a.clientId}`} className="no-underline rounded-[3px] border text-center uppercase" style={{ fontFamily: C, fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.1em", padding: "4px 10px", background: "transparent", borderColor: "#1A1A1A", color: "#3A3020", cursor: "pointer" }}>
+            Note
           </a>
         </div>
       </div>

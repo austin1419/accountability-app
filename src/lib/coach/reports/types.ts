@@ -19,6 +19,13 @@ export interface ReportSignal {
   text: string;
 }
 
+export interface WeightPoint {
+  date: string;
+  weight: number;
+}
+
+export type StatusLabel = "thriving" | "on_track" | "needs_attention" | "at_risk" | "critical";
+
 export interface ClientReportData {
   clientId: string;
   clientName: string;
@@ -38,9 +45,27 @@ export interface ClientReportData {
     unit: string;
   }[];
 
+  // Status
+  statusLabel: StatusLabel;
+  statusHeadline: string;
+  daysSinceActive: number | null;
+
+  // Compliance
+  todayPct: number | null;
+  sevenDayPct: number;
   thirtyDayPct: number;
   weeklyTrend: ReportDailyCompliance[];
+  thirtyDayTrend: ReportDailyCompliance[];
   pillars: ReportPillar[];
 
+  // Body metrics
+  weightHistory: WeightPoint[];
+  currentWeight: number | null;
+  currentBodyFat: number | null;
+  currentSmm: number | null;
+
+  // Signals + insights
   signals: ReportSignal[];
+  wins: string[];
+  focusAreas: string[];
 }

@@ -225,16 +225,60 @@ export default async function CoachAlertsPage() {
         {clientGroups.length === 0 ? (
           <EmptySection message="No active alerts. All clients above threshold." accent="green" />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px] mb-6">
-            {clientGroups.map((group) => (
-              <ClientRiskCard
-                key={group.clientId}
-                clientId={group.clientId}
-                clientName={group.clientName}
-                activeAlerts={group.activeAlerts}
-                resolvedTodayAlerts={group.resolvedTodayAlerts}
-              />
-            ))}
+          <div className="space-y-4 mb-6">
+            {/* Critical clients (have at least one priority-1 alert) */}
+            {clientGroups.filter((g) => g.criticalCount > 0).length > 0 && (
+              <>
+                <SeverityHeader label="Critical" count={clientGroups.filter((g) => g.criticalCount > 0).length} color="#7A1E1E" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px]">
+                  {clientGroups.filter((g) => g.criticalCount > 0).map((group) => (
+                    <ClientRiskCard
+                      key={group.clientId}
+                      clientId={group.clientId}
+                      clientName={group.clientName}
+                      activeAlerts={group.activeAlerts}
+                      resolvedTodayAlerts={group.resolvedTodayAlerts}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Warning clients (no critical, but have warnings) */}
+            {clientGroups.filter((g) => g.criticalCount === 0 && g.warningCount > 0).length > 0 && (
+              <>
+                <SeverityHeader label="Warning" count={clientGroups.filter((g) => g.criticalCount === 0 && g.warningCount > 0).length} color="#B8933A" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px]">
+                  {clientGroups.filter((g) => g.criticalCount === 0 && g.warningCount > 0).map((group) => (
+                    <ClientRiskCard
+                      key={group.clientId}
+                      clientId={group.clientId}
+                      clientName={group.clientName}
+                      activeAlerts={group.activeAlerts}
+                      resolvedTodayAlerts={group.resolvedTodayAlerts}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Resolved-only clients (no active, only resolved today) */}
+            {clientGroups.filter((g) => g.activeAlerts.length === 0 && g.resolvedTodayAlerts.length > 0).length > 0 && (
+              <>
+                <SeverityHeader label="Resolved Today" count={clientGroups.filter((g) => g.activeAlerts.length === 0).length} color="#1D9E75" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px]">
+                  {clientGroups.filter((g) => g.activeAlerts.length === 0 && g.resolvedTodayAlerts.length > 0).map((group) => (
+                    <ClientRiskCard
+                      key={group.clientId}
+                      clientId={group.clientId}
+                      clientName={group.clientName}
+                      activeAlerts={group.activeAlerts}
+                      resolvedTodayAlerts={group.resolvedTodayAlerts}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -247,6 +291,21 @@ export default async function CoachAlertsPage() {
 }
 
 // ── Sub-components ───────────────────────────────────────────────
+
+function SeverityHeader({ label, count, color }: { label: string; count: number; color: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <span className="rounded-full" style={{ width: "6px", height: "6px", background: color, flexShrink: 0 }} />
+      <span style={{ fontFamily: "'Cinzel', serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color }}>
+        {label}
+      </span>
+      <span style={{ fontFamily: "'Cinzel', serif", fontSize: "7px", fontWeight: 700, color: "#4A3F2A" }}>
+        {count} client{count !== 1 ? "s" : ""}
+      </span>
+      <div className="flex-1 h-px" style={{ background: "#1A1A1A" }} />
+    </div>
+  );
+}
 
 function EmptySection({ message, accent = "default" }: { message: string; accent?: "green" | "default" }) {
   const borderClass = accent === "green" ? "border-[#0D3A25]" : "border-[#1A1A1A]";
