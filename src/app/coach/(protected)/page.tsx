@@ -12,6 +12,11 @@ import type { DashboardAlert, PillarBreakdown } from "@/lib/coach/dashboard/getC
 import { AmbientBar } from "@/components/coach/AmbientBar";
 import { RosterScorecard } from "@/components/coach/RosterScorecard";
 
+/* Prototype surface tokens */
+const BG_TOPBAR = "#0A0A0A";
+const BG_PAGE = "#111111";
+const BORDER = "#1A1A1A";
+
 export const dynamic = "force-dynamic";
 
 const C = "'Cinzel', serif";
@@ -61,13 +66,13 @@ export default async function CoachDashboardPage() {
   );
 
   return (
-    <div className="-mx-6 -mt-6 lg:-mx-8">
+    <div className="-mx-6 -mt-6 lg:-mx-8" style={{ background: BG_PAGE }}>
 
       {/* ── Ambient Bar ──────────────────────────── */}
       <AmbientBar thriving={roster.thriving} atRisk={roster.atRisk} critical={roster.critical} total={roster.total} />
 
       {/* ── Topbar ───────────────────────────────── */}
-      <div className="flex items-center justify-between" style={{ background: "#0A0A0A", borderBottom: "1px solid #1A1A1A", padding: "11px 22px" }}>
+      <div className="flex items-center justify-between" style={{ background: BG_TOPBAR, borderBottom: `1px solid ${BORDER}`, padding: "11px 22px" }}>
         <div>
           <div style={{ fontFamily: C, fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em", color: "#F4EEE4" }}>War Room</div>
           <div style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#3A3020", marginTop: "1px" }}>
@@ -83,7 +88,7 @@ export default async function CoachDashboardPage() {
       </div>
 
       {/* ── Priority Strip ───────────────────────── */}
-      <div className="flex items-center overflow-hidden" style={{ background: "#060606", borderBottom: "1px solid #1A1A1A", padding: "5px 22px", gap: "10px" }}>
+      <div className="flex items-center overflow-hidden" style={{ background: "#060606", borderBottom: `1px solid ${BORDER}`, padding: "5px 22px", gap: "10px" }}>
         <span style={{ fontFamily: C, fontSize: "6px", fontWeight: 700, letterSpacing: "0.2em", color: "#2A2010", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>Now</span>
         <div style={{ width: "1px", height: "12px", background: "#1A1A1A", flexShrink: 0 }} />
         {priorityItems.length === 0 ? (
@@ -104,10 +109,10 @@ export default async function CoachDashboardPage() {
       </div>
 
       {/* ── Content ──────────────────────────────── */}
-      <div style={{ padding: "16px 22px 32px" }}>
+      <div style={{ padding: "12px 22px 24px" }}>
 
         {/* ── KPI Strip ──────────────────────────── */}
-        <div className="grid grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-5 gap-2 mb-3">
           <KPI label="Clients at Risk" sub="need action today" value={kpis.clientsAtRisk} accent="crimson" />
           <KPI label="Critical Alerts" sub="priority 1" value={kpis.criticalAlerts} accent="crimson-dim" />
           <KPI label="Warning Alerts" sub="priority 2+" value={kpis.warningAlerts} accent="gold" />
@@ -116,8 +121,8 @@ export default async function CoachDashboardPage() {
         </div>
 
         {/* ── Roster Health Bar ──────────────────── */}
-        <div className="mb-3.5">
-          <div className="flex h-[4px] rounded-[3px] overflow-hidden gap-[1px] mb-1.5">
+        <div className="mb-3">
+          <div className="flex h-[4px] rounded-[3px] overflow-hidden gap-[1px] mb-1">
             {roster.thriving > 0 && <div style={{ flex: roster.thriving, background: "#1D9E75" }} />}
             {roster.atRisk > 0 && <div style={{ flex: roster.atRisk, background: "#B8933A" }} />}
             {roster.critical > 0 && <div style={{ flex: roster.critical, background: "#7A1E1E" }} />}
@@ -134,7 +139,7 @@ export default async function CoachDashboardPage() {
         <div style={{ display: "grid", gridTemplateColumns: "65fr 35fr", gap: "12px", alignItems: "start" }}>
 
           {/* ── LEFT COLUMN ──────────────────────── */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-[10px]">
 
             {/* Attention Queue */}
             <Panel>
@@ -142,7 +147,7 @@ export default async function CoachDashboardPage() {
               {attentionQueue.length === 0 ? (
                 <Empty msg="No clients need attention right now." accent="green" />
               ) : (
-                <div className="flex flex-col gap-[7px]">
+                <div className="flex flex-col gap-[5px]">
                   {attentionQueue.map((a, i) => <AlertCard key={`${a.clientId}-${a.alertType}-${i}`} alert={a} />)}
                   {attentionQueue.length > 4 && (
                     <p className="text-center" style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#2A2010", padding: "4px 0" }}>
@@ -211,7 +216,7 @@ export default async function CoachDashboardPage() {
           </div>
 
           {/* ── RIGHT COLUMN ─────────────────────── */}
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-[8px]">
 
             {/* Roster Health */}
             <Panel>
@@ -229,7 +234,7 @@ export default async function CoachDashboardPage() {
                     const pct = c.thirtyDayPct ?? 0;
                     const col = cColor(c.thirtyDayPct);
                     return (
-                      <div key={c.id} className="flex items-center gap-2 mb-1.5">
+                      <div key={c.id} className="flex items-center gap-2 mb-1">
                         <span className="truncate" style={{ fontFamily: G, fontSize: "12px", color: "#DDD5C0", minWidth: "90px" }}>{c.name}</span>
                         <div className="flex-1 h-[3px] rounded-[2px] overflow-hidden" style={{ background: "#1A1A1A" }}>
                           <div className="h-full rounded-[2px]" style={{ width: `${Math.min(pct, 100)}%`, background: col }} />
@@ -252,7 +257,7 @@ export default async function CoachDashboardPage() {
             {/* Pillar Breakdown */}
             <Panel>
               <SHdr title="Pillar Breakdown" subtitle="roster avg" />
-              <div className="grid grid-cols-4 gap-1.5 mt-2.5">
+              <div className="grid grid-cols-4 gap-1.5 mt-2">
                 {pillarBreakdown.map((p) => {
                   const pct = p.avgPct;
                   const has = pct !== null && p.taskCount > 0;
@@ -279,7 +284,7 @@ export default async function CoachDashboardPage() {
             {/* Compliance Trend */}
             <Panel>
               <SHdr title="Compliance Trend" subtitle="this week" />
-              <div className="grid grid-cols-7 gap-[3px] mt-2.5">
+              <div className="grid grid-cols-7 gap-[3px] mt-2">
                 {weeklyTrend.map((d) => {
                   const pct = d.avgPct;
                   const has = pct !== null;
@@ -336,10 +341,10 @@ function KPI({ label, sub, value, accent }: { label: string; sub: string; value:
   };
   const c = m[accent];
   return (
-    <div className="rounded-[6px] border" style={{ background: c.bg, borderColor: c.border, padding: "12px 14px" }}>
-      <div style={{ fontFamily: C, fontSize: "6px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: c.label, marginBottom: "5px" }}>{label}</div>
-      <div style={{ fontFamily: C, fontSize: "26px", fontWeight: 900, lineHeight: 1, color: c.text }}>{value}</div>
-      <div style={{ fontFamily: G, fontSize: "9px", fontStyle: "italic", color: c.sub, marginTop: "2px" }}>{sub}</div>
+    <div className="rounded-[6px] border" style={{ background: c.bg, borderColor: c.border, padding: "8px 12px" }}>
+      <div style={{ fontFamily: C, fontSize: "6px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: c.label, marginBottom: "3px" }}>{label}</div>
+      <div style={{ fontFamily: C, fontSize: "22px", fontWeight: 900, lineHeight: 1, color: c.text }}>{value}</div>
+      <div style={{ fontFamily: G, fontSize: "8px", fontStyle: "italic", color: c.sub, marginTop: "1px" }}>{sub}</div>
     </div>
   );
 }
@@ -350,19 +355,21 @@ function AlertCard({ alert: a }: { alert: DashboardAlert }) {
   return (
     <div className="flex rounded-[5px] border overflow-hidden" style={{ background: "#0A0A0A", borderColor: "#1A1A1A" }}>
       <div className="flex-shrink-0" style={{ width: "3px", background: sc }} />
-      <div className="flex-1 flex items-start gap-3" style={{ padding: "10px 13px" }}>
+      <div className="flex-1 flex items-start gap-3" style={{ padding: "8px 11px" }}>
         <div className="flex-1 min-w-0">
-          <div style={{ fontFamily: G, fontSize: "14px", fontWeight: 600, color: "#F4EEE4", marginBottom: "3px" }}>{a.clientName}</div>
-          {a.goalName && <div style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#4A3F2A", marginBottom: "5px" }}>{a.goalName}{a.goalCategory ? ` · ${a.goalCategory}` : ""}</div>}
-          <div className="flex flex-wrap gap-[3px] mb-1.5">
+          <div style={{ marginBottom: "2px" }}>
+            <span style={{ fontFamily: G, fontSize: "14px", fontWeight: 600, color: "#F4EEE4" }}>{a.clientName}</span>
+            {a.goalName && <span style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#4A3F2A", marginLeft: "6px" }}>{a.goalName}{a.goalCategory ? ` · ${a.goalCategory}` : ""}</span>}
+          </div>
+          <div className="flex flex-wrap gap-[3px] mb-1">
             {a.daysSinceActive !== null && a.daysSinceActive >= 3 && <Chip text={`${a.daysSinceActive} Days`} accent="r" />}
             {a.statusLabel === "gone_dark" && <Chip text="Gone Dark" accent="r" />}
             {a.todayPct !== null && <Chip text={`${a.todayPct}% Today`} accent={a.todayPct >= 70 ? "gr" : a.todayPct >= 40 ? "g" : "r"} />}
             {a.sevenDayPct !== null && <Chip text={`${a.sevenDayPct}% 7-Day`} accent={a.sevenDayPct >= 70 ? "gr" : a.sevenDayPct >= 40 ? "g" : "r"} />}
             {a.thirtyDayPct !== null && <Chip text={`${a.thirtyDayPct}% 30-Day`} accent={a.thirtyDayPct >= 70 ? "gr" : a.thirtyDayPct >= 40 ? "g" : "r"} />}
           </div>
-          {a.interventionNote && <div style={{ fontFamily: G, fontSize: "12px", fontStyle: "italic", color: "#807868", lineHeight: 1.4 }}>{a.interventionNote}</div>}
-          <div style={{ fontFamily: C, fontSize: "6px", letterSpacing: "0.08em", color: "#1E1A0A", textTransform: "uppercase", marginTop: "4px" }}>{tl} · {a.status.replace(/_/g, " ")}</div>
+          {a.interventionNote && <div style={{ fontFamily: G, fontSize: "11px", fontStyle: "italic", color: "#807868", lineHeight: 1.3 }}>{a.interventionNote}</div>}
+          <div style={{ fontFamily: C, fontSize: "6px", letterSpacing: "0.08em", color: "#1E1A0A", textTransform: "uppercase", marginTop: "2px" }}>{tl} · {a.status.replace(/_/g, " ")}</div>
         </div>
         <div className="flex-shrink-0 flex flex-col gap-1 pt-0.5">
           <a href={`/coach/clients/${a.clientId}`} className="no-underline rounded-[3px] border text-center uppercase" style={{ fontFamily: C, fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.1em", padding: "4px 10px", whiteSpace: "nowrap", background: sc === "#7A1E1E" ? "rgba(122,30,30,0.12)" : "rgba(184,147,58,0.08)", borderColor: sc, color: sc, cursor: "pointer" }}>
@@ -393,7 +400,7 @@ function Chip({ text, accent }: { text: string; accent: "r" | "g" | "gr" | "d" }
 }
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-[7px] border" style={{ background: "#0D0D0D", borderColor: "#1A1A1A", padding: "14px 16px" }}>{children}</div>;
+  return <div className="rounded-[7px] border" style={{ background: "#0D0D0D", borderColor: "#1A1A1A", padding: "12px 14px" }}>{children}</div>;
 }
 
 function SHdr({ title, badge, badgeAccent, subtitle }: { title: string; badge?: string; badgeAccent?: "crimson" | "gold" | "green"; subtitle?: string }) {
@@ -403,7 +410,7 @@ function SHdr({ title, badge, badgeAccent, subtitle }: { title: string; badge?: 
     green: { color: "#1D9E75", bg: "rgba(29,158,117,0.08)", border: "#0D3A25" },
   };
   return (
-    <div className="flex items-center justify-between mb-2.5">
+    <div className="flex items-center justify-between mb-2">
       <span style={{ fontFamily: C, fontSize: "8px", fontWeight: 700, letterSpacing: "0.2em", color: "#2A2010", textTransform: "uppercase" }}>{title}</span>
       {badge && badgeAccent && (
         <span className="rounded-[3px] border" style={{ fontFamily: C, fontSize: "6px", fontWeight: 700, padding: "1px 6px", ...ba[badgeAccent] }}>{badge}</span>

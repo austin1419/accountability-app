@@ -90,13 +90,14 @@ export async function getCoachDashboardData(
       .in("user_id", clientIds)
       .eq("is_active", true),
 
-    // Task logs for last 30 days
+    // Task logs for last 30 days (override default 1000-row limit)
     supabase
       .from("task_logs")
       .select("user_id, task_id, date, completed")
       .in("user_id", clientIds)
       .gte("date", thirtyDaysAgo)
-      .lte("date", today),
+      .lte("date", today)
+      .limit(10000),
 
     // Alert states for this coach + these clients
     (supabase as unknown as UntypedQuery)

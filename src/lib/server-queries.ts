@@ -428,7 +428,8 @@ export async function fetchAllClientsForCoach(): Promise<CoachClientRow[]> {
       .in("user_id", clientIds)
       .gte("date", monthStart)
       .lte("date", today)
-      .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""]),
+      .in("task_id", allTaskIds.length > 0 ? allTaskIds : [""])
+      .limit(10000),
     supabase
       .from("daily_journal")
       .select("user_id, sleep_hours, felt_rested, protein_hit, hydration_hit, alcohol, trained_today, zone2_cardio, recovery_work, supplements_taken, stress_level, energy_level")
