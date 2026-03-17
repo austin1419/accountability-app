@@ -4,7 +4,7 @@
 // CoachTopBar — sticky top bar for coach content area
 //
 // Pure UI. No data fetching, no Supabase, no context.
-// Receives page title from pathname. Sign out moved to sidebar.
+// Receives page title from pathname.
 // ─────────────────────────────────────────────
 
 import { usePathname } from "next/navigation";
@@ -20,7 +20,7 @@ const routeTitles: { match: string; title: string }[] = [
   { match: "/coach/notes",       title: "Notes" },
   { match: "/coach/reports",     title: "Reports" },
   { match: "/coach/dashboard",   title: "War Room" },
-  { match: "/coach",             title: "Dashboard" },
+  { match: "/coach",             title: "War Room" },
 ];
 
 function deriveTitle(pathname: string): string {
@@ -37,11 +37,11 @@ export function CoachTopBar() {
   return (
     <header
       className="sticky top-0 z-30 flex items-center justify-between"
-      style={{ background: "#0A0A0A", borderBottom: "1px solid #1A1A1A", padding: "10px 22px" }}
+      style={{ background: "#080808", borderBottom: "1px solid #111111", padding: "9px 20px" }}
     >
       <h1
-        className="text-[#F4EEE4]"
-        style={{ fontFamily: cinzel, fontSize: "13px", fontWeight: 700, letterSpacing: "0.1em" }}
+        className="text-[#F4EEE4] uppercase"
+        style={{ fontFamily: cinzel, fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em" }}
       >
         {title}
       </h1>

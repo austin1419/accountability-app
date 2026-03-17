@@ -1,11 +1,8 @@
 // ─────────────────────────────────────────────
-// COACH DASHBOARD — V1 (Phase 1-3)
+// COACH DASHBOARD — War Room
 //
 // Server Component. Fetches all data before render.
 // Uses dedicated dashboard utility, not the RPC.
-//
-// Phase 1/2: Ambient Bar, RosterScorecard, KPI Strip, Roster Health Bar
-// Phase 3: Priority Strip, Attention Queue, Recent Interventions, Follow-Ups Due
 // ─────────────────────────────────────────────
 
 import { getCoachDashboardData } from "@/lib/coach/dashboard/getCoachDashboardData";
@@ -77,14 +74,19 @@ export default async function CoachDashboardPage() {
         total={roster.total}
       />
 
-      {/* ── ZONE 2: Action Bar ───────────────────── */}
+      {/* ── ZONE 2: War Room Header ──────────────── */}
       <div
-        className="flex items-center justify-between border-b border-[#1A1A1A]"
-        style={{ background: "#0A0A0A", padding: "6px 18px" }}
+        className="flex items-center justify-between"
+        style={{ background: "#080808", borderBottom: "1px solid #141414", padding: "8px 20px" }}
       >
-        <p style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: "#4A3F2A" }}>
-          {todayDate} — {roster.total} active client{roster.total !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-4">
+          <p style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: "#3A3020" }}>
+            {todayDate}
+          </p>
+          <span style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, letterSpacing: "0.06em", color: "#4A3F2A" }}>
+            {roster.total} client{roster.total !== 1 ? "s" : ""}
+          </span>
+        </div>
         <div className="flex items-center gap-3">
           <RosterScorecard
             thriving={roster.thriving}
@@ -93,19 +95,22 @@ export default async function CoachDashboardPage() {
           />
           <a
             href="/coach/clients?add=true"
-            className="text-[#F4EEE4] bg-[#B8933A] hover:bg-[#C9A44A] rounded-[5px] transition-colors cursor-pointer uppercase no-underline"
-            style={{ fontFamily: cinzel, fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "7px 14px" }}
+            className="text-[#F4EEE4] bg-[#B8933A] hover:bg-[#C9A44A] rounded-[4px] transition-colors cursor-pointer uppercase no-underline"
+            style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, letterSpacing: "0.08em", padding: "6px 12px" }}
           >
             + Add Client
           </a>
         </div>
       </div>
 
+      {/* ── ZONE 3: Priority Strip ───────────────── */}
+      <PriorityStripSection items={priorityItems} />
+
       {/* ── Page Content ─────────────────────────── */}
-      <div style={{ padding: "18px" }}>
+      <div style={{ padding: "14px 18px 18px" }}>
 
         {/* ── KPI Strip ──────────────────────────── */}
-        <div className="grid grid-cols-5 gap-[9px] mb-6">
+        <div className="grid grid-cols-5 gap-[7px] mb-5">
           <KPICard label="Clients at Risk" value={kpis.clientsAtRisk} accent={kpis.clientsAtRisk > 0 ? "crimson" : "green"} />
           <KPICard label="Critical Alerts" value={kpis.criticalAlerts} accent={kpis.criticalAlerts > 0 ? "crimson" : "green"} />
           <KPICard label="Warning Alerts" value={kpis.warningAlerts} accent={kpis.warningAlerts > 0 ? "gold" : "green"} />
@@ -114,7 +119,7 @@ export default async function CoachDashboardPage() {
         </div>
 
         {/* ── Roster Health Bar ──────────────────── */}
-        <div className="mb-6">
+        <div className="mb-5">
           <RosterHealthBar
             thriving={roster.thriving}
             atRisk={roster.atRisk}
@@ -123,30 +128,25 @@ export default async function CoachDashboardPage() {
           />
         </div>
 
-        {/* ── Priority Strip ─────────────────────── */}
-        <PriorityStripSection items={priorityItems} />
+        {/* ── Two-column: Action Surface + Analytics ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[5fr_2fr] items-start gap-[12px]">
 
-        {/* ── Two-column: Attention Queue + Recent Interventions ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px] mb-4">
-          <AttentionQueueSection items={attentionQueue} />
-          <RecentInterventionsSection items={recentInterventions} />
+          {/* ── LEFT COLUMN: Action Surface ────────── */}
+          <div className="flex flex-col gap-[10px]">
+            <AttentionQueueSection items={attentionQueue} />
+            <RecentInterventionsSection items={recentInterventions} />
+            <FollowUpsDueSection items={followUpsDue} />
+          </div>
+
+          {/* ── RIGHT COLUMN: Signal Sidebar ───────── */}
+          <div className="flex flex-col gap-[8px]">
+            <RosterHealthSection clients={clients} />
+            <PillarBreakdownSection pillars={pillarBreakdown} />
+            <ComplianceTrendSection days={weeklyTrend} />
+            <CoachInsightsSection insights={coachInsights} />
+          </div>
+
         </div>
-
-        {/* ── Two-column: Follow-Ups Due + Roster Health ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px] mb-4">
-          <FollowUpsDueSection items={followUpsDue} />
-          <RosterHealthSection clients={clients} />
-        </div>
-
-        {/* ── Two-column: Pillar Breakdown + Compliance Trend ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-[9px] mb-4">
-          <PillarBreakdownSection pillars={pillarBreakdown} />
-          <ComplianceTrendSection days={weeklyTrend} />
-        </div>
-
-        {/* ── Coach Insights ─────────────────────── */}
-        <CoachInsightsSection insights={coachInsights} />
-
       </div>
     </div>
   );
@@ -160,23 +160,28 @@ export default async function CoachDashboardPage() {
 
 function KPICard({ label, value, accent }: { label: string; value: number; accent: "crimson" | "gold" | "green" | "neutral" }) {
   const colors = {
-    crimson: { text: "#7A1E1E", border: "#2A1010", bg: "rgba(122,30,30,0.10)" },
-    gold:    { text: "#B8933A", border: "#2A2010", bg: "rgba(184,147,58,0.08)" },
-    green:   { text: "#1D9E75", border: "#0D3A25", bg: "rgba(29,158,117,0.08)" },
-    neutral: { text: "#807868", border: "#1A1A1A", bg: "#0D0D0D" },
+    crimson: { text: "#7A1E1E", border: "#2A1010", bg: "rgba(122,30,30,0.06)", glow: "rgba(122,30,30,0.12)" },
+    gold:    { text: "#B8933A", border: "#2A2010", bg: "rgba(184,147,58,0.05)", glow: "rgba(184,147,58,0.10)" },
+    green:   { text: "#1D9E75", border: "#0D3A25", bg: "rgba(29,158,117,0.05)", glow: "rgba(29,158,117,0.10)" },
+    neutral: { text: "#807868", border: "#1A1A1A", bg: "#0A0A0A", glow: "transparent" },
   }[accent];
 
   return (
     <div
-      className="rounded-[7px] border flex flex-col items-center justify-center"
-      style={{ background: colors.bg, borderColor: colors.border, padding: "12px 10px" }}
+      className="rounded-[6px] border flex flex-col items-center justify-center"
+      style={{
+        background: colors.bg,
+        borderColor: colors.border,
+        padding: "14px 8px 10px",
+        boxShadow: value > 0 ? `inset 0 1px 8px ${colors.glow}` : "none",
+      }}
     >
-      <span style={{ fontFamily: cinzel, fontSize: "20px", fontWeight: 900, color: colors.text, lineHeight: 1 }}>
+      <span style={{ fontFamily: cinzel, fontSize: "22px", fontWeight: 900, color: colors.text, lineHeight: 1 }}>
         {value}
       </span>
       <span
-        className="mt-1 uppercase text-center"
-        style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.08em", color: "#807868" }}
+        className="mt-1.5 uppercase text-center leading-tight"
+        style={{ fontFamily: cinzel, fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.08em", color: "#807868" }}
       >
         {label}
       </span>
@@ -190,10 +195,10 @@ function PriorityStripSection({ items }: { items: PriorityItem[] }) {
   if (items.length === 0) {
     return (
       <div
-        className="rounded-[5px] border border-[#0D3A25] mb-4 text-center"
-        style={{ background: "#060606", padding: "8px 18px" }}
+        className="text-center"
+        style={{ background: "#060606", borderBottom: "1px solid #111111", padding: "6px 18px" }}
       >
-        <p style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: "#1D9E75" }}>
+        <p style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#0D3A25" }}>
           No priority alerts right now.
         </p>
       </div>
@@ -202,10 +207,9 @@ function PriorityStripSection({ items }: { items: PriorityItem[] }) {
 
   return (
     <div
-      className="rounded-[5px] border border-[#1A1A1A] mb-4"
-      style={{ background: "#060606", padding: "8px 14px" }}
+      style={{ background: "#060606", borderBottom: "1px solid #111111", padding: "6px 16px" }}
     >
-      <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+      <div className="flex flex-wrap gap-x-5 gap-y-1">
         {items.map((item, idx) => {
           const dotColor = item.alertType === "inactivity_streak" || item.alertType === "compliance_drop"
             ? "#7A1E1E"
@@ -214,20 +218,15 @@ function PriorityStripSection({ items }: { items: PriorityItem[] }) {
             <a
               key={`${item.clientId}-${item.alertType}-${idx}`}
               href={`/coach/clients/${item.clientId}`}
-              className="flex items-center gap-2 no-underline hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1.5 no-underline hover:opacity-80 transition-opacity"
             >
-              <span className="flex-shrink-0 rounded-full" style={{ width: "5px", height: "5px", background: dotColor }} />
+              <span className="flex-shrink-0 rounded-full" style={{ width: "4px", height: "4px", background: dotColor }} />
               <span style={{ fontFamily: ebGaramond, fontSize: "11px", fontWeight: 600, color: "#DDD5C0" }}>
                 {item.clientName}
               </span>
-              <span style={{ fontFamily: ebGaramond, fontSize: "11px", color: "#807868" }}>
-                — {alertTypeLabel(item.alertType)}
+              <span style={{ fontFamily: ebGaramond, fontSize: "10px", color: "#4A3F2A" }}>
+                {alertTypeLabel(item.alertType)}
               </span>
-              {item.coachNote && (
-                <span style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
-                  ({item.coachNote.length > 30 ? item.coachNote.slice(0, 30) + "…" : item.coachNote})
-                </span>
-              )}
             </a>
           );
         })}
@@ -240,22 +239,18 @@ function PriorityStripSection({ items }: { items: PriorityItem[] }) {
 
 function AttentionQueueSection({ items }: { items: DashboardAlert[] }) {
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Attention Queue</SectionLabel>
-
       {items.length === 0 ? (
         <EmptyState message="No clients need attention right now." accent="green" />
       ) : (
-        <div className="flex flex-col gap-[7px] mt-3">
+        <div className="flex flex-col gap-[6px] mt-2.5">
           {items.map((item, idx) => (
             <AttentionRow key={`${item.clientId}-${item.alertType}-${idx}`} alert={item} />
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }
 
@@ -267,65 +262,58 @@ function AttentionRow({ alert }: { alert: DashboardAlert }) {
 
   return (
     <div
-      className="rounded-[5px] border border-[#1A1A1A]"
-      style={{ background: "#111111", borderLeft: `3px solid ${statusColor}`, padding: "8px 10px" }}
+      className="rounded-[5px] border border-[#151515] transition-colors hover:border-[#1E1E1E]"
+      style={{ background: "#0A0A0A", borderLeft: `4px solid ${statusColor}`, padding: "10px 12px" }}
     >
-      {/* Row 1: Name + goal */}
-      <div className="flex items-center justify-between gap-2 mb-0.5">
-        <span className="truncate" style={{ fontFamily: ebGaramond, fontSize: "13px", fontWeight: 600, color: "#DDD5C0" }}>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <span className="truncate" style={{ fontFamily: ebGaramond, fontSize: "13.5px", fontWeight: 600, color: "#DDD5C0" }}>
           {alert.clientName}
         </span>
         <a
           href={`/coach/clients/${alert.clientId}`}
-          className="uppercase no-underline flex-shrink-0 transition-colors hover:text-[#B8933A]"
-          style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, letterSpacing: "0.06em", color: "#F4EEE4" }}
+          className="uppercase no-underline flex-shrink-0 rounded-[3px] border transition-colors hover:text-[#B8933A] hover:border-[#B8933A]"
+          style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, letterSpacing: "0.06em", color: "#F4EEE4", borderColor: "#1A1A1A", padding: "3px 8px" }}
         >
-          Open Client &rarr;
+          Open &rarr;
         </a>
       </div>
 
-      {/* Row 2: Goal + category */}
       {alert.goalName && (
-        <p className="truncate mb-1" style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#807868" }}>
+        <p className="truncate mb-1.5" style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
           {alert.goalName}
-          {alert.goalCategory && (
-            <span style={{ color: "#4A3F2A" }}> · {alert.goalCategory}</span>
-          )}
+          {alert.goalCategory && <span> · {alert.goalCategory}</span>}
         </p>
       )}
 
-      {/* Row 3: Compliance + alert */}
-      <div className="flex items-center gap-3 mb-0.5">
+      <div className="flex items-center gap-2 mb-1.5">
         <ComplianceChip label="T" pct={alert.todayPct} />
         <ComplianceChip label="7d" pct={alert.sevenDayPct} />
         <ComplianceChip label="30d" pct={alert.thirtyDayPct} />
         {alert.daysSinceActive !== null && alert.daysSinceActive >= 3 && (
-          <span style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, color: "#7A1E1E" }}>
+          <span style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, color: "#7A1E1E", letterSpacing: "0.04em" }}>
             {alert.daysSinceActive}d inactive
           </span>
         )}
       </div>
 
-      {/* Row 4: Alert label */}
-      <div className="flex items-center gap-2 mt-1">
+      <div className="flex items-center gap-2 mt-0.5">
         <span
-          className="rounded border uppercase"
+          className="rounded-[3px] border uppercase"
           style={{
-            fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.08em",
-            color: statusColor, borderColor: statusColor, padding: "1px 5px",
+            fontFamily: cinzel, fontSize: "6.5px", fontWeight: 700, letterSpacing: "0.06em",
+            color: statusColor, borderColor: statusColor, padding: "2px 6px",
           }}
         >
           {typeLabel}
         </span>
-        <span style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#4A3F2A" }}>
+        <span className="uppercase" style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#3A3020" }}>
           {alert.status.replace(/_/g, " ")}
         </span>
       </div>
 
-      {/* Intervention note if present */}
       {alert.interventionNote && (
-        <p className="mt-1 truncate" style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
-          Note: {alert.interventionNote}
+        <p className="mt-1.5 truncate" style={{ fontFamily: ebGaramond, fontSize: "10px", fontStyle: "italic", color: "#4A3F2A" }}>
+          {alert.interventionNote}
         </p>
       )}
     </div>
@@ -335,8 +323,11 @@ function AttentionRow({ alert }: { alert: DashboardAlert }) {
 function ComplianceChip({ label, pct }: { label: string; pct: number | null }) {
   const display = pct !== null ? `${pct}%` : "—";
   return (
-    <span style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, color: complianceColor(pct) }}>
-      {label}: {display}
+    <span
+      className="rounded-[3px]"
+      style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, color: complianceColor(pct), letterSpacing: "0.02em", background: "#0D0D0D", padding: "2px 5px" }}
+    >
+      {label}:{display}
     </span>
   );
 }
@@ -345,34 +336,30 @@ function ComplianceChip({ label, pct }: { label: string; pct: number | null }) {
 
 function RecentInterventionsSection({ items }: { items: RecentIntervention[] }) {
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Recent Interventions</SectionLabel>
-
       {items.length === 0 ? (
         <EmptyState message="No interventions recorded today." />
       ) : (
-        <div className="flex flex-col gap-[6px] mt-3">
+        <div className="flex flex-col gap-[5px] mt-2.5">
           {items.map((item, idx) => (
             <a
               key={`${item.clientId}-${idx}`}
               href={`/coach/clients/${item.clientId}`}
-              className="rounded-[5px] border border-[#1A1A1A] no-underline transition-colors hover:border-[#2A2010]"
-              style={{ background: "#111111", borderLeft: "3px solid #B8933A", padding: "7px 10px" }}
+              className="rounded-[5px] border border-[#151515] no-underline transition-colors hover:border-[#1E1E1E]"
+              style={{ background: "#0A0A0A", borderLeft: "3px solid #B8933A", padding: "8px 11px" }}
             >
               <div className="flex items-center justify-between gap-2 mb-0.5">
                 <span className="truncate" style={{ fontFamily: ebGaramond, fontSize: "12px", fontWeight: 600, color: "#DDD5C0" }}>
                   {item.clientName}
                 </span>
-                <span style={{ fontFamily: ebGaramond, fontSize: "9px", color: "#4A3F2A" }}>
+                <span style={{ fontFamily: ebGaramond, fontSize: "9px", color: "#3A3020" }}>
                   {relativeTime(item.updatedAt)}
                 </span>
               </div>
               <span
                 className="uppercase block mb-0.5"
-                style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.08em", color: "#B8933A" }}
+                style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#B8933A" }}
               >
                 {interventionLabels[item.interventionType] ?? item.interventionType}
               </span>
@@ -383,7 +370,7 @@ function RecentInterventionsSection({ items }: { items: RecentIntervention[] }) 
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }
 
@@ -391,16 +378,12 @@ function RecentInterventionsSection({ items }: { items: RecentIntervention[] }) 
 
 function FollowUpsDueSection({ items }: { items: FollowUpDue[] }) {
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Follow-Ups Due</SectionLabel>
-
       {items.length === 0 ? (
         <EmptyState message="No follow-ups due in the next 24 hours." />
       ) : (
-        <div className="flex flex-col gap-[6px] mt-3">
+        <div className="flex flex-col gap-[5px] mt-2.5">
           {items.map((item, idx) => {
             const fuDate = new Date(item.followUpDate);
             const isOverdue = fuDate.getTime() < Date.now();
@@ -411,11 +394,11 @@ function FollowUpsDueSection({ items }: { items: FollowUpDue[] }) {
               <a
                 key={`${item.clientId}-${idx}`}
                 href={`/coach/clients/${item.clientId}`}
-                className="rounded-[5px] border border-[#1A1A1A] no-underline transition-colors hover:border-[#2A2010]"
+                className="rounded-[5px] border border-[#151515] no-underline transition-colors hover:border-[#1E1E1E]"
                 style={{
-                  background: "#111111",
+                  background: "#0A0A0A",
                   borderLeft: `3px solid ${isOverdue ? "#7A1E1E" : "#B8933A"}`,
-                  padding: "7px 10px",
+                  padding: "8px 11px",
                 }}
               >
                 <div className="flex items-center justify-between gap-2 mb-0.5">
@@ -428,7 +411,7 @@ function FollowUpsDueSection({ items }: { items: FollowUpDue[] }) {
                 </div>
                 <span
                   className="uppercase block mb-0.5"
-                  style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#4A3F2A" }}
+                  style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#3A3020" }}
                 >
                   {item.status.replace(/_/g, " ")}
                 </span>
@@ -442,31 +425,7 @@ function FollowUpsDueSection({ items }: { items: FollowUpDue[] }) {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Shared ───────────────────────────────────────────────────────
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      className="text-[#807868] uppercase"
-      style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, letterSpacing: "0.12em" }}
-    >
-      {children}
-    </p>
-  );
-}
-
-function EmptyState({ message, accent = "default" }: { message: string; accent?: "green" | "default" }) {
-  const textColor = accent === "green" ? "#1D9E75" : "#4A3F2A";
-  return (
-    <div className="py-5 text-center">
-      <p style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: textColor }}>
-        {message}
-      </p>
-    </div>
+    </Panel>
   );
 }
 
@@ -475,7 +434,6 @@ function EmptyState({ message, accent = "default" }: { message: string; accent?:
 const INITIAL_VISIBLE = 8;
 
 function RosterHealthSection({ clients }: { clients: DashboardClient[] }) {
-  // Sort: gone_dark first, then lowest thirty_day_pct
   const sorted = [...clients].sort((a, b) => {
     const gdA = a.statusLabel === "gone_dark" ? 0 : 1;
     const gdB = b.statusLabel === "gone_dark" ? 0 : 1;
@@ -486,54 +444,35 @@ function RosterHealthSection({ clients }: { clients: DashboardClient[] }) {
   const visible = sorted.slice(0, INITIAL_VISIBLE);
   const remaining = sorted.length - INITIAL_VISIBLE;
 
-  return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
-      <SectionLabel>Roster Health</SectionLabel>
+  const statusDot: Record<string, string> = {
+    thriving: "#1D9E75", at_risk: "#B8933A", critical: "#7A1E1E", gone_dark: "#2A2010",
+  };
 
+  return (
+    <Panel>
+      <SectionLabel>Roster Health</SectionLabel>
       {sorted.length === 0 ? (
         <EmptyState message="No clients in roster." />
       ) : (
-        <div className="flex flex-col gap-[5px] mt-3">
+        <div className="flex flex-col gap-[4px] mt-2.5">
           {visible.map((c) => {
             const pct = c.thirtyDayPct ?? 0;
             const barColor = complianceColor(c.thirtyDayPct);
-            const statusColors: Record<string, string> = {
-              thriving: "#1D9E75", at_risk: "#B8933A", critical: "#7A1E1E", gone_dark: "#2A2010",
-            };
             return (
               <a
                 key={c.id}
                 href={`/coach/clients/${c.id}`}
-                className="flex items-center gap-2.5 no-underline rounded-[4px] hover:bg-[rgba(255,255,255,0.02)] transition-colors"
-                style={{ padding: "3px 4px" }}
+                className="flex items-center gap-2 no-underline rounded-[3px] hover:bg-[rgba(255,255,255,0.015)] transition-colors"
+                style={{ padding: "2.5px 3px" }}
               >
-                {/* Status dot */}
-                <span
-                  className="flex-shrink-0 rounded-full"
-                  style={{ width: "5px", height: "5px", background: statusColors[c.statusLabel] ?? "#4A3F2A" }}
-                />
-                {/* Name */}
-                <span
-                  className="truncate"
-                  style={{ fontFamily: ebGaramond, fontSize: "11px", color: "#DDD5C0", minWidth: "60px", maxWidth: "100px" }}
-                >
+                <span className="flex-shrink-0 rounded-full" style={{ width: "4px", height: "4px", background: statusDot[c.statusLabel] ?? "#4A3F2A" }} />
+                <span className="truncate" style={{ fontFamily: ebGaramond, fontSize: "11px", color: "#DDD5C0", minWidth: "55px", maxWidth: "95px" }}>
                   {c.name}
                 </span>
-                {/* Bar */}
-                <div className="flex-1 h-[4px] bg-[#1A1A1A] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${Math.min(pct, 100)}%`, background: barColor }}
-                  />
+                <div className="flex-1 h-[3px] bg-[#141414] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: barColor }} />
                 </div>
-                {/* Percentage */}
-                <span
-                  className="flex-shrink-0 text-right"
-                  style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, color: barColor, minWidth: "28px" }}
-                >
+                <span className="flex-shrink-0 text-right" style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, color: barColor, minWidth: "26px" }}>
                   {c.thirtyDayPct !== null ? `${c.thirtyDayPct}%` : "—"}
                 </span>
               </a>
@@ -542,15 +481,15 @@ function RosterHealthSection({ clients }: { clients: DashboardClient[] }) {
           {remaining > 0 && (
             <a
               href="/coach/clients"
-              className="no-underline text-center mt-1 transition-colors hover:text-[#B8933A]"
-              style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, letterSpacing: "0.08em", color: "#4A3F2A" }}
+              className="no-underline text-center mt-0.5 transition-colors hover:text-[#B8933A]"
+              style={{ fontFamily: cinzel, fontSize: "7px", fontWeight: 700, letterSpacing: "0.06em", color: "#3A3020" }}
             >
-              + {remaining} more clients →
+              + {remaining} more →
             </a>
           )}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }
 
@@ -558,41 +497,37 @@ function RosterHealthSection({ clients }: { clients: DashboardClient[] }) {
 
 function PillarBreakdownSection({ pillars }: { pillars: PillarBreakdown[] }) {
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Pillar Breakdown</SectionLabel>
-
-      <div className="grid grid-cols-4 gap-[7px] mt-3">
+      <div className="grid grid-cols-4 gap-[6px] mt-2.5">
         {pillars.map((p) => {
           const pct = p.avgPct;
           const hasData = pct !== null && p.taskCount > 0;
-          const color = hasData ? complianceColor(pct) : "#4A3F2A";
+          const color = hasData ? complianceColor(pct) : "#3A3020";
           const borderColor = hasData
             ? (pct! >= 70 ? "#0D3A25" : pct! >= 40 ? "#2A2010" : "#2A1010")
-            : "#1A1A1A";
+            : "#151515";
           const bgColor = hasData
-            ? (pct! >= 70 ? "rgba(29,158,117,0.08)" : pct! >= 40 ? "rgba(184,147,58,0.08)" : "rgba(122,30,30,0.10)")
-            : "#111111";
+            ? (pct! >= 70 ? "rgba(29,158,117,0.05)" : pct! >= 40 ? "rgba(184,147,58,0.05)" : "rgba(122,30,30,0.06)")
+            : "#0A0A0A";
 
           return (
             <div
               key={p.pillar}
               className="rounded-[5px] border flex flex-col items-center justify-center"
-              style={{ background: bgColor, borderColor, padding: "10px 6px" }}
+              style={{ background: bgColor, borderColor, padding: "10px 4px 8px" }}
             >
               <span style={{ fontFamily: cinzel, fontSize: "16px", fontWeight: 900, color, lineHeight: 1 }}>
                 {hasData ? `${pct}%` : "—"}
               </span>
               <span
                 className="mt-1 uppercase"
-                style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.08em", color: "#807868" }}
+                style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#807868" }}
               >
                 {p.label}
               </span>
               {hasData && (
-                <div className="w-full h-[3px] bg-[#1A1A1A] rounded-full mt-1.5 overflow-hidden">
+                <div className="w-full h-[3px] bg-[#141414] rounded-full mt-1.5 overflow-hidden" style={{ margin: "0 4px" }}>
                   <div className="h-full rounded-full" style={{ width: `${Math.min(pct!, 100)}%`, background: color }} />
                 </div>
               )}
@@ -600,7 +535,7 @@ function PillarBreakdownSection({ pillars }: { pillars: PillarBreakdown[] }) {
           );
         })}
       </div>
-    </div>
+    </Panel>
   );
 }
 
@@ -608,85 +543,109 @@ function PillarBreakdownSection({ pillars }: { pillars: PillarBreakdown[] }) {
 
 function ComplianceTrendSection({ days }: { days: DailyCompliance[] }) {
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Compliance Trend</SectionLabel>
-
-      <div className="grid grid-cols-7 gap-[4px] mt-3">
+      <div className="grid grid-cols-7 gap-[3px] mt-2.5">
         {days.map((d) => {
           const pct = d.avgPct;
           const hasData = pct !== null;
-          const bgColor = !hasData ? "#111111"
-            : pct >= 70 ? "rgba(29,158,117,0.15)"
-            : pct >= 40 ? "rgba(184,147,58,0.15)"
-            : "rgba(122,30,30,0.15)";
-          const textColor = !hasData ? "#4A3F2A" : complianceColor(pct);
+          const bgColor = !hasData ? "#0A0A0A"
+            : pct >= 70 ? "rgba(29,158,117,0.10)"
+            : pct >= 40 ? "rgba(184,147,58,0.10)"
+            : "rgba(122,30,30,0.10)";
+          const textColor = !hasData ? "#3A3020" : complianceColor(pct);
 
           return (
             <div
               key={d.date}
               className="rounded-[4px] flex flex-col items-center justify-center"
-              style={{ background: bgColor, padding: "8px 2px" }}
+              style={{ background: bgColor, padding: "7px 2px" }}
             >
-              <span style={{ fontFamily: cinzel, fontSize: "6px", fontWeight: 700, letterSpacing: "0.06em", color: "#807868" }}>
+              <span style={{ fontFamily: cinzel, fontSize: "5.5px", fontWeight: 700, letterSpacing: "0.04em", color: "#807868" }}>
                 {d.dayLabel}
               </span>
-              <span
-                className="mt-0.5"
-                style={{ fontFamily: cinzel, fontSize: "12px", fontWeight: 900, color: textColor, lineHeight: 1 }}
-              >
+              <span className="mt-0.5" style={{ fontFamily: cinzel, fontSize: "13px", fontWeight: 900, color: textColor, lineHeight: 1 }}>
                 {hasData ? pct : "—"}
               </span>
               {hasData && (
-                <span style={{ fontFamily: cinzel, fontSize: "6px", color: "#4A3F2A", marginTop: "1px" }}>%</span>
+                <span style={{ fontFamily: cinzel, fontSize: "5px", color: "#3A3020", marginTop: "1px" }}>%</span>
               )}
             </div>
           );
         })}
       </div>
-    </div>
+    </Panel>
   );
 }
 
 // ── Coach Insights ───────────────────────────────────────────────
 
 function CoachInsightsSection({ insights }: { insights: CoachInsight[] }) {
-  const dotColors: Record<string, string> = {
-    green: "#1D9E75",
-    gold: "#B8933A",
-    crimson: "#7A1E1E",
-  };
+  const dotColors: Record<string, string> = { green: "#1D9E75", gold: "#B8933A", crimson: "#7A1E1E" };
 
   return (
-    <div
-      className="bg-[#0D0D0D] rounded-[7px] border border-[#1A1A1A]"
-      style={{ padding: "16px 20px" }}
-    >
+    <Panel>
       <SectionLabel>Coach Insights</SectionLabel>
-
       {insights.length === 0 ? (
         <EmptyState message="No insights to display." />
       ) : (
-        <div className="flex flex-col gap-2 mt-3">
+        <div className="flex flex-col gap-1.5 mt-2.5">
           {insights.map((insight, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-2.5 rounded-[5px] border border-[#1A1A1A] px-3 py-2"
-              style={{ background: "#111111" }}
+              className="flex items-start gap-2 rounded-[4px] border border-[#151515]"
+              style={{ background: "#0A0A0A", padding: "7px 10px" }}
             >
               <span
                 className="flex-shrink-0 rounded-full mt-1"
-                style={{ width: "5px", height: "5px", background: dotColors[insight.dot] ?? "#807868" }}
+                style={{ width: "4px", height: "4px", background: dotColors[insight.dot] ?? "#807868" }}
               />
-              <p style={{ fontFamily: ebGaramond, fontSize: "12px", color: "#DDD5C0", lineHeight: 1.5 }}>
+              <p style={{ fontFamily: ebGaramond, fontSize: "11px", color: "#DDD5C0", lineHeight: 1.5 }}>
                 {insight.text}
               </p>
             </div>
           ))}
         </div>
       )}
+    </Panel>
+  );
+}
+
+// ── Shared Presentation Helpers ──────────────────────────────────
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-[6px] border border-[#151515]"
+      style={{ background: "#0D0D0D", padding: "14px 16px" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="uppercase"
+      style={{ fontFamily: cinzel, fontSize: "8px", fontWeight: 700, letterSpacing: "0.10em", color: "#807868" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function EmptyState({ message, accent = "default" }: { message: string; accent?: "green" | "default" }) {
+  const textColor = accent === "green" ? "#1D9E75" : "#3A3020";
+  const borderColor = accent === "green" ? "#0A2A1A" : "#141414";
+  return (
+    <div
+      className="rounded-[4px] border text-center mt-2.5"
+      style={{ borderColor, padding: "16px 12px", background: accent === "green" ? "rgba(29,158,117,0.02)" : "#090909" }}
+    >
+      <p style={{ fontFamily: ebGaramond, fontSize: "11px", fontStyle: "italic", color: textColor }}>
+        {message}
+      </p>
     </div>
   );
 }

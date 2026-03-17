@@ -6,7 +6,7 @@
 
 export function CoachPageContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="max-w-[1200px] px-6 py-8 lg:px-8">
+    <div className="max-w-[1200px] px-6 py-6 lg:px-8">
       {children}
     </div>
   );

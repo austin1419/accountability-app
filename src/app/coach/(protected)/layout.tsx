@@ -42,12 +42,12 @@ export default async function CoachLayout({ children }: { children: React.ReactN
   // ── Shell ─────────────────────────────────────
   return (
     <div
-      className="min-h-screen bg-[#111111]"
+      className="min-h-screen bg-[#0E0E0E]"
       style={{
-        "--coach-bg": "#111111",
-        "--coach-sidebar": "#080808",
+        "--coach-bg": "#0E0E0E",
+        "--coach-sidebar": "#070707",
         "--coach-surface": "#0D0D0D",
-        "--coach-topbar": "#0A0A0A",
+        "--coach-topbar": "#080808",
         "--coach-border": "#1A1A1A",
         "--coach-border-subtle": "#111111",
         "--coach-gold": "#B8933A",
